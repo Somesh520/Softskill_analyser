@@ -5,10 +5,21 @@ import { getWelcomeEmailTemplate } from './emailTemplates.js';
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    }
+});
+
+// Verify email connection on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("⚠️ Email Service Error on Startup: ", error.message);
+    } else {
+        console.log("✅ Email Service is Ready to send messages!");
     }
 });
 
