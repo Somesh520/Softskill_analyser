@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Lock, ExternalLink, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, User, Lock, ExternalLink, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import NeoBrutalismButton from '../../components/ui/NeoBrutalismButton';
 import { loginUser } from '../../api/authApi';
 
@@ -14,9 +15,16 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(!!savedEmail);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState(null);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    if (!turnstileToken) {
+      setError('Please complete the security check.');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
@@ -24,7 +32,8 @@ const Login = () => {
       // Ensure email is correctly formatted (case-insensitive login)
       const data = await loginUser({
         ...formData,
-        email: formData.email.trim().toLowerCase()
+        email: formData.email.trim().toLowerCase(),
+        turnstileToken: turnstileToken
       });
       
       // Select storage mechanism based on 'Remember Me'
@@ -156,7 +165,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-[#f8f8f8] border-4 border-black pl-14 pr-4 py-3 text-lg font-bold focus:outline-none focus:bg-white focus:-translate-y-1 focus:translate-x-1 transition-all"
-                  style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)', ':focus': { boxShadow: '-6px 6px 0px #000' } }}
+                  style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
                   placeholder="name@kiet.edu"
                   required
                 />
@@ -226,14 +235,29 @@ const Login = () => {
               </button>
             </motion.div>
 
+            {/* Cloudflare Turnstile Invisible Widget */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex justify-center py-2"
+            >
+              <Turnstile 
+                siteKey="0x4AAAAAADHxYXD4xY63oWfy" 
+                onSuccess={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setError('Security check failed. Please refresh.')}
+              />
+            </motion.div>
+
             {/* Submit Button */}
             <motion.button 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               whileHover={!loading ? { scale: 1.02, x: -4, y: -4, boxShadow: '8px 8px 0px #000' } : {}}
               whileTap={!loading ? { scale: 0.98, x: 0, y: 0, boxShadow: '0px 0px 0px #000' } : {}}
-              className={`w-full bg-[#00FF00] text-black font-black text-xl uppercase border-4 border-black py-4 mt-6 flex justify-center items-center gap-3 transition-all ${loading ? 'opacity-50 cursor-not-allowed bg-gray-300' : 'cursor-pointer hover:bg-[#FFEB3B]'}`}
+              className={`w-full bg-[#00FF00] text-black font-black text-xl uppercase border-4 border-black py-4 mt-2 flex justify-center items-center gap-3 transition-all ${loading ? 'opacity-50 cursor-not-allowed bg-gray-300' : 'cursor-pointer hover:bg-[#FFEB3B]'}`}
               style={{ boxShadow: loading ? '0px 0px 0px #000' : '6px 6px 0px #000' }}
               type="submit"
               disabled={loading}

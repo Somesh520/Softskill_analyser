@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.5.1",
     "axios": "^1.15.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.9.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-google-recaptcha": "^3.1.0",
     "react-router-dom": "^7.14.2",
     "tailwind-merge": "^3.5.0"
   },
