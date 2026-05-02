@@ -5,7 +5,7 @@
       "destination": "https://softskill-analyser.onrender.com/api/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api|sitemap.xml|robots.txt|logo.svg|favicon.svg|icons.svg).*)",
       "destination": "/index.html"
     }
   ]
