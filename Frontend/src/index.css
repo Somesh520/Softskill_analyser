@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FFEB3B;
+  --color-secondary: #00FFFF;
+  --color-accent: #FF00FF;
+  --color-neo-bg: #FFFFFF;
+  --color-neo-border: #000000;
+}
+
+body {
+  @apply bg-neo-bg text-black font-sans;
+}
