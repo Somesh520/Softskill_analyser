@@ -28,10 +28,12 @@ export const addTeacherService = async (adminId, name, email, password, deptName
     // 4. Send the introductory email with credentials
     // Follows Dependency Injection/SOLID by passing the generated template HTML into the generic sender
     const emailHtml = teacherWelcomeTemplate(name, normalizedEmail, password);
-    await sendEmail({
+    sendEmail({
         to: normalizedEmail,
         subject: 'Welcome to Soft Skill Analyser - Your Teacher Account',
         html: emailHtml
+    }).catch(err => {
+        console.error('Failed to send welcome email to teacher in background:', err);
     });
 
     return {
