@@ -1,54 +1,64 @@
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { getWelcomeEmailTemplate } from './emailTemplates.js';
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-// Verify email connection on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("⚠️ Email Service Error on Startup: ", error.message);
-    } else {
-        console.log("✅ Email Service is Ready to send messages!");
-    }
-});
+// Helper function to send email via Brevo HTTP API
+const sendBrevoEmail = async (toEmail, subject, htmlContent) => {
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.EMAIL_USER || 'someshtiwari.in@gmail.com';
 
-// Sends a single welcome email
-export const sendWelcomeEmail = async (email, name, plainPassword) => {
+    if (!apiKey) {
+        console.error("⚠️ BREVO_API_KEY is missing in environment variables!");
+        return false;
+    }
+
     try {
-        const mailOptions = {
-            from: `"Soft Skill Analyzer" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Welcome to Soft Skill Analyzer - Your Login Details',
-            html: getWelcomeEmailTemplate(name, email, plainPassword)
-        };
+        const response = await fetch(BREVO_API_URL, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'api-key': apiKey
+            },
+            body: JSON.stringify({
+                sender: { name: "Soft Skill Analyzer", email: senderEmail },
+                to: [{ email: toEmail }],
+                subject: subject,
+                htmlContent: htmlContent
+            })
+        });
 
-        await transporter.sendMail(mailOptions);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(JSON.stringify(errorData));
+        }
+
+        console.log(`✅ Email sent successfully to ${toEmail}`);
         return true;
     } catch (error) {
-        console.error(`Failed to send email to ${email}:`, error.message);
+        console.error(`❌ Failed to send email to ${toEmail}:`, error.message);
         return false;
     }
 };
 
+// Sends a single welcome email (Used when creating new students)
+export const sendWelcomeEmail = async (email, name, plainPassword) => {
+    const subject = 'Welcome to Soft Skill Analyzer - Your Login Details';
+    const htmlContent = getWelcomeEmailTemplate(name, email, plainPassword);
+    
+    return await sendBrevoEmail(email, subject, htmlContent);
+};
 
 export const sendWelcomeEmailsInBackground = (newStudents) => {
     // We do NOT await this function. It runs entirely in the background.
-    console.log(`[Email Queue] Starting background job to email ${newStudents.length} new students...`);
+    console.log(`[Email Queue] Starting background job to email ${newStudents.length} new students via Brevo...`);
 
     // Self-executing async function for background processing
     (async () => {
-        // Send in batches of 5 to avoid Gmail rate limits
+        // Send in batches of 5
         const BATCH_SIZE = 5;
 
         for (let i = 0; i < newStudents.length; i += BATCH_SIZE) {
@@ -65,25 +75,11 @@ export const sendWelcomeEmailsInBackground = (newStudents) => {
             }
         }
 
-        console.log(`[Email Queue] Finished emailing ${newStudents.length} students.`);
+        console.log(`[Email Queue] Finished emailing ${newStudents.length} students via Brevo.`);
     })();
 };
 
-// SOLID Principle: Single Responsibility - This function ONLY sends emails, it doesn't build templates
+// Generic email sender (Used for admin creating teachers, etc)
 export const sendEmail = async ({ to, subject, html }) => {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to,
-            subject,
-            html
-        };
-
-        const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully: " + info.response);
-        return true;
-    } catch (error) {
-        console.error("Error sending email: ", error);
-        return false;
-    }
+    return await sendBrevoEmail(to, subject, html);
 };
