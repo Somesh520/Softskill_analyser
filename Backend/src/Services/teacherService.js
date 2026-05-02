@@ -228,8 +228,7 @@ export const deleteClassService = async (teacherId, classId) => {
     );
 
     return true;
-};
-
+}
 export const deleteStudentFromClassService = async (teacherId, classId, studentId) => {
     // Ensure the class belongs to this teacher
     const classObj = await Class.findOne({ _id: classId, teacherId });
@@ -239,10 +238,10 @@ export const deleteStudentFromClassService = async (teacherId, classId, studentI
 
     // Unassign or delete the student (Here we completely delete the student account)
     const deletedStudent = await User.findOneAndDelete({ _id: studentId, classId: classId });
-    
+
     if (!deletedStudent) {
         throw new Error('Student not found in this class.');
     }
 
     return true;
-};
+};  
