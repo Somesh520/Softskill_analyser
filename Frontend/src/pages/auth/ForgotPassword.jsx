@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Lock, KeyRound } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { forgotPassword, resetPassword } from '../../api/authApi';
 
 const ForgotPassword = () => {
@@ -14,17 +15,25 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
 
   const handleRequestOTP = async (e) => {
     e.preventDefault();
+    
+    if (!turnstileToken) {
+      setError('Please complete the security check.');
+      return;
+    }
+
     setError(null);
     setMessage(null);
     setLoading(true);
 
     try {
-      const res = await forgotPassword(email);
+      const res = await forgotPassword(email, turnstileToken);
       setMessage(res.message);
       setStep(2);
+      setTurnstileToken(null); // Reset token for the next step
     } catch (err) {
       setError(err.message || 'Failed to request OTP');
     } finally {
@@ -34,12 +43,18 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    
+    if (!turnstileToken) {
+      setError('Please complete the security check.');
+      return;
+    }
+
     setError(null);
     setMessage(null);
     setLoading(true);
 
     try {
-      const res = await resetPassword(email, otp, newPassword);
+      const res = await resetPassword(email, otp, newPassword, turnstileToken);
       setMessage(res.message);
       setTimeout(() => {
         navigate('/login');
@@ -111,11 +126,19 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-[#f8f8f8] border-4 border-black pl-14 pr-4 py-3 text-lg font-bold focus:outline-none focus:bg-white focus:-translate-y-1 focus:translate-x-1 transition-all"
-                    style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)', ':focus': { boxShadow: '-6px 6px 0px #000' } }}
+                    style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
                     placeholder="student@kiet.edu"
                     required
                   />
                 </div>
+              </div>
+
+              {/* Turnstile for Step 1 */}
+              <div className="flex justify-center py-2">
+                <Turnstile 
+                  siteKey="0x4AAAAAADHxYXD4xY63oWfy" 
+                  onSuccess={(token) => setTurnstileToken(token)}
+                />
               </div>
 
               <motion.button 
@@ -142,7 +165,7 @@ const ForgotPassword = () => {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     className="w-full bg-[#f8f8f8] border-4 border-black pl-14 pr-4 py-3 text-lg font-bold focus:outline-none focus:bg-white focus:-translate-y-1 focus:translate-x-1 transition-all tracking-widest text-center"
-                    style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)', ':focus': { boxShadow: '-6px 6px 0px #000' } }}
+                    style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
                     placeholder="123456"
                     required
                     maxLength="6"
@@ -159,11 +182,19 @@ const ForgotPassword = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full bg-[#f8f8f8] border-4 border-black pl-14 pr-4 py-3 text-lg font-bold focus:outline-none focus:bg-white focus:-translate-y-1 focus:translate-x-1 transition-all"
-                    style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)', ':focus': { boxShadow: '-6px 6px 0px #000' } }}
+                    style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
                     placeholder="••••••••"
                     required
                   />
                 </div>
+              </div>
+
+              {/* Turnstile for Step 2 */}
+              <div className="flex justify-center py-2">
+                <Turnstile 
+                  siteKey="0x4AAAAAADHxYXD4xY63oWfy" 
+                  onSuccess={(token) => setTurnstileToken(token)}
+                />
               </div>
 
               <motion.button 
