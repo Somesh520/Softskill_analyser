@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance
 const axiosInstance = axios.create({
-  baseURL: '/api', 
+  baseURL: 'https://softskill-analyser.onrender.com/api', 
   headers: {
     'Content-Type': 'application/json',
   },

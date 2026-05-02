@@ -5,10 +5,10 @@ import connectDB from './src/Config/db.js';
 import authRoutes from './src/Routes/authRoutes.js';
 import adminRoutes from './src/Routes/adminRoutes.js';
 import teacherRoutes from './src/Routes/teacherRoutes.js';
-
-const app = express();
-const PORT = 3000;
 dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 
 // here we are connecting to the database and then starting the server
@@ -18,8 +18,21 @@ connectDB();
 
 
 
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://softskill-analyser.vercel.app',
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
