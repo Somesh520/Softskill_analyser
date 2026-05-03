@@ -8,3 +8,12 @@ export const createTeacher = async (teacherData) => {
     throw new Error(error.response?.data?.message || 'Error assigning teacher');
   }
 };
+
+export const getTeachers = async () => {
+  try {
+    const response = await axiosInstance.get('/admin/teachers');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error fetching teachers');
+  }
+};

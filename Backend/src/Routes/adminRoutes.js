@@ -1,5 +1,5 @@
 import express from 'express';
-import { addTeacher } from '../Controller/adminController.js';
+import { addTeacher, getAllTeachers } from '../Controller/adminController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -10,5 +10,8 @@ router.use(requireRole('admin'));
 
 // Route:  POST /api/admin/add-teacher
 router.post('/add-teacher', addTeacher);
+
+// Route:  GET /api/admin/teachers
+router.get('/teachers', getAllTeachers);
 
 export default router;

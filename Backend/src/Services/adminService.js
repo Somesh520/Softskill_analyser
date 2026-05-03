@@ -44,3 +44,7 @@ export const addTeacherService = async (adminId, name, email, password, deptName
         deptName: newTeacher.deptName
     };
 };
+
+export const getAllTeachersService = async () => {
+    return await User.find({ role: 'teacher' }).select('-password').sort({ createdAt: -1 });
+};

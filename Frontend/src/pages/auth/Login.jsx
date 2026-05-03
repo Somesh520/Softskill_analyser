@@ -243,7 +243,7 @@ const Login = () => {
               className="flex justify-center py-2"
             >
               <Turnstile 
-                siteKey="0x4AAAAAADHxYXD4xY63oWfy" 
+                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
                 onSuccess={(token) => setTurnstileToken(token)}
                 onExpire={() => setTurnstileToken(null)}
                 onError={() => setError('Security check failed. Please refresh.')}

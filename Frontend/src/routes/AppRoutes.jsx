@@ -4,6 +4,7 @@ import Login from '../pages/auth/Login';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import AdminDashboard from '../pages/admin/Dashboard';
 import AssignTeacher from '../pages/admin/AssignTeacher';
+import ManageTeachers from '../pages/admin/ManageTeachers';
 import TeacherDashboard from '../pages/teacher/Dashboard';
 import MyClasses from '../pages/teacher/MyClasses';
 import ClassDetails from '../pages/teacher/ClassDetails';
@@ -16,6 +17,7 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/assign-teacher" element={<AssignTeacher />} />
+      <Route path="/admin/teachers" element={<ManageTeachers />} />
       <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
       <Route path="/teacher/classes" element={<MyClasses />} />
       <Route path="/teacher/classes/:id" element={<ClassDetails />} />

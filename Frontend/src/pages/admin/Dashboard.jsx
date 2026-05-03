@@ -47,13 +47,13 @@ const Dashboard = () => {
 
           {/* Dashboard Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <motion.div whileHover={{ y: -5 }} onClick={() => navigate('/admin/assign-teacher')} className="cursor-pointer">
+            <motion.div whileHover={{ y: -5 }} onClick={() => navigate('/admin/teachers')} className="cursor-pointer">
               <NeoBrutalismCard 
                 title="Manage Teachers" 
                 icon={<Users className="w-8 h-8" />} 
                 color="#FF00FF"
               >
-                Add new teachers, review their assigned students, and remove inactive accounts.
+                View all active teachers, review their departments, and manage their account status.
               </NeoBrutalismCard>
             </motion.div>
 
