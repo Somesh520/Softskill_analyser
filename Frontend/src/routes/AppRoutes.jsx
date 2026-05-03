@@ -5,6 +5,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword';
 import AdminDashboard from '../pages/admin/Dashboard';
 import AssignTeacher from '../pages/admin/AssignTeacher';
 import ManageTeachers from '../pages/admin/ManageTeachers';
+import ManageStudents from '../pages/admin/ManageStudents';
 import TeacherDashboard from '../pages/teacher/Dashboard';
 import MyClasses from '../pages/teacher/MyClasses';
 import ClassDetails from '../pages/teacher/ClassDetails';
@@ -18,11 +19,13 @@ const AppRoutes = () => {
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/assign-teacher" element={<AssignTeacher />} />
       <Route path="/admin/teachers" element={<ManageTeachers />} />
+      <Route path="/admin/students" element={<ManageStudents />} />
       <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
       <Route path="/teacher/classes" element={<MyClasses />} />
       <Route path="/teacher/classes/:id" element={<ClassDetails />} />
     </Routes>
   );
 };
+
 // here we change the routing 
 export default AppRoutes;

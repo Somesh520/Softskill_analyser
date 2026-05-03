@@ -57,13 +57,13 @@ const Dashboard = () => {
               </NeoBrutalismCard>
             </motion.div>
 
-            <motion.div whileHover={{ y: -5 }}>
+            <motion.div whileHover={{ y: -5 }} onClick={() => navigate('/admin/students')} className="cursor-pointer">
               <NeoBrutalismCard 
                 title="Manage Students" 
                 icon={<Users className="w-8 h-8" />} 
                 color="#00FF00"
               >
-                Onboard thousands of students and assign them to specific semantic batches and teachers.
+                View all enrolled students, check their semester, teacher assignment, and account status.
               </NeoBrutalismCard>
             </motion.div>
 

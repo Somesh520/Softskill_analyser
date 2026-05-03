@@ -4,29 +4,24 @@ import { sendEmail } from '../utils/emailService.js';
 import { teacherWelcomeTemplate } from '../utils/emailTemplates.js';
 
 export const addTeacherService = async (adminId, name, email, password, deptName) => {
-    // 1. Check if user already exists
     const normalizedEmail = email?.trim().toLowerCase();
     const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
         throw new Error('A user with this email already exists');
     }
 
-    // 2. Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3. Create the Teacher user
     const newTeacher = await User.create({
         name,
         email: normalizedEmail,
         password: hashedPassword,
         role: 'teacher',
-        assignedByAdmin: adminId, // This links the teacher strictly to the admin
+        assignedByAdmin: adminId,
         deptName
     });
 
-    // 4. Send the introductory email with credentials
-    // Follows Dependency Injection/SOLID by passing the generated template HTML into the generic sender
     const emailHtml = teacherWelcomeTemplate(name, normalizedEmail, password);
     sendEmail({
         to: normalizedEmail,
@@ -47,4 +42,12 @@ export const addTeacherService = async (adminId, name, email, password, deptName
 
 export const getAllTeachersService = async () => {
     return await User.find({ role: 'teacher' }).select('-password').sort({ createdAt: -1 });
+};
+
+export const getAllStudentsService = async () => {
+    return await User.find({ role: 'student' })
+        .select('-password')
+        .populate('assignedByTeacher', 'name email')  // Show which teacher assigned them
+        .populate('classId', 'name semester')          // Show class name & semester
+        .sort({ createdAt: -1 });
 };

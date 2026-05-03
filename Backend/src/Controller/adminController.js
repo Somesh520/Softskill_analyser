@@ -1,4 +1,4 @@
-import { addTeacherService, getAllTeachersService } from '../Services/adminService.js';
+import { addTeacherService, getAllTeachersService, getAllStudentsService } from '../Services/adminService.js';
 
 // @desc    Add a single Teacher
 // @route   POST /api/admin/add-teacher
@@ -6,7 +6,7 @@ import { addTeacherService, getAllTeachersService } from '../Services/adminServi
 export const addTeacher = async (req, res) => {
     try {
         const { name, email, password, deptName } = req.body;
-        const adminId = req.user.id; // Comes from our JWT verifyToken middleware
+        const adminId = req.user.id;
 
         const newTeacher = await addTeacherService(adminId, name, email, password, deptName);
         
@@ -26,6 +26,18 @@ export const getAllTeachers = async (req, res) => {
     try {
         const teachers = await getAllTeachersService();
         res.status(200).json(teachers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get all Students
+// @route   GET /api/admin/students
+// @access  Private (Admin Only)
+export const getAllStudents = async (req, res) => {
+    try {
+        const students = await getAllStudentsService();
+        res.status(200).json(students);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

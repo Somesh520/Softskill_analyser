@@ -17,3 +17,12 @@ export const getTeachers = async () => {
     throw new Error(error.response?.data?.message || 'Error fetching teachers');
   }
 };
+
+export const getStudents = async () => {
+  try {
+    const response = await axiosInstance.get('/admin/students');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error fetching students');
+  }
+};

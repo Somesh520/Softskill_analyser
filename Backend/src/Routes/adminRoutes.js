@@ -1,5 +1,5 @@
 import express from 'express';
-import { addTeacher, getAllTeachers } from '../Controller/adminController.js';
+import { addTeacher, getAllTeachers, getAllStudents } from '../Controller/adminController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -13,5 +13,8 @@ router.post('/add-teacher', addTeacher);
 
 // Route:  GET /api/admin/teachers
 router.get('/teachers', getAllTeachers);
+
+// Route:  GET /api/admin/students
+router.get('/students', getAllStudents);
 
 export default router;
