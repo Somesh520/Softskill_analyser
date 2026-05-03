@@ -1,4 +1,4 @@
-import { addTeacherService, getAllTeachersService, getAllStudentsService } from '../Services/adminService.js';
+import { addTeacherService, getAllTeachersService, removeTeacherService, getAllStudentsService } from '../Services/adminService.js';
 
 // @desc    Add a single Teacher
 // @route   POST /api/admin/add-teacher
@@ -28,6 +28,19 @@ export const getAllTeachers = async (req, res) => {
         res.status(200).json(teachers);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Remove a Teacher
+// @route   DELETE /api/admin/teachers/:id
+// @access  Private (Admin Only)
+export const removeTeacher = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await removeTeacherService(id);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(404).json({ message: error.message });
     }
 };
 

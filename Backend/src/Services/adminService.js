@@ -44,10 +44,19 @@ export const getAllTeachersService = async () => {
     return await User.find({ role: 'teacher' }).select('-password').sort({ createdAt: -1 });
 };
 
+export const removeTeacherService = async (teacherId) => {
+    const teacher = await User.findOne({ _id: teacherId, role: 'teacher' });
+    if (!teacher) {
+        throw new Error('Teacher not found');
+    }
+    await User.findByIdAndDelete(teacherId);
+    return { message: 'Teacher removed successfully' };
+};
+
 export const getAllStudentsService = async () => {
     return await User.find({ role: 'student' })
         .select('-password')
-        .populate('assignedByTeacher', 'name email')  // Show which teacher assigned them
-        .populate('classId', 'name semester')          // Show class name & semester
+        .populate('assignedByTeacher', 'name email')
+        .populate('classId', 'name semester')
         .sort({ createdAt: -1 });
 };

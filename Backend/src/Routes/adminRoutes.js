@@ -1,5 +1,5 @@
 import express from 'express';
-import { addTeacher, getAllTeachers, getAllStudents } from '../Controller/adminController.js';
+import { addTeacher, getAllTeachers, removeTeacher, getAllStudents } from '../Controller/adminController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -13,6 +13,9 @@ router.post('/add-teacher', addTeacher);
 
 // Route:  GET /api/admin/teachers
 router.get('/teachers', getAllTeachers);
+
+// Route:  DELETE /api/admin/teachers/:id
+router.delete('/teachers/:id', removeTeacher);
 
 // Route:  GET /api/admin/students
 router.get('/students', getAllStudents);

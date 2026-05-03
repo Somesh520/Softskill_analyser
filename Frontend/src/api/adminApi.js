@@ -18,6 +18,15 @@ export const getTeachers = async () => {
   }
 };
 
+export const deleteTeacher = async (id) => {
+  try {
+    const response = await axiosInstance.delete(`/admin/teachers/${id}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error removing teacher');
+  }
+};
+
 export const getStudents = async () => {
   try {
     const response = await axiosInstance.get('/admin/students');
