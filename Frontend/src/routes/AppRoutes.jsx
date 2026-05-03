@@ -24,5 +24,5 @@ const AppRoutes = () => {
     </Routes>
   );
 };
-
+// here we change the routing 
 export default AppRoutes;
