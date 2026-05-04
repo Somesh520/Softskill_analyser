@@ -1,5 +1,18 @@
+# Robots.txt for Soft Skill Analyser
+# https://softskill-analyser.vercel.app
+
 User-agent: *
 Allow: /
+Allow: /login
+Allow: /forgot-password
+
+# Block admin and teacher dashboard routes (private content)
+Disallow: /admin/
+Disallow: /teacher/
+Disallow: /student/
 
 # Sitemaps
-Sitemap: https://soft-skill-analyzer.vercel.app/sitemap.xml
+Sitemap: https://softskill-analyser.vercel.app/sitemap.xml
+
+# Crawl-delay (optional, respected by some bots)
+Crawl-delay: 1

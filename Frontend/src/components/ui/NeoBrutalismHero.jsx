@@ -48,7 +48,7 @@ const NeoBrutalismHero = ({
           style={{ boxShadow: '6px 6px 0px #000' }}
         >
           <Sparkles className="w-5 h-5" />
-          <span className="font-black text-sm uppercase tracking-wider">Soft Skill Analyzer</span>
+          <span className="font-black text-sm uppercase tracking-wider">Soft Skill Analyser – KIET</span>
         </motion.div>
 
         {/* Title */}

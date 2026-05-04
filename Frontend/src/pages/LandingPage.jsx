@@ -98,17 +98,20 @@ const LandingPage = () => {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <NeoBrutalismHero 
-        title="SOFT SKILL ANALYZER"
-        subtitle="Analyze, Track, and Improve Student Soft Skills"
-        description="A role-based platform for colleges to evaluate students beyond academics. Track communication, leadership, teamwork, confidence, problem-solving, and professional behavior through structured activities and semester-wise reports."
-        onPrimaryClick={() => navigate('/login')}
-        primaryBtnText="Get Started"
-        secondaryBtnText="View Demo"
-      />
+      <header role="banner" aria-label="Soft Skill Analyser Hero">
+        <NeoBrutalismHero 
+          title="SOFT SKILL ANALYSER"
+          subtitle="KIET Group of Institutions – Communication & Personality Development Tool"
+          description="A role-based platform built for KIET Group of Institutions (Deemed to be University), Ghaziabad to evaluate students beyond academics. Track communication, leadership, teamwork, confidence, problem-solving, and professional behaviour through structured semester-wise activities and reports."
+          onPrimaryClick={() => navigate('/login')}
+          primaryBtnText="Get Started"
+          secondaryBtnText="View Demo"
+        />
+      </header>
 
       {/* Info Section */}
-      <section className="py-20 px-6 border-b-8 border-black">
+      <main role="main">
+      <section className="py-20 px-6 border-b-8 border-black" aria-label="About Soft Skill Analyser">
         <div className="container mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -116,14 +119,15 @@ const LandingPage = () => {
             className="bg-[#00FFFF] border-4 border-black p-10 relative"
             style={{ boxShadow: '12px 12px 0px #000' }}
           >
+            <h2 className="sr-only">Why Soft Skills Matter at KIET</h2>
             <p className="text-2xl md:text-3xl font-black uppercase leading-tight text-black">
               Academic marks show knowledge, but they do not show complete student growth. 
-              Colleges need a proper system to measure how students communicate, lead, 
-              work in teams, present ideas, and behave professionally.
+              KIET Group of Institutions (Deemed to be University) needs a proper system to measure how students 
+              communicate, lead, work in teams, present ideas, and behave professionally.
             </p>
             <div className="mt-8 flex justify-center">
               <div className="bg-black text-white px-6 py-2 font-black uppercase text-xl">
-                Soft Skill Analyzer helps institutions evaluate students
+                Soft Skill Analyser helps KIET evaluate student communication &amp; personality
               </div>
             </div>
           </motion.div>
@@ -131,16 +135,18 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-6 bg-[#F0F0F0]">
+      <section className="py-24 px-6 bg-[#F0F0F0]" aria-label="Key Features of Soft Skill Analyser">
         <div className="container mx-auto max-w-7xl">
           <h2 className="text-5xl md:text-7xl font-black uppercase mb-16 text-center" style={{ textShadow: '4px 4px 0px #00FFFF', WebkitTextStroke: '2px black' }}>
             Key Features
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {features.map((f, i) => (
-              <NeoBrutalismCard key={i} title={f.title} icon={f.icon} color={f.color}>
-                {f.description}
-              </NeoBrutalismCard>
+              <article key={i} aria-label={f.title}>
+                <NeoBrutalismCard title={f.title} icon={f.icon} color={f.color}>
+                  {f.description}
+                </NeoBrutalismCard>
+              </article>
             ))}
           </div>
         </div>
@@ -150,23 +156,25 @@ const LandingPage = () => {
       <NeoBrutalismMarquee items={skills} color="#FFEB3B" />
 
       {/* Role-Based Portals */}
-      <section className="py-24 px-6 bg-[#FF00FF]">
+      <section className="py-24 px-6 bg-[#FF00FF]" aria-label="Role-Based Portals for KIET">
         <div className="container mx-auto max-w-7xl">
           <h2 className="text-5xl md:text-7xl font-black uppercase mb-16 text-center text-white" style={{ textShadow: '4px 4px 0px #000', WebkitTextStroke: '2px black' }}>
             Role-Based Portals
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {roles.map((r, i) => (
-              <NeoBrutalismCard key={i} title={r.role} icon={r.icon} color={r.color}>
-                {r.description}
-              </NeoBrutalismCard>
+              <article key={i} aria-label={`${r.role} Portal`}>
+                <NeoBrutalismCard title={r.role} icon={r.icon} color={r.color}>
+                  {r.description}
+                </NeoBrutalismCard>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-24 px-6 bg-white border-y-8 border-black">
+      <section className="py-24 px-6 bg-white border-y-8 border-black" aria-label="How Soft Skill Analyser Works">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-5xl md:text-6xl font-black uppercase mb-16 text-center">
             How It Works
@@ -190,7 +198,7 @@ const LandingPage = () => {
       </section>
 
       {/* Dashboard Overview */}
-      <section className="py-24 px-6 bg-[#FFEB3B]">
+      <section className="py-24 px-6 bg-[#FFEB3B]" aria-label="Dashboard Statistics">
         <div className="container mx-auto max-w-7xl">
           <h2 className="text-5xl md:text-7xl font-black uppercase mb-16 text-center">
             Dashboard Overview
@@ -211,16 +219,17 @@ const LandingPage = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-24 px-6 bg-white" aria-label="Why Choose Soft Skill Analyser">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-5xl md:text-6xl font-black uppercase mb-8">
-            Why Soft Skill Analyzer?
+            Why Soft Skill Analyser?
           </h2>
           <div className="bg-black text-[#00FFFF] p-10 border-4 border-black mb-12" style={{ boxShadow: '12px 12px 0px #FFD700' }}>
             <p className="text-2xl font-bold leading-relaxed">
-              It helps colleges understand student development beyond marks. It gives teachers 
-              a structured way to evaluate students and gives students clear feedback on 
-              how to improve their professional and interpersonal skills.
+              KIET Group of Institutions (Deemed to be University), Ghaziabad uses the Soft Skill Analyser 
+              to understand student development beyond marks. It gives teachers a structured way to evaluate 
+              communication and interpersonal skills, and gives students clear feedback on 
+              how to improve their professional behaviour.
             </p>
           </div>
           <p className="text-3xl font-black uppercase mb-12">
@@ -232,19 +241,22 @@ const LandingPage = () => {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
-      <footer className="bg-black text-white py-12 px-6 border-t-8 border-[#FF00FF]">
+      <footer className="bg-black text-white py-12 px-6 border-t-8 border-[#FF00FF]" role="contentinfo">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-3xl font-black tracking-tighter">
-            SOFT SKILL <span className="text-[#00FFFF]">ANALYZER</span>
+            SOFT SKILL <span className="text-[#00FFFF]">ANALYSER</span>
           </div>
-          <div className="flex gap-8 font-bold uppercase text-sm">
+          <nav aria-label="Footer Navigation" className="flex gap-8 font-bold uppercase text-sm">
             <a href="#" className="hover:text-[#FFEB3B]">Privacy</a>
             <a href="#" className="hover:text-[#FFEB3B]">Terms</a>
             <a href="#" className="hover:text-[#FFEB3B]">Contact</a>
-          </div>
+          </nav>
           <div className="text-xs font-mono opacity-50">
-            © 2026 SOFT SKILL ANALYZER. BUILT BOLD.
+            <p>© 2026 SOFT SKILL ANALYSER – KIET GROUP OF INSTITUTIONS. BUILT BOLD.</p>
+            <p className="mt-1">KIET Deemed to be University, Ghaziabad, UP, India</p>
           </div>
         </div>
       </footer>
