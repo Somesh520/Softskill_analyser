@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Lock, ExternalLink, Eye, EyeOff, ShieldCheck } from 'lucide-react';
@@ -16,9 +16,12 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef();
+  const isSubmitting = useRef(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
     
     if (!turnstileToken) {
       setError('Please complete the security check.');
@@ -27,6 +30,7 @@ const Login = () => {
 
     setError(null);
     setLoading(true);
+    isSubmitting.current = true;
 
     try {
       // Ensure email is correctly formatted (case-insensitive login)
@@ -69,8 +73,11 @@ const Login = () => {
 
     } catch (err) {
       setError(err.message || 'Invalid credentials or server error.');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 
@@ -243,6 +250,7 @@ const Login = () => {
               className="flex justify-center py-2"
             >
               <Turnstile 
+                ref={turnstileRef}
                 siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
                 onSuccess={(token) => setTurnstileToken(token)}
                 onExpire={() => setTurnstileToken(null)}

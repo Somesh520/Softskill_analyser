@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Lock, KeyRound } from 'lucide-react';
@@ -16,9 +16,12 @@ const ForgotPassword = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState(null);
+  const turnstileRef = useRef();
+  const isSubmitting = useRef(false);
 
   const handleRequestOTP = async (e) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
     
     if (!turnstileToken) {
       setError('Please complete the security check.');
@@ -28,21 +31,27 @@ const ForgotPassword = () => {
     setError(null);
     setMessage(null);
     setLoading(true);
+    isSubmitting.current = true;
 
     try {
       const res = await forgotPassword(email, turnstileToken);
       setMessage(res.message);
       setStep(2);
       setTurnstileToken(null); // Reset token for the next step
+      turnstileRef.current?.reset();
     } catch (err) {
       setError(err.message || 'Failed to request OTP');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    if (isSubmitting.current) return;
     
     if (!turnstileToken) {
       setError('Please complete the security check.');
@@ -52,6 +61,7 @@ const ForgotPassword = () => {
     setError(null);
     setMessage(null);
     setLoading(true);
+    isSubmitting.current = true;
 
     try {
       const res = await resetPassword(email, otp, newPassword, turnstileToken);
@@ -61,8 +71,11 @@ const ForgotPassword = () => {
       }, 3000);
     } catch (err) {
       setError(err.message || 'Failed to reset password');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   };
 
@@ -136,8 +149,10 @@ const ForgotPassword = () => {
               {/* Turnstile for Step 1 */}
               <div className="flex justify-center py-2">
                 <Turnstile 
+                  ref={turnstileRef}
                   siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
                   onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
                 />
               </div>
 
@@ -192,8 +207,10 @@ const ForgotPassword = () => {
               {/* Turnstile for Step 2 */}
               <div className="flex justify-center py-2">
                 <Turnstile 
+                  ref={turnstileRef}
                   siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
                   onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
                 />
               </div>
 
