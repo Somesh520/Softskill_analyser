@@ -30,9 +30,7 @@ const TeacherDashboard = () => {
   if (!teacherData) return null;
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-[#F0F0F0] overflow-hidden">
-        <Sidebar role="teacher" userName={teacherData.name || ''} />
+        <div className="flex flex-col flex-1 h-full w-full">
         <main className="flex-1 overflow-y-auto p-6 lg:p-10">
           {/* Welcome Banner */}
           <motion.div 
@@ -81,7 +79,7 @@ const TeacherDashboard = () => {
           </div>
         </main>
       </div>
-    </SidebarProvider>
+    
   );
 };
 

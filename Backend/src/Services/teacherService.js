@@ -1,10 +1,21 @@
 import Class from '../Models/Classmodel.js';
 import User from '../Models/Usermodel.js';
+import Activity from '../Models/Activitymodel.js';
+import ActivitySubmission from '../Models/ActivitySubmissionmodel.js';
 import csv from 'csv-parser';
 import streamifier from 'streamifier';
 import bcrypt from 'bcryptjs';
 import cloudinary from '../Config/cloudinary.js';
 import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
+import { generateActivityCSV } from '../utils/csvGenerator.js';
+
+const normalizeHeader = (header) => header?.trim().toLowerCase();
+
+const getRowValue = (row, candidates) => {
+    const keys = Object.keys(row);
+    const matchedKey = keys.find((key) => candidates.some((candidate) => key.includes(candidate)));
+    return matchedKey ? row[matchedKey] : undefined;
+};
 
 export const createClassService = async (teacherId, classData) => {
     const { name, program, branch, semester, section, academicYear } = classData;
@@ -40,16 +51,16 @@ export const createClassService = async (teacherId, classData) => {
 
 export const getClassesService = async (teacherId) => {
     // Return all classes sorted by newest first
-    return await Class.find({ teacherId }).sort({ createdAt: -1 });
+    return await Class.find({ teacherId }).sort({ createdAt: -1 }).lean();
 };
 
 export const getClassDetailsService = async (teacherId, classId) => {
-    const classObj = await Class.findOne({ _id: classId, teacherId });
+    const classObj = await Class.findOne({ _id: classId, teacherId }).lean();
     if (!classObj) {
         throw new Error('Class not found or you do not have permission to view it.');
     }
 
-    const students = await User.find({ classId, role: 'student' }).select('-password');
+    const students = await User.find({ classId, role: 'student' }).select('name email rollNo semester classId').lean();
 
     return {
         classDetails: classObj,
@@ -221,11 +232,9 @@ export const deleteClassService = async (teacherId, classId) => {
     // Delete the class
     await Class.findByIdAndDelete(classId);
 
-    // Optionally: Unassign students from this class
-    await User.updateMany(
-        { classId: classId },
-        { $unset: { classId: 1, assignedByTeacher: 1 } }
-    );
+    // Completely delete the students who were part of this class
+    // (If you want to keep the users but unassign them, use updateMany with $unset instead)
+    await User.deleteMany({ classId: classId, role: 'student' });
 
     return true;
 }
@@ -244,4 +253,305 @@ export const deleteStudentFromClassService = async (teacherId, classId, studentI
     }
 
     return true;
+};
+
+// Activity Management Services
+export const createActivityService = async (teacherId, activityData) => {
+    const { title, description, classIds, dueDate, maxPoints, type, rubrics } = activityData;
+
+    // Ensure classIds is an array
+    const classIdArray = Array.isArray(classIds) ? classIds : [classIds];
+
+    // Verify all classes exist and belong to teacher
+    const classes = await Class.find({ _id: { $in: classIdArray }, teacherId });
+    if (classes.length !== classIdArray.length) {
+        throw new Error('One or more classes not found or unauthorized');
+    }
+
+    const activity = await Activity.create({
+        title,
+        description,
+        teacherId,
+        classIds: classIdArray,
+        dueDate,
+        maxPoints,
+        type,
+        rubrics
+    });
+
+    return activity;
+};
+
+export const getActivitiesService = async (teacherId, classId = null) => {
+    const query = { teacherId };
+    if (classId) query.classIds = classId;
+
+    return await Activity.find(query)
+        .populate('classIds', 'name section')
 };  
+
+export const getActivitySubmissionsService = async (teacherId, activityId) => {
+    const activity = await Activity.findOne({ _id: activityId, teacherId }).populate('classIds', 'name section').lean();
+    if (!activity) {
+        throw new Error('Activity not found or unauthorized');
+    }
+
+    const submissions = await ActivitySubmission.find({ activityId, submittedByTeacher: teacherId })
+        .select('studentName rollNo email criteriaMarks totalMarks feedback updatedAt studentId editHistory')
+        .sort({ updatedAt: -1 })
+        .lean();
+
+    return {
+        activity: {
+            _id: activity._id,
+            title: activity.title,
+            maxPoints: activity.maxPoints,
+            classNames: activity.classIds?.map(c => c.name).join(', ') || ''
+        },
+        rubrics: (activity.rubrics || []).map((rubric) => rubric.criteria),
+        submissions: submissions.map((submission) => ({
+            _id: submission._id,
+            studentName: submission.studentName,
+            rollNo: submission.rollNo,
+            email: submission.email,
+            criteriaMarks: submission.criteriaMarks || {},
+            totalMarks: submission.totalMarks,
+            feedback: submission.feedback,
+            updatedAt: submission.updatedAt,
+            studentId: submission.studentId,
+            editHistory: submission.editHistory || []
+        }))
+    };
+};
+
+export const deleteActivityService = async (teacherId, activityId) => {
+    const activity = await Activity.findOneAndDelete({ _id: activityId, teacherId }).lean();
+
+    if (!activity) {
+        throw new Error('Activity not found or unauthorized');
+    }
+
+    await ActivitySubmission.deleteMany({ activityId: activityId, submittedByTeacher: teacherId });
+
+    return { message: 'Activity deleted successfully' };
+};
+
+export const editActivityMarksService = async (teacherId, activityId, submissionId, updateData, teacherName) => {
+    const activity = await Activity.findOne({ _id: activityId, teacherId }).lean();
+    if (!activity) throw new Error('Activity not found or unauthorized');
+
+    const submission = await ActivitySubmission.findOne({ _id: submissionId, activityId, submittedByTeacher: teacherId });
+    if (!submission) throw new Error('Submission not found or unauthorized');
+
+    const { criteriaMarks, feedback } = updateData;
+
+    // Calculate new total marks
+    let newTotalMarks = 0;
+    const newCriteriaMarks = {};
+    if (criteriaMarks) {
+        for (const [criterion, mark] of Object.entries(criteriaMarks)) {
+            const numMark = Number(mark);
+            const safeMark = Number.isFinite(numMark) ? numMark : 0;
+            newCriteriaMarks[criterion] = safeMark;
+            newTotalMarks += safeMark;
+        }
+    }
+
+    // Build change history
+    const changes = {};
+    if (criteriaMarks) {
+        for (const [criterion, newValue] of Object.entries(newCriteriaMarks)) {
+            const oldValue = submission.criteriaMarks?.get?.(criterion) ?? submission.criteriaMarks?.[criterion] ?? 0;
+            if (oldValue !== newValue) {
+                changes[criterion] = { oldValue, newValue };
+            }
+        }
+        if (submission.totalMarks !== newTotalMarks) {
+            changes.totalMarks = { oldValue: submission.totalMarks, newValue: newTotalMarks };
+        }
+    }
+    if (feedback !== undefined && submission.feedback !== feedback) {
+        changes.feedback = { oldValue: submission.feedback, newValue: feedback };
+    }
+
+    // Only add to history if there are actual changes
+    if (Object.keys(changes).length > 0) {
+        if (!submission.editHistory) submission.editHistory = [];
+        submission.editHistory.push({
+            editedByTeacherId: teacherId,
+            editedByTeacherName: teacherName,
+            editedAt: new Date(),
+            changes
+        });
+    }
+
+    // Update submission with new marks and feedback
+    if (criteriaMarks) submission.criteriaMarks = newCriteriaMarks;
+    if (criteriaMarks) submission.totalMarks = newTotalMarks;
+    if (feedback !== undefined) submission.feedback = feedback;
+
+    await submission.save();
+
+    return {
+        message: 'Marks updated successfully',
+        submission: {
+            _id: submission._id,
+            studentName: submission.studentName,
+            criteriaMarks: submission.criteriaMarks,
+            totalMarks: submission.totalMarks,
+            feedback: submission.feedback,
+            editHistory: submission.editHistory
+        }
+    };
+};
+
+export const getActivityAnalyticsService = async (teacherId, activityId) => {
+    const activity = await Activity.findOne({ _id: activityId, teacherId }).lean();
+    if (!activity) {
+        throw new Error('Activity not found or unauthorized');
+    }
+
+    const totalSubmissions = await ActivitySubmission.countDocuments({ activityId: activity._id, submittedByTeacher: teacherId });
+    const summary = await ActivitySubmission.aggregate([
+        { $match: { activityId: activity._id, submittedByTeacher: teacherId } },
+        {
+            $group: {
+                _id: null,
+                avgMarks: { $avg: '$totalMarks' },
+                maxMarks: { $max: '$totalMarks' },
+                minMarks: { $min: '$totalMarks' }
+            }
+        }
+    ]);
+
+    const distribution = await ActivitySubmission.aggregate([
+        { $match: { activityId: activity._id, submittedByTeacher: teacherId } },
+        {
+            $bucket: {
+                groupBy: '$totalMarks',
+                boundaries: [0, 20, 40, 60, 80, 101],
+                default: 'other',
+                output: { count: { $sum: 1 } }
+            }
+        }
+    ]);
+
+    return {
+        activityId: activity._id,
+        title: activity.title,
+        maxPoints: activity.maxPoints,
+        totalSubmissions,
+        summary: summary[0] || { avgMarks: 0, maxMarks: 0, minMarks: 0 },
+        distribution
+    };
+};
+
+export const downloadActivityTemplateService = async (teacherId, activityId) => {
+    const activity = await Activity.findOne({ _id: activityId, teacherId }).populate('classIds', 'name section').lean();
+    if (!activity) throw new Error('Activity not found or unauthorized');
+
+    // For multi-class, use first class for student extraction
+    const classId = activity.classIds?.[0]?._id || activity.classIds?.[0];
+    const students = await User.find({ classId, role: 'student' })
+        .select('name email rollNo')
+        .lean();
+    
+    const csvContent = generateActivityCSV(activity, students);
+    return {
+        filename: `template_${activity.title.replace(/\s+/g, '_')}.csv`,
+        content: csvContent
+    };
+};
+
+export const uploadActivityMarksService = async (teacherId, activityId, fileBuffer) => {
+    const activity = await Activity.findOne({ _id: activityId, teacherId }).populate('classIds', 'name section').lean();
+    if (!activity) throw new Error('Activity not found or unauthorized');
+
+    // For multi-class, use first class for student extraction
+    const classId = activity.classIds?.[0]?._id || activity.classIds?.[0];
+    const students = await User.find({ classId, role: 'student' })
+        .select('name email rollNo')
+        .lean();
+    const studentsByRollNo = new Map(students.filter((student) => student.rollNo).map((student) => [String(student.rollNo).trim().toLowerCase(), student]));
+    const studentsByEmail = new Map(students.filter((student) => student.email).map((student) => [String(student.email).trim().toLowerCase(), student]));
+
+    const rubricCriteria = (activity.rubrics || []).map((rubric) => rubric.criteria).filter(Boolean);
+    const uploadedRows = [];
+
+    return new Promise((resolve, reject) => {
+        streamifier.createReadStream(fileBuffer)
+            .pipe(csv({ mapHeaders: ({ header }) => normalizeHeader(header) }))
+            .on('data', (data) => uploadedRows.push(data))
+            .on('end', async () => {
+                try {
+                    const bulkOps = [];
+                    let skipped = 0;
+
+                    for (const row of uploadedRows) {
+                        const rollNo = String(getRowValue(row, ['roll no', 'rollno', 'roll']) || '').trim().toLowerCase();
+                        const email = String(getRowValue(row, ['email', 'mail']) || '').trim().toLowerCase();
+                        const studentName = String(getRowValue(row, ['name', 'student']) || '').trim();
+                        const feedback = String(getRowValue(row, ['overall feedback', 'feedback']) || '').trim();
+
+                        const student = studentsByRollNo.get(rollNo) || studentsByEmail.get(email);
+                        if (!student) {
+                            skipped += 1;
+                            continue;
+                        }
+
+                        const criteriaMarks = {};
+                        let totalMarks = 0;
+
+                        for (const criterion of rubricCriteria) {
+                            const criterionKey = normalizeHeader(criterion);
+                            const rawMark = row[criterionKey];
+                            const numericMark = Number(rawMark);
+                            const safeMark = Number.isFinite(numericMark) ? numericMark : 0;
+                            criteriaMarks[criterion] = safeMark;
+                            totalMarks += safeMark;
+                        }
+
+                        bulkOps.push({
+                            updateOne: {
+                                filter: { activityId: activity._id, studentId: student._id },
+                                update: {
+                                    $set: {
+                                        activityId: activity._id,
+                                        studentId: student._id,
+                                        studentName: studentName || student.name,
+                                        rollNo: student.rollNo || rollNo,
+                                        email: student.email,
+                                        criteriaMarks,
+                                        totalMarks,
+                                        feedback,
+                                        submittedByTeacher: teacherId,
+                                        sourceFileName: ''
+                                    }
+                                },
+                                upsert: true
+                            }
+                        });
+                    }
+
+                    const bulkWriteChunkSize = 500;
+                    let written = 0;
+                    for (let i = 0; i < bulkOps.length; i += bulkWriteChunkSize) {
+                        const chunk = bulkOps.slice(i, i + bulkWriteChunkSize);
+                        if (chunk.length > 0) {
+                            await ActivitySubmission.bulkWrite(chunk, { ordered: false });
+                            written += chunk.length;
+                        }
+                    }
+
+                    resolve({
+                        message: `Processed ${written} students`,
+                        count: written,
+                        skipped
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            })
+            .on('error', reject);
+    });
+};

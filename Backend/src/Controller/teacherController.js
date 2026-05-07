@@ -1,4 +1,142 @@
-import { createClassService, getClassesService, getClassDetailsService, assignTeacherService, uploadStudentCsvService, deleteClassService, deleteStudentFromClassService } from '../Services/teacherService.js';
+import { 
+    createClassService, 
+    getClassesService, 
+    getClassDetailsService, 
+    assignTeacherService, 
+    uploadStudentCsvService, 
+    deleteClassService, 
+    deleteStudentFromClassService,
+    createActivityService,
+    getActivitiesService,
+    deleteActivityService,
+    downloadActivityTemplateService,
+    uploadActivityMarksService,
+    getActivitySubmissionsService,
+    getActivityAnalyticsService,
+    editActivityMarksService
+} from '../Services/teacherService.js';
+
+// ... existing code ...
+
+// @desc    Download CSV template for activity marks
+// @route   GET /api/teacher/activities/:id/template
+// @access  Private (Teacher)
+export const downloadActivityTemplate = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const activityId = req.params.id;
+        const { filename, content } = await downloadActivityTemplateService(teacherId, activityId);
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+        res.status(200).send(content);
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+};
+
+// @desc    Upload filled CSV with marks
+// @route   POST /api/teacher/activities/:id/upload-marks
+// @access  Private (Teacher)
+export const uploadActivityMarks = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No CSV file uploaded' });
+        
+        const teacherId = req.user.id;
+        const activityId = req.params.id;
+        const result = await uploadActivityMarksService(teacherId, activityId, req.file.buffer);
+        
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Get uploaded marks for an activity
+// @route   GET /api/teacher/activities/:id/submissions
+// @access  Private (Teacher)
+export const getActivitySubmissions = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const activityId = req.params.id;
+        const result = await getActivitySubmissionsService(teacherId, activityId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Edit marks for a submission
+// @route   PATCH /api/teacher/activities/:activityId/submissions/:submissionId
+// @access  Private (Teacher)
+export const editActivityMarks = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const teacherName = req.user.name;
+        const { activityId, submissionId } = req.params;
+        const { criteriaMarks, feedback } = req.body;
+
+        const result = await editActivityMarksService(teacherId, activityId, submissionId, { criteriaMarks, feedback }, teacherName);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Get analytics for an activity
+// @route   GET /api/teacher/activities/:id/analytics
+// @access  Private (Teacher)
+export const getActivityAnalytics = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const activityId = req.params.id;
+        const result = await getActivityAnalyticsService(teacherId, activityId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Create a new activity for a class
+// @route   POST /api/teacher/activities
+// @access  Private (Teacher)
+export const createActivity = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const activity = await createActivityService(teacherId, req.body);
+        res.status(201).json(activity);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Get all activities (optionally filtered by class)
+// @route   GET /api/teacher/activities
+// @access  Private (Teacher)
+export const getActivities = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const { classId } = req.query;
+        const activities = await getActivitiesService(teacherId, classId);
+        res.status(200).json(activities);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete an activity
+// @route   DELETE /api/teacher/activities/:id
+// @access  Private (Teacher)
+export const deleteActivity = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const activityId = req.params.id;
+        const result = await deleteActivityService(teacherId, activityId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
 
 // @desc    Create a new class
 // @route   POST /api/teacher/create-class

@@ -1,5 +1,5 @@
 import express from 'express';
-import { addTeacher, getAllTeachers, removeTeacher, getAllStudents } from '../Controller/adminController.js';
+import { addTeacher, getAllTeachers, removeTeacher, getAllStudents, getCollegeAnalytics, getClassPerformance, getDepartmentAnalytics, getPerformanceDistribution, getActivityAnalytics } from '../Controller/adminController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -19,5 +19,12 @@ router.delete('/teachers/:id', removeTeacher);
 
 // Route:  GET /api/admin/students
 router.get('/students', getAllStudents);
+
+// Analytics Routes
+router.get('/analytics/college', getCollegeAnalytics);
+router.get('/analytics/class-performance', getClassPerformance);
+router.get('/analytics/departments', getDepartmentAnalytics);
+router.get('/analytics/performance-distribution', getPerformanceDistribution);
+router.get('/analytics/activities', getActivityAnalytics);
 
 export default router;

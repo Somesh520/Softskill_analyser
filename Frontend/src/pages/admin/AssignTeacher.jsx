@@ -47,9 +47,7 @@ const AssignTeacher = () => {
   if (!adminData) return null;
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-[#F0F0F0] overflow-hidden">
-        <Sidebar role="admin" userName={adminData.name || ''} />
+        <div className="flex flex-col flex-1 h-full w-full">
         <main className="flex-1 overflow-y-auto p-6 lg:p-10">
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
@@ -133,7 +131,7 @@ const AssignTeacher = () => {
           </motion.div>
         </main>
       </div>
-    </SidebarProvider>
+    
   );
 };
 

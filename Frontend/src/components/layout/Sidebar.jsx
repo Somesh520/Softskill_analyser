@@ -55,7 +55,7 @@ const menuConfigs = {
     { id: 'my-classes', label: 'My Classes', icon: FolderOpen, href: '/teacher/classes' },
     { id: 'assigned-students', label: 'My Students', icon: Users, href: '/teacher/assigned-students' },
     { id: 'create-activity', label: 'Create Activity', icon: ClipboardCheck, href: '/teacher/create-activity' },
-    { id: 'upload-csv', label: 'Upload CSV', icon: Upload, href: '/teacher/upload-csv' },
+    { id: 'upload-marks', label: 'Upload Marks', icon: Upload, href: '/teacher/upload-marks' },
     { id: 'reports', label: 'Reports', icon: BarChart, href: '/teacher/reports' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/teacher/settings' },
   ],

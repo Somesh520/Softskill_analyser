@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ArrowLeft, BookOpen, GraduationCap, Upload, ShieldCheck, FileText, Trash2, X } from 'lucide-react';
+import { Users, ArrowLeft, BookOpen, GraduationCap, Upload, ShieldCheck, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Sidebar, { SidebarProvider } from '../../components/layout/Sidebar';
 import { getClassDetails, uploadStudentCsv, deleteStudent } from '../../api/teacherApi';
 
@@ -13,7 +13,12 @@ const ClassDetails = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // New Animation States
   const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('idle'); // idle, processing, success, error
+  const [uploadMessage, setUploadMessage] = useState('');
+  
   const [studentToDelete, setStudentToDelete] = useState(null);
   const fileInputRef = React.useRef(null);
 
@@ -60,15 +65,30 @@ const ClassDetails = () => {
 
     try {
       setUploading(true);
+      setUploadStatus('processing');
+      setUploadMessage(`Analysing ${file.name}...`);
       setError('');
+      
       const result = await uploadStudentCsv(id, file);
-      alert(result.message || 'Students successfully uploaded and assigned!');
-      fetchDetails(); // Refresh the list
+      
+      setUploadStatus('success');
+      setUploadMessage(result.message || 'Students successfully uploaded and assigned!');
+      
+      // Keep success state for a moment then refresh
+      setTimeout(() => {
+        setUploading(false);
+        setUploadStatus('idle');
+        fetchDetails(); 
+      }, 2500);
+
     } catch (err) {
-      setError(err.message || 'Failed to upload students');
+      setUploadStatus('error');
+      setUploadMessage(err.message || 'Failed to upload students');
+      setTimeout(() => {
+        setUploading(false);
+        setUploadStatus('idle');
+      }, 3000);
     } finally {
-      setUploading(false);
-      // Reset the input so the same file can be uploaded again if needed
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -92,9 +112,7 @@ const ClassDetails = () => {
   if (!teacherData) return null;
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen bg-[#F0F0F0] overflow-hidden">
-        <Sidebar role="teacher" userName={teacherData.name || ''} />
+        <div className="flex flex-col flex-1 h-full w-full">
         <main className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
           
           <button 
@@ -161,7 +179,7 @@ const ClassDetails = () => {
                   onClick={() => !uploading && fileInputRef.current?.click()}
                   disabled={uploading}
                 >
-                  <Upload size={20} strokeWidth={3} /> {uploading ? 'Uploading...' : 'Upload Student CSV'}
+                  <Upload size={20} strokeWidth={3} /> {uploading ? 'Processing CSV...' : 'Upload Student CSV'}
                 </button>
                 <button 
                   className="bg-[#00FFFF] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 hover:-translate-y-1 transition-transform text-black"
@@ -171,6 +189,78 @@ const ClassDetails = () => {
                   <FileText size={20} strokeWidth={3} /> Evaluate Class
                 </button>
               </div>
+
+              {/* Upload Animation Overlay */}
+              <AnimatePresence>
+                {uploading && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-md p-6"
+                  >
+                    <motion.div 
+                      initial={{ scale: 0.8, y: 20 }}
+                      animate={{ scale: 1, y: 0 }}
+                      className="bg-white border-8 border-black p-10 max-w-md w-full text-center relative"
+                      style={{ boxShadow: '20px 20px 0px #00FF00' }}
+                    >
+                      <div className="flex justify-center mb-6">
+                        {uploadStatus === 'processing' && (
+                          <div className="relative">
+                            <motion.div 
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                              className="w-24 h-24 border-8 border-black border-t-[#00FF00] rounded-full"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Upload size={32} className="animate-bounce" />
+                            </div>
+                          </div>
+                        )}
+                        {uploadStatus === 'success' && (
+                          <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                            className="bg-[#00FF00] p-6 border-4 border-black rounded-full"
+                          >
+                            <CheckCircle2 size={64} color="black" />
+                          </motion.div>
+                        )}
+                        {uploadStatus === 'error' && (
+                          <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1, shake: [0, 10, -10, 10, 0] }}
+                            className="bg-[#FF0000] p-6 border-4 border-black rounded-full"
+                          >
+                            <AlertCircle size={64} color="white" />
+                          </motion.div>
+                        )}
+                      </div>
+
+                      <h2 className="text-3xl font-black uppercase mb-4 tracking-tight">
+                        {uploadStatus === 'processing' ? 'Syncing Students' : 
+                         uploadStatus === 'success' ? 'Records Secured' : 'Upload Failed'}
+                      </h2>
+                      
+                      <p className="font-bold text-lg uppercase bg-black text-white px-4 py-2 inline-block">
+                        {uploadMessage}
+                      </p>
+
+                      {uploadStatus === 'processing' && (
+                        <div className="mt-8 h-4 w-full bg-gray-200 border-2 border-black overflow-hidden">
+                          <motion.div 
+                            initial={{ x: '-100%' }}
+                            animate={{ x: '100%' }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="h-full w-1/3 bg-[#00FF00]"
+                          />
+                        </div>
+                      )}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Student List */}
               <div className="bg-white border-8 border-black p-6" style={{ boxShadow: '8px 8px 0px #000' }}>
@@ -288,7 +378,7 @@ const ClassDetails = () => {
 
         </main>
       </div>
-    </SidebarProvider>
+    
   );
 };
 

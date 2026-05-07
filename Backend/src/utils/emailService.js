@@ -5,8 +5,8 @@ dotenv.config();
 
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-// Helper function to send email via Brevo HTTP API
-const sendBrevoEmail = async (toEmail, subject, htmlContent) => {
+// Helper function to send email via Brevo HTTP API with retry logic
+const sendBrevoEmail = async (toEmail, subject, htmlContent, retries = 2) => {
     const apiKey = process.env.BREVO_API_KEY;
     const senderEmail = process.env.EMAIL_USER || 'someshtiwari.in@gmail.com';
 
@@ -33,13 +33,25 @@ const sendBrevoEmail = async (toEmail, subject, htmlContent) => {
 
         if (!response.ok) {
             const errorData = await response.json();
+            // If it's a rate limit error (429), retry after a delay
+            if (response.status === 429 && retries > 0) {
+                console.warn(`⚠️ Rate limited for ${toEmail}. Retrying in 5 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                return await sendBrevoEmail(toEmail, subject, htmlContent, retries - 1);
+            }
             throw new Error(JSON.stringify(errorData));
         }
 
         console.log(`✅ Email sent successfully to ${toEmail}`);
         return true;
     } catch (error) {
-        console.error(`❌ Failed to send email to ${toEmail}:`, error.message);
+        if (retries > 0) {
+            console.warn(`🔄 Retrying email to ${toEmail} (${retries} left) due to error: ${error.message}`);
+            // Exponential backoff: 3s, 6s
+            await new Promise(resolve => setTimeout(resolve, (3 - retries) * 3000));
+            return await sendBrevoEmail(toEmail, subject, htmlContent, retries - 1);
+        }
+        console.error(`❌ Failed to send email to ${toEmail} after retries:`, error.message);
         return false;
     }
 };
@@ -58,20 +70,20 @@ export const sendWelcomeEmailsInBackground = (newStudents) => {
 
     // Self-executing async function for background processing
     (async () => {
-        // Send in batches of 5
-        const BATCH_SIZE = 5;
+        // Send in smaller batches to prevent socket exhaustion
+        const BATCH_SIZE = 3;
 
         for (let i = 0; i < newStudents.length; i += BATCH_SIZE) {
             const batch = newStudents.slice(i, i + BATCH_SIZE);
 
-            // Wait for this chunk of 5 to send before moving to the next
+            // Wait for this chunk to send
             await Promise.all(batch.map(student =>
                 sendWelcomeEmail(student.email, student.name, student.plainPassword)
             ));
 
-            // Wait 2 seconds between batches to be safe
+            // Wait 3 seconds between batches for Brevo safety
             if (i + BATCH_SIZE < newStudents.length) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 3000));
             }
         }
 

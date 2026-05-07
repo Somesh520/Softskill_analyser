@@ -60,3 +60,86 @@ export const deleteStudent = async (classId, studentId) => {
     throw new Error(error.response?.data?.message || 'Failed to delete student');
   }
 };
+
+// Activity Management
+export const createActivity = async (activityData) => {
+  try {
+    const response = await axiosInstance.post('/teacher/activities', activityData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to create activity');
+  }
+};
+
+export const getActivities = async (classId = null) => {
+  try {
+    const url = classId ? `/teacher/activities?classId=${classId}` : '/teacher/activities';
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch activities');
+  }
+};
+
+export const deleteActivity = async (activityId) => {
+  try {
+    const response = await axiosInstance.delete(`/teacher/activities/${activityId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to delete activity');
+  }
+};
+
+export const downloadActivityTemplate = async (activityId) => {
+  try {
+    const response = await axiosInstance.get(`/teacher/activities/${activityId}/template`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to download template');
+  }
+};
+
+export const uploadActivityMarks = async (activityId, file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosInstance.post(`/teacher/activities/${activityId}/upload-marks`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to upload marks');
+  }
+};
+
+export const getActivitySubmissions = async (activityId) => {
+  try {
+    const response = await axiosInstance.get(`/teacher/activities/${activityId}/submissions`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch activity submissions');
+  }
+};
+
+export const getActivityAnalytics = async (activityId) => {
+  try {
+    const response = await axiosInstance.get(`/teacher/activities/${activityId}/analytics`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch activity analytics');
+  }
+};
+
+export const editActivityMarks = async (activityId, submissionId, updateData) => {
+  try {
+    const response = await axiosInstance.patch(
+      `/teacher/activities/${activityId}/submissions/${submissionId}`,
+      updateData
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to edit marks');
+  }
+};
