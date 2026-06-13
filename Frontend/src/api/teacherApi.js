@@ -143,3 +143,10 @@ export const editActivityMarks = async (activityId, submissionId, updateData) =>
     throw new Error(error.response?.data?.message || 'Failed to edit marks');
   }
 };
+export const activityPerformanceData =async (activityId) => {
+  try {
+    const response = await axiosInstance.get(`/teacher/activities/${activityId}/analytics`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch activity performance data');  }
+  }

@@ -7,7 +7,7 @@ const router = express.Router();
 // Define a rate limiter for auth routes
 
 
-// Route to log in (works for Admin, Teacher, and Student)
+
 router.post('/login', loginUser);
 
 // Password Reset Routes

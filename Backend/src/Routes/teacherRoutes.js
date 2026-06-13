@@ -21,13 +21,13 @@ import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Multer setup for memory storage (max 2MB file size)
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 } // 2MB
 });
 
-// All routes here are protected and require the 'teacher' role
+
 router.use(verifyToken);
 router.use(requireRole('teacher'));
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+  import Skeleton from "@mui/material/Skeleton";
+import Stack from "@mui/material/Stack";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -27,7 +29,7 @@ import {
   Loader,
 } from 'lucide-react';
 import Sidebar, { SidebarProvider } from '../../components/layout/Sidebar';
-import { getActivities, getActivitySubmissions } from '../../api/teacherApi';
+import { getActivities, getActivitySubmissions ,activityPerformanceData} from '../../api/teacherApi';
 
 const TeacherReports = () => {
   const navigate = useNavigate();
@@ -149,14 +151,118 @@ const TeacherReports = () => {
   if (!teacherData) return null;
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-8">
-        <div className="flex flex-col items-center gap-4">
-          <Loader size={64} className="animate-spin text-black" strokeWidth={2} />
-          <p className="text-2xl font-black uppercase">Loading Reports...</p>
+  return <div className="flex-1 p-6 lg:p-8 space-y-8">
+
+      {/* Banner */}
+      <div className="border-[8px] border-black p-6 bg-white shadow-[12px_12px_0px_#999]">
+        <div className="flex items-center gap-6">
+
+          <Skeleton
+            variant="rectangular"
+            width={100}
+            height={100}
+            sx={{
+              bgcolor: "#d1d5db",
+              border: "4px solid black",
+            }}
+          />
+
+          <div className="flex-1 space-y-4">
+            <Skeleton
+              variant="text"
+              width="50%"
+              height={70}
+              sx={{ bgcolor: "#d1d5db" }}
+            />
+
+            <Skeleton
+              variant="rectangular"
+              width="60%"
+              height={40}
+              sx={{
+                bgcolor: "#d1d5db",
+                border: "3px solid black",
+              }}
+            />
+          </div>
         </div>
       </div>
-    );
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+        {[1, 2, 3, 4].map((item) => (
+          <div
+            key={item}
+            className="border-[8px] border-black p-6 bg-white shadow-[10px_10px_0px_black]"
+          >
+            <div className="flex items-start justify-between mb-6">
+              <Skeleton
+                variant="rectangular"
+                width={70}
+                height={70}
+                sx={{
+                  bgcolor: "#d1d5db",
+                  border: "4px solid black",
+                }}
+              />
+
+              <Skeleton
+                variant="rectangular"
+                width={50}
+                height={35}
+                sx={{
+                  bgcolor: "#d1d5db",
+                  border: "3px solid black",
+                }}
+              />
+            </div>
+
+            <Stack spacing={2}>
+              <Skeleton
+                variant="text"
+                width="80%"
+                height={35}
+                sx={{ bgcolor: "#d1d5db" }}
+              />
+
+              <Skeleton
+                variant="text"
+                width="40%"
+                height={60}
+                sx={{ bgcolor: "#d1d5db" }}
+              />
+            </Stack>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {[1, 2].map((item) => (
+          <div
+            key={item}
+            className="border-[8px] border-black p-8 bg-white shadow-[10px_10px_0px_black]"
+          >
+            <Skeleton
+              variant="text"
+              width="50%"
+              height={50}
+              sx={{ bgcolor: "#d1d5db", mb: 4 }}
+            />
+
+            <Skeleton
+              variant="rectangular"
+              width="100%"
+              height={320}
+              sx={{
+                bgcolor: "#d1d5db",
+                border: "3px dashed black",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   }
 
   if (error) {
@@ -410,24 +516,6 @@ const TeacherReports = () => {
                 <div className="w-28 min-w-28 p-4 border-r-4 border-white text-center">HIGHEST</div>
                 <div className="w-28 min-w-28 p-4 border-r-4 border-white text-center">LOWEST</div>
                 <div className="w-32 min-w-32 p-4 text-center">SUBMITTED</div>
-              </div>
-
-              <div className="divide-y-2 divide-black">
-                {activityPerformanceData.map((activity, idx) => (
-                  <div key={idx} className="flex hover:bg-[#FFFACD] transition-all bg-white">
-                    <div className="flex-1 min-w-40 p-4 border-r-2 border-gray-300 font-black text-base">{activity.name}</div>
-                    <div className="w-24 min-w-24 p-4 border-r-2 border-gray-300 text-center">
-                      <span className="bg-[#FF00FF] text-white px-2 py-1 font-black text-sm">{activity.avg}%</span>
-                    </div>
-                    <div className="w-28 min-w-28 p-4 border-r-2 border-gray-300 text-center font-bold">
-                      <span className="bg-[#00FF00] text-black px-2 py-1 font-black text-sm">{activity.avg + 15}%</span>
-                    </div>
-                    <div className="w-28 min-w-28 p-4 border-r-2 border-gray-300 text-center font-bold">
-                      <span className="bg-[#FF6B6B] text-white px-2 py-1 font-black text-sm">{activity.avg - 20}%</span>
-                    </div>
-                    <div className="w-32 min-w-32 p-4 text-center font-bold">{activity.submitted}/{activity.students}</div>
-                  </div>
-                ))}
               </div>
             </div>
           </motion.div>
