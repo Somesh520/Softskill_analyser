@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, ArrowLeft, BookOpen, GraduationCap, Upload, ShieldCheck, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Sidebar, { SidebarProvider } from '../../components/layout/Sidebar';
-import { getClassDetails, uploadStudentCsv, deleteStudent } from '../../api/teacherApi';
+import { getClassDetails, uploadStudentCsv, deleteStudent, addStudentManually } from '../../api/teacherApi';
 
 const ClassDetails = () => {
   const { id } = useParams();
@@ -21,6 +21,12 @@ const ClassDetails = () => {
   
   const [studentToDelete, setStudentToDelete] = useState(null);
   const fileInputRef = React.useRef(null);
+
+  // Manual Add Student States
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newStudent, setNewStudent] = useState({ name: '', email: '', rollNo: '' });
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -109,6 +115,22 @@ const ClassDetails = () => {
     }
   };
 
+  const handleAddStudentSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setAddLoading(true);
+      setAddError('');
+      await addStudentManually(id, newStudent);
+      setShowAddModal(false);
+      setNewStudent({ name: '', email: '', rollNo: '' });
+      fetchDetails(); // Refresh list
+    } catch (err) {
+      setAddError(err.message || 'Failed to add student');
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   if (!teacherData) return null;
 
   return (
@@ -187,6 +209,16 @@ const ClassDetails = () => {
                   onClick={() => alert("Evaluation functionality coming next!")}
                 >
                   <FileText size={20} strokeWidth={3} /> Evaluate Class
+                </button>
+                <button 
+                  className="bg-[#FFEB3B] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 hover:-translate-y-1 transition-transform text-black cursor-pointer"
+                  style={{ boxShadow: '4px 4px 0px #000' }}
+                  onClick={() => {
+                    setAddError('');
+                    setShowAddModal(true);
+                  }}
+                >
+                  <Users size={20} strokeWidth={3} /> Add Student Manually
                 </button>
               </div>
 
@@ -371,6 +403,121 @@ const ClassDetails = () => {
                       </button>
                     </div>
                   </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Add Student Manually Modal */}
+          <AnimatePresence>
+            {showAddModal && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm"
+              >
+                <motion.div 
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 50, opacity: 0 }}
+                  className="bg-white border-8 border-black w-full max-w-md"
+                  style={{ boxShadow: '16px 16px 0px #000' }}
+                >
+                  <div className="flex justify-between items-center p-6 border-b-4 border-black bg-[#FFEB3B]">
+                    <h2 className="text-2xl font-black uppercase text-black flex items-center gap-3">
+                      <Users size={28} /> Add Student
+                    </h2>
+                    <button 
+                      onClick={() => setShowAddModal(false)}
+                      className="bg-white border-4 border-black p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
+                      style={{ boxShadow: '4px 4px 0px #000' }}
+                    >
+                      <X size={24} strokeWidth={3} />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleAddStudentSubmit} className="p-6 space-y-6">
+                    {addError && (
+                      <div className="bg-[#FF0000] text-white p-4 border-4 border-black font-black uppercase text-sm flex items-center gap-2">
+                        <AlertCircle size={20} /> {addError}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label htmlFor="student-name" className="text-sm font-black uppercase text-black block">
+                        Full Name
+                      </label>
+                      <input
+                        id="student-name"
+                        type="text"
+                        required
+                        value={newStudent.name}
+                        onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        placeholder="John Doe"
+                        style={{ borderRadius: 0 }}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="student-email" className="text-sm font-black uppercase text-black block">
+                        Email Address
+                      </label>
+                      <input
+                        id="student-email"
+                        type="email"
+                        required
+                        value={newStudent.email}
+                        onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        placeholder="student@kiet.edu"
+                        style={{ borderRadius: 0 }}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="student-roll" className="text-sm font-black uppercase text-black block">
+                        Roll Number
+                      </label>
+                      <input
+                        id="student-roll"
+                        type="text"
+                        required
+                        value={newStudent.rollNo}
+                        onChange={(e) => setNewStudent({ ...newStudent, rollNo: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        placeholder="CSE2021001"
+                        style={{ borderRadius: 0 }}
+                      />
+                    </div>
+
+                    <div className="flex gap-4 pt-2">
+                      <button 
+                        type="button"
+                        onClick={() => setShowAddModal(false)}
+                        className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
+                        style={{ boxShadow: '4px 4px 0px #000' }}
+                        disabled={addLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit"
+                        className="flex-1 bg-[#00FF00] text-black border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style={{ boxShadow: '4px 4px 0px #000' }}
+                        disabled={addLoading}
+                      >
+                        {addLoading ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} /> Adding...
+                          </>
+                        ) : (
+                          'Add Student'
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </motion.div>
               </motion.div>
             )}

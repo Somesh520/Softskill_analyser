@@ -13,7 +13,9 @@ import {
     uploadActivityMarksService,
     getActivitySubmissionsService,
     getActivityAnalyticsService,
-    editActivityMarksService
+    editActivityMarksService,
+    getTeacherReportsSummaryService,
+    addStudentManuallyService
 } from '../Services/teacherService.js';
 
 // ... existing code ...
@@ -245,6 +247,34 @@ export const deleteStudentFromClass = async (req, res) => {
         const { classId, studentId } = req.params;
         await deleteStudentFromClassService(teacherId, classId, studentId);
         res.status(200).json({ message: 'Student deleted successfully' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Get reports summary for teacher dashboard
+// @route   GET /api/teacher/reports/summary
+// @access  Private (Teacher)
+export const getTeacherReportsSummary = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const { classId } = req.query;
+        const result = await getTeacherReportsSummaryService(teacherId, classId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Add a student manually to a class
+// @route   POST /api/teacher/classes/:classId/students
+// @access  Private (Teacher)
+export const addStudentManually = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const { classId } = req.params;
+        const result = await addStudentManuallyService(teacherId, classId, req.body);
+        res.status(201).json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

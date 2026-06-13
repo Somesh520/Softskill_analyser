@@ -149,4 +149,23 @@ export const activityPerformanceData =async (activityId) => {
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to fetch activity performance data');  }
+  };
+
+export const getTeacherReportsSummary = async (classId = null) => {
+  try {
+    const url = classId && classId !== 'all' ? `/teacher/reports/summary?classId=${classId}` : '/teacher/reports/summary';
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch teacher reports summary');
   }
+};
+
+export const addStudentManually = async (classId, studentData) => {
+  try {
+    const response = await axiosInstance.post(`/teacher/classes/${classId}/students`, studentData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to add student');
+  }
+};

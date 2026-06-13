@@ -15,7 +15,9 @@ import {
   uploadActivityMarks,
   getActivitySubmissions,
   getActivityAnalytics,
-  editActivityMarks 
+  editActivityMarks,
+  getTeacherReportsSummary,
+  addStudentManually
 } from '../Controller/teacherController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
@@ -37,6 +39,7 @@ router.get('/activities/:id/analytics', getActivityAnalytics);
 router.post('/activities/:id/upload-marks', upload.single('file'), uploadActivityMarks);
 router.patch('/activities/:activityId/submissions/:submissionId', editActivityMarks);
 router.post('/assign-student', assignTeacher);
+router.get('/reports/summary', getTeacherReportsSummary);
 // Class Management
 router.post('/create-class', createClass);
 router.get('/classes', getClasses);
@@ -44,6 +47,7 @@ router.get('/classes/:id', getClassDetails);
 router.delete('/classes/:id', deleteClass);
 router.delete('/classes/:classId/students/:studentId', deleteStudentFromClass);
 router.post('/classes/:id/upload-students', upload.single('file'), uploadStudentCsv);
+router.post('/classes/:classId/students', addStudentManually);
 
 // Activity Management
 router.post('/activities', createActivity);

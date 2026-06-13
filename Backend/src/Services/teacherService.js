@@ -555,3 +555,328 @@ export const uploadActivityMarksService = async (teacherId, activityId, fileBuff
             .on('error', reject);
     });
 };
+
+export const getTeacherReportsSummaryService = async (teacherId, classId = null) => {
+    // 1. Fetch classes for this teacher (optionally filtered by classId)
+    let classes;
+    if (classId && classId !== 'all') {
+        classes = await Class.find({ _id: classId, teacherId }).lean();
+    } else {
+        classes = await Class.find({ teacherId }).lean();
+    }
+    const classIds = classes.map(c => c._id);
+
+    // 2. Fetch activities for this teacher (optionally filtered by classId)
+    let activities;
+    if (classId && classId !== 'all') {
+        activities = await Activity.find({ teacherId, classIds: classId }).lean();
+    } else {
+        activities = await Activity.find({ teacherId }).lean();
+    }
+    const activityIds = activities.map(a => a._id);
+
+    // 4. Fetch students in these classes
+    const students = await User.find({ classId: { $in: classIds }, role: 'student' })
+        .select('name email rollNo classId')
+        .lean();
+    const totalStudentsCount = students.length;
+    const studentIds = students.map(s => s._id);
+
+    // 3. Fetch submissions for these activities and students
+    const submissions = await ActivitySubmission.find({ 
+        activityId: { $in: activityIds },
+        studentId: { $in: studentIds },
+        submittedByTeacher: teacherId 
+    }).lean();
+
+    // 5. Calculate stats
+    const totalActivities = activities.length;
+    const totalClasses = classId && classId !== 'all' ? 1 : classes.length;
+    const totalSubmissions = submissions.length;
+
+    let totalMarksSum = 0;
+    submissions.forEach(sub => {
+        totalMarksSum += (sub.totalMarks || 0);
+    });
+    const avgScore = totalSubmissions > 0 ? Math.round((totalMarksSum / totalSubmissions) * 10) / 10 : 0;
+
+    // 6. Activity performance: for each activity, calculate avg, high, low, submitted
+    const activityPerformance = activities.map(activity => {
+        const actSubmissions = submissions.filter(sub => String(sub.activityId) === String(activity._id));
+        const count = actSubmissions.length;
+        let avg = 0;
+        let highest = 0;
+        let lowest = count > 0 ? 999999 : 0;
+        let sum = 0;
+
+        actSubmissions.forEach(sub => {
+            const marks = sub.totalMarks || 0;
+            sum += marks;
+            if (marks > highest) highest = marks;
+            if (marks < lowest) lowest = marks;
+        });
+
+        if (count > 0) {
+            avg = Math.round((sum / count) * 10) / 10;
+        } else {
+            lowest = 0;
+        }
+
+        return {
+            id: activity._id,
+            name: activity.title,
+            avg,
+            students: count,
+            submitted: count,
+            highest,
+            lowest,
+            dueDate: activity.dueDate,
+            type: activity.type
+        };
+    });
+
+    // 7. Class or Student Performance Comparison
+    let classPerformance = [];
+    if (classId && classId !== 'all') {
+        // If specific class is selected, compare students in this class
+        classPerformance = students.map(student => {
+            const studentSubmissions = submissions.filter(sub => String(sub.studentId) === String(student._id));
+            const count = studentSubmissions.length;
+            let sum = 0;
+            let avg = 0;
+
+            studentSubmissions.forEach(sub => {
+                sum += (sub.totalMarks || 0);
+            });
+
+            if (count > 0) {
+                avg = Math.round((sum / count) * 10) / 10;
+            }
+
+            return {
+                name: student.name,
+                avg,
+                students: count // number of activities submitted by this student
+            };
+        });
+
+        // Sort by average descending (best performing first)
+        classPerformance.sort((a, b) => b.avg - a.avg);
+        // Limit to top 12 to fit nicely on the chart, but don't limit if there are few
+        if (classPerformance.length > 12) {
+            classPerformance = classPerformance.slice(0, 12);
+        }
+    } else {
+        // Otherwise, compare class averages
+        classPerformance = classes.map(cls => {
+            const clsStudents = students.filter(s => String(s.classId) === String(cls._id));
+            const clsStudentIds = new Set(clsStudents.map(s => String(s._id)));
+            
+            const clsSubmissions = submissions.filter(sub => clsStudentIds.has(String(sub.studentId)));
+            const count = clsSubmissions.length;
+            let sum = 0;
+            let avg = 0;
+
+            clsSubmissions.forEach(sub => {
+                sum += (sub.totalMarks || 0);
+            });
+
+            if (count > 0) {
+                avg = Math.round((sum / count) * 10) / 10;
+            }
+
+            return {
+                name: `${cls.name} (${cls.section || 'A'})`,
+                avg,
+                students: clsStudents.length
+            };
+        });
+    }
+
+    // 8. Scoring Trend: Group by calendar week based on submission date (updatedAt)
+    const sortedSubmissions = [...submissions].sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+    
+    const getWeekLabel = (date) => {
+        const d = new Date(date);
+        d.setHours(0,0,0,0);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(d.setDate(diff));
+        return monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const weeklyGroups = {};
+    sortedSubmissions.forEach(sub => {
+        const label = getWeekLabel(sub.updatedAt);
+        if (!weeklyGroups[label]) {
+            weeklyGroups[label] = [];
+        }
+        weeklyGroups[label].push(sub.totalMarks || 0);
+    });
+
+    const scoringTrend = Object.keys(weeklyGroups).map(weekLabel => {
+        const marksList = weeklyGroups[weekLabel];
+        const sum = marksList.reduce((a, b) => a + b, 0);
+        const avg = Math.round((sum / marksList.length) * 10) / 10;
+        const high = Math.max(...marksList);
+        const low = Math.min(...marksList);
+        return {
+            week: weekLabel,
+            avg,
+            high,
+            low
+        };
+    });
+
+    // 9. Criteria distribution and top criteria
+    const criteriaSums = {};
+    const criteriaCounts = {};
+    submissions.forEach(sub => {
+        if (sub.criteriaMarks) {
+            const marksObj = sub.criteriaMarks instanceof Map ? Object.fromEntries(sub.criteriaMarks) : sub.criteriaMarks;
+            for (const [criterion, score] of Object.entries(marksObj)) {
+                if (score !== undefined && score !== null) {
+                    criteriaSums[criterion] = (criteriaSums[criterion] || 0) + Number(score);
+                    criteriaCounts[criterion] = (criteriaCounts[criterion] || 0) + 1;
+                }
+            }
+        }
+    });
+
+    const criteriaBreakdown = [];
+    let topCriterion = { name: 'None', avg: 0, count: 0 };
+
+    for (const criterion of Object.keys(criteriaSums)) {
+        const sum = criteriaSums[criterion];
+        const count = criteriaCounts[criterion];
+        const avg = count > 0 ? Math.round((sum / count) * 10) / 10 : 0;
+        
+        criteriaBreakdown.push({
+            name: criterion.charAt(0).toUpperCase() + criterion.slice(1),
+            value: avg,
+            count
+        });
+
+        if (avg > topCriterion.avg) {
+            topCriterion = {
+                name: criterion.charAt(0).toUpperCase() + criterion.slice(1),
+                avg,
+                count
+            };
+        }
+    }
+
+    const totalAvgSum = criteriaBreakdown.reduce((sum, item) => sum + item.value, 0);
+    criteriaBreakdown.forEach(item => {
+        item.percentage = totalAvgSum > 0 ? Math.round((item.value / totalAvgSum) * 100) : 0;
+    });
+
+    // 10. Completion rate
+    let totalExpectedSubmissions = 0;
+    activities.forEach(activity => {
+        const activityClassIds = activity.classIds.map(id => String(id));
+        const activityStudents = students.filter(s => activityClassIds.includes(String(s.classId)));
+        totalExpectedSubmissions += activityStudents.length;
+    });
+
+    const completionRate = totalExpectedSubmissions > 0 
+        ? Math.round((totalSubmissions / totalExpectedSubmissions) * 100) 
+        : 0;
+
+    // 11. Improvement calculation
+    let improvementValue = 0;
+    let improvementLabel = 'N/A';
+    if (scoringTrend.length >= 2) {
+        const firstWeek = scoringTrend[0];
+        const lastWeek = scoringTrend[scoringTrend.length - 1];
+        improvementValue = Math.round((lastWeek.avg - firstWeek.avg) * 10) / 10;
+        improvementLabel = `From ${firstWeek.week} to ${lastWeek.week}`;
+    } else if (scoringTrend.length === 1) {
+        improvementLabel = `Single week data: ${scoringTrend[0].week}`;
+    }
+
+    return {
+        stats: {
+            totalActivities,
+            totalClasses,
+            avgScore,
+            totalSubmissions,
+            totalStudents: totalStudentsCount
+        },
+        activityPerformance,
+        classPerformance,
+        scoringTrend,
+        criteriaBreakdown,
+        completionRate: {
+            rate: completionRate,
+            submitted: totalSubmissions,
+            expected: totalExpectedSubmissions
+        },
+        improvement: {
+            value: improvementValue,
+            label: improvementLabel
+        },
+        topCriterion
+    };
+};
+
+export const addStudentManuallyService = async (teacherId, classId, studentData) => {
+    const { name, email, rollNo } = studentData;
+
+    // 1. Verify class belongs to teacher
+    const classObj = await Class.findOne({ _id: classId, teacherId });
+    if (!classObj) {
+        throw new Error('Class not found or unauthorized');
+    }
+
+    // 2. Check if user already exists with this email or roll number
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedRollNo = String(rollNo).trim().toLowerCase();
+
+    const studentExists = await User.findOne({
+        $or: [
+            { email: normalizedEmail },
+            { rollNo: normalizedRollNo }
+        ]
+    });
+
+    if (studentExists) {
+        throw new Error('Student already exist');
+    }
+
+    // 3. Set standard student password
+    const plainPassword = 'Student@123';
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(plainPassword, salt);
+
+    // 4. Create new student user
+    const newStudent = await User.create({
+        name: String(name).trim(),
+        email: normalizedEmail,
+        rollNo: String(rollNo).trim(),
+        classId: classObj._id,
+        semester: classObj.semester,
+        assignedByTeacher: teacherId,
+        password: passwordHash,
+        role: 'student',
+        isActive: true
+    });
+
+    // 5. Send welcome email (DO NOT AWAIT)
+    sendWelcomeEmailsInBackground([{
+        name: newStudent.name,
+        email: newStudent.email,
+        plainPassword
+    }]);
+
+    return {
+        message: 'Student added successfully',
+        student: {
+            _id: newStudent._id,
+            name: newStudent.name,
+            email: newStudent.email,
+            rollNo: newStudent.rollNo,
+            semester: newStudent.semester
+        }
+    };
+};

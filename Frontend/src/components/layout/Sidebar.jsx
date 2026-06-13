@@ -63,7 +63,6 @@ const menuConfigs = {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/student/dashboard' },
     { id: 'my-reports', label: 'My Reports', icon: FileText, href: '/student/my-reports' },
     { id: 'semester-report', label: 'Semester Report', icon: BarChart, href: '/student/semester-report' },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, href: '/student/courses' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/student/settings' },
   ],
 };

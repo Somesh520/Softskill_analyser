@@ -6,6 +6,7 @@ import connectDB from './src/Config/db.js';
 import authRoutes from './src/Routes/authRoutes.js';
 import adminRoutes from './src/Routes/adminRoutes.js';
 import teacherRoutes from './src/Routes/teacherRoutes.js';
+import studentRoutes from './src/Routes/studentRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,6 +48,9 @@ app.use('/api/admin', adminRoutes);
 
 // Teacher-specific routes
 app.use('/api/teacher', teacherRoutes);
+
+// Student-specific routes
+app.use('/api/student', studentRoutes);
 
 app.get('/', (req, res) => {
   res.send('soft skill analyser backend is running');
