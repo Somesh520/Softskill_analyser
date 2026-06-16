@@ -35,7 +35,8 @@ import {
   downloadActivityTemplate,
   uploadActivityMarks,
   getActivitySubmissions,
-  editActivityMarks
+  editActivityMarks,
+  getTeachersList
 } from '../../api/teacherApi';
 
 const CreateActivity = () => {
@@ -46,6 +47,7 @@ const CreateActivity = () => {
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(true);
   
+  const [teachers, setTeachers] = useState([]);
   const [evaluatingId, setEvaluatingId] = useState(null);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [submissionLoading, setSubmissionLoading] = useState(false);
@@ -61,6 +63,7 @@ const CreateActivity = () => {
     dueDate: '',
     maxPoints: 100,
     type: 'Assessment',
+    appointedTeacherId: '',
     questions: [{ id: Date.now(), title: '', type: 'text', weight: 0 }]
   });
 
@@ -81,6 +84,8 @@ const CreateActivity = () => {
       setLoading(true);
       const classData = await getClasses();
       setClasses(classData);
+      const teacherDataList = await getTeachersList();
+      setTeachers(teacherDataList);
       await fetchActivitiesList();
     } catch (err) {
       console.error(err);
@@ -161,6 +166,7 @@ const CreateActivity = () => {
         dueDate: '',
         maxPoints: 100,
         type: 'Assessment',
+        appointedTeacherId: '',
         questions: [{ id: Date.now(), title: '', type: 'text', weight: 0 }]
       });
 
@@ -334,6 +340,47 @@ const CreateActivity = () => {
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                   />
                 </div>
+
+                <div className="bg-white border-6 border-black p-5" style={{ boxShadow: '8px 8px 0px #000' }}>
+                  <label className="block text-base font-black uppercase mb-2 text-[#000] flex items-center gap-2">
+                    📋 Activity Type *
+                  </label>
+                  <select 
+                    required
+                    className="w-full border-4 border-black p-4 font-bold uppercase focus:bg-[#00FFFF] outline-none transition-all text-lg bg-white"
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value, appointedTeacherId: e.target.value === 'Interview' ? formData.appointedTeacherId : ''})}
+                  >
+                    <option value="Assessment">Assessment</option>
+                    <option value="Presentation">Presentation</option>
+                    <option value="Group Discussion">Group Discussion</option>
+                    <option value="Role Play">Role Play</option>
+                    <option value="Writing Task">Writing Task</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {formData.type === 'Interview' && (
+                  <div className="bg-white border-6 border-black p-5" style={{ boxShadow: '8px 8px 0px #000' }}>
+                    <label className="block text-base font-black uppercase mb-2 text-[#000] flex items-center gap-2">
+                      👤 Appoint Evaluator *
+                    </label>
+                    <select 
+                      required
+                      className="w-full border-4 border-black p-4 font-bold uppercase focus:bg-[#FF00FF] focus:text-white outline-none transition-all text-lg bg-white"
+                      value={formData.appointedTeacherId}
+                      onChange={(e) => setFormData({...formData, appointedTeacherId: e.target.value})}
+                    >
+                      <option value="">-- SELECT TEACHER --</option>
+                      {teachers.map(t => (
+                        <option key={t._id} value={t._id}>
+                          {t.name.toUpperCase()} ({t.deptName || 'DEPT'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="bg-white border-6 border-black p-5" style={{ boxShadow: '8px 8px 0px #000' }}>
                   <label className="block text-base font-black uppercase mb-4 text-[#000] flex items-center gap-2">
@@ -511,6 +558,9 @@ const CreateActivity = () => {
                       <p className="text-sm font-bold text-gray-700 line-clamp-2 mb-4">{activity.description}</p>
                       
                       <div className="flex flex-wrap gap-2 text-xs font-black uppercase mb-5">
+                        <span className="bg-[#FF00FF] text-white border-2 border-black px-3 py-1 flex items-center gap-1 font-bold">
+                          🏷️ {activity.type || 'Assessment'}
+                        </span>
                         <span className="bg-[#00FFFF] border-2 border-black px-3 py-1 flex items-center gap-1 font-bold">
                           📚 {activity.classIds?.map(c => c.name).join(', ') || 'Classes'}
                         </span>
@@ -520,6 +570,14 @@ const CreateActivity = () => {
                         <span className="bg-black text-white border-2 border-black px-3 py-1 font-bold">
                           ⭐ {activity.maxPoints} pts
                         </span>
+                        {activity.appointedTeacherId && (
+                          <span className={`${teacherData && activity.appointedTeacherId._id === teacherData._id ? 'bg-[#00FF00] text-black' : 'bg-yellow-200 text-black'} border-2 border-black px-3 py-1 font-bold`}>
+                            {teacherData && activity.appointedTeacherId._id === teacherData._id 
+                              ? `🎯 Evaluator (Assigned by ${activity.teacherId?.name || 'Teacher'})` 
+                              : `👤 Appointed: ${activity.appointedTeacherId.name}`
+                            }
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-5 pt-5 border-t-4 border-black flex gap-2 flex-wrap">
@@ -573,12 +631,14 @@ const CreateActivity = () => {
                         )}
                       </AnimatePresence>
 
-                      <button 
-                        onClick={() => handleDeleteActivity(activity._id)}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-red-600 hover:bg-red-100 p-2 opacity-0 group-hover:opacity-100 transition-all font-black"
-                      >
-                        <Trash2 size={22} />
-                      </button>
+                      {(!activity.teacherId || (teacherData && (activity.teacherId._id === teacherData._id || activity.teacherId === teacherData._id))) && (
+                        <button 
+                          onClick={() => handleDeleteActivity(activity._id)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-red-600 hover:bg-red-100 p-2 opacity-0 group-hover:opacity-100 transition-all font-black"
+                        >
+                          <Trash2 size={22} />
+                        </button>
+                      )}
                     </motion.div>
                   ))
                 )}

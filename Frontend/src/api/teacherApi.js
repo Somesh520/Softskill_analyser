@@ -169,3 +169,12 @@ export const addStudentManually = async (classId, studentData) => {
     throw new Error(error.response?.data?.message || 'Failed to add student');
   }
 };
+
+export const getTeachersList = async () => {
+  try {
+    const response = await axiosInstance.get('/teacher/teachers');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch teachers');
+  }
+};
