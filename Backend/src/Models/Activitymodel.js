@@ -12,8 +12,13 @@ const ActivitySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Assessment', 'Presentation', 'Group Discussion', 'Role Play', 'Writing Task', 'Other'],
+        enum: ['Assessment', 'Presentation', 'Group Discussion', 'Role Play', 'Writing Task', 'Interview', 'Other'],
         default: 'Assessment'
+    },
+    appointedTeacherId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
     },
     teacherId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -49,6 +54,7 @@ const ActivitySchema = new mongoose.Schema({
 // Indexes for faster teacher activity reads and dashboard timelines
 ActivitySchema.index({ teacherId: 1, classIds: 1 });
 ActivitySchema.index({ teacherId: 1, createdAt: -1 });
+ActivitySchema.index({ appointedTeacherId: 1, createdAt: -1 });
 
 const Activity = mongoose.model('Activity', ActivitySchema);
 

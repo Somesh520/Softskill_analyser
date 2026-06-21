@@ -15,7 +15,8 @@ import {
     getActivityAnalyticsService,
     editActivityMarksService,
     getTeacherReportsSummaryService,
-    addStudentManuallyService
+    addStudentManuallyService,
+    getTeachersService
 } from '../Services/teacherService.js';
 
 // ... existing code ...
@@ -279,3 +280,16 @@ export const addStudentManually = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+// @desc    Get all teachers
+// @route   GET /api/teacher/teachers
+// @access  Private (Teacher)
+export const getTeachersList = async (req, res) => {
+    try {
+        const teachers = await getTeachersService();
+        res.status(200).json(teachers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+

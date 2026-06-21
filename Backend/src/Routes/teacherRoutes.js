@@ -17,7 +17,8 @@ import {
   getActivityAnalytics,
   editActivityMarks,
   getTeacherReportsSummary,
-  addStudentManually
+  addStudentManually,
+  getTeachersList
 } from '../Controller/teacherController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
@@ -53,5 +54,6 @@ router.post('/classes/:classId/students', addStudentManually);
 router.post('/activities', createActivity);
 router.get('/activities', getActivities);
 router.delete('/activities/:id', deleteActivity);
+router.get('/teachers', getTeachersList);
 
 export default router;

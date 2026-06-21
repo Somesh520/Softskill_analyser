@@ -1,6 +1,8 @@
+"use client";
 import React, { useState, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
   Users,
@@ -117,8 +119,9 @@ const SidebarItem = ({ item, isActive, isCollapsed, accentColor, onClick }) => {
 // ─── Main Sidebar Component ──────────────────────────────────
 const Sidebar = ({ role = 'student', userName = '' }) => {
   const { isCollapsed, setIsCollapsed } = useSidebar();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { setUser } = useAuth();
 
   const items = menuConfigs[role] || menuConfigs.student;
   const colors = roleColors[role] || roleColors.student;
@@ -129,7 +132,8 @@ const Sidebar = ({ role = 'student', userName = '' }) => {
     localStorage.removeItem('user');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
-    navigate('/login');
+    setUser(null);
+    router.push('/login');
   };
 
   return (
@@ -204,10 +208,10 @@ const Sidebar = ({ role = 'student', userName = '' }) => {
           <SidebarItem
             key={item.id}
             item={item}
-            isActive={location.pathname === item.href}
+            isActive={pathname === item.href}
             isCollapsed={isCollapsed}
             accentColor={colors.accent}
-            onClick={() => navigate(item.href)}
+            onClick={() => router.push(item.href)}
           />
         ))}
       </nav>

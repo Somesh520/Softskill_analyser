@@ -18,8 +18,8 @@ connectDB();
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -65,7 +65,11 @@ app.get('/health', (req, res) => {
 
 //basic server file 
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+export default app;
 

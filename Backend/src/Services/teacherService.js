@@ -9,6 +9,13 @@ import cloudinary from '../Config/cloudinary.js';
 import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
 import { generateActivityCSV } from '../utils/csvGenerator.js';
 
+const reportsSummaryCache = new Map();
+const CACHE_TTL = 15000; // 15 seconds TTL
+
+export const clearReportsSummaryCache = () => {
+    reportsSummaryCache.clear();
+};
+
 const normalizeHeader = (header) => header?.trim().toLowerCase();
 
 const getRowValue = (row, candidates) => {
@@ -46,6 +53,7 @@ export const createClassService = async (teacherId, classData) => {
         teacherId
     });
 
+    clearReportsSummaryCache();
     return newClass;
 };
 
@@ -229,15 +237,39 @@ export const deleteClassService = async (teacherId, classId) => {
         throw new Error('Class not found or you are not authorized to delete it.');
     }
 
-    // Delete the class
+    // 1. Get list of student IDs in this class before deleting them
+    const students = await User.find({ classId: classId, role: 'student' }).select('_id').lean();
+    const studentIds = students.map(s => s._id);
+
+    // 2. Delete the class
     await Class.findByIdAndDelete(classId);
 
-    // Completely delete the students who were part of this class
-    // (If you want to keep the users but unassign them, use updateMany with $unset instead)
+    // 3. Delete the student users
     await User.deleteMany({ classId: classId, role: 'student' });
 
+    // 4. Delete submissions of these deleted students
+    if (studentIds.length > 0) {
+        await ActivitySubmission.deleteMany({ studentId: { $in: studentIds } });
+    }
+
+    // 5. Pull this classId from all activities' classIds array
+    await Activity.updateMany(
+        { classIds: classId },
+        { $pull: { classIds: classId } }
+    );
+
+    // 6. Delete activities that no longer have any classes assigned to them (orphaned activities)
+    const orphanedActivities = await Activity.find({ classIds: { $size: 0 } }).select('_id').lean();
+    const orphanedActivityIds = orphanedActivities.map(a => a._id);
+
+    if (orphanedActivityIds.length > 0) {
+        await Activity.deleteMany({ _id: { $in: orphanedActivityIds } });
+        await ActivitySubmission.deleteMany({ activityId: { $in: orphanedActivityIds } });
+    }
+
+    clearReportsSummaryCache();
     return true;
-}
+};
 export const deleteStudentFromClassService = async (teacherId, classId, studentId) => {
     // Ensure the class belongs to this teacher
     const classObj = await Class.findOne({ _id: classId, teacherId });
@@ -257,7 +289,7 @@ export const deleteStudentFromClassService = async (teacherId, classId, studentI
 
 // Activity Management Services
 export const createActivityService = async (teacherId, activityData) => {
-    const { title, description, classIds, dueDate, maxPoints, type, rubrics } = activityData;
+    const { title, description, classIds, dueDate, maxPoints, type, rubrics, appointedTeacherId } = activityData;
 
     // Ensure classIds is an array
     const classIdArray = Array.isArray(classIds) ? classIds : [classIds];
@@ -268,6 +300,14 @@ export const createActivityService = async (teacherId, activityData) => {
         throw new Error('One or more classes not found or unauthorized');
     }
 
+    // Verify appointed teacher exists if it's an Interview
+    if (type === 'Interview' && appointedTeacherId) {
+        const appointedTeacher = await User.findOne({ _id: appointedTeacherId, role: 'teacher' });
+        if (!appointedTeacher) {
+            throw new Error('Appointed teacher not found');
+        }
+    }
+
     const activity = await Activity.create({
         title,
         description,
@@ -276,27 +316,44 @@ export const createActivityService = async (teacherId, activityData) => {
         dueDate,
         maxPoints,
         type,
-        rubrics
+        rubrics,
+        appointedTeacherId: type === 'Interview' ? appointedTeacherId : undefined
     });
 
+    clearReportsSummaryCache();
     return activity;
 };
 
 export const getActivitiesService = async (teacherId, classId = null) => {
-    const query = { teacherId };
+    const query = {
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    };
     if (classId) query.classIds = classId;
 
     return await Activity.find(query)
         .populate('classIds', 'name section')
+        .populate('teacherId', 'name email deptName')
+        .populate('appointedTeacherId', 'name email deptName')
+        .sort({ createdAt: -1 });
 };  
 
 export const getActivitySubmissionsService = async (teacherId, activityId) => {
-    const activity = await Activity.findOne({ _id: activityId, teacherId }).populate('classIds', 'name section').lean();
+    const activity = await Activity.findOne({
+        _id: activityId,
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    }).populate('classIds', 'name section').lean();
+
     if (!activity) {
         throw new Error('Activity not found or unauthorized');
     }
 
-    const submissions = await ActivitySubmission.find({ activityId, submittedByTeacher: teacherId })
+    const submissions = await ActivitySubmission.find({ activityId })
         .select('studentName rollNo email criteriaMarks totalMarks feedback updatedAt studentId editHistory')
         .sort({ updatedAt: -1 })
         .lean();
@@ -331,17 +388,24 @@ export const deleteActivityService = async (teacherId, activityId) => {
         throw new Error('Activity not found or unauthorized');
     }
 
-    await ActivitySubmission.deleteMany({ activityId: activityId, submittedByTeacher: teacherId });
+    await ActivitySubmission.deleteMany({ activityId: activityId });
 
+    clearReportsSummaryCache();
     return { message: 'Activity deleted successfully' };
 };
 
 export const editActivityMarksService = async (teacherId, activityId, submissionId, updateData, teacherName) => {
-    const activity = await Activity.findOne({ _id: activityId, teacherId }).lean();
+    const activity = await Activity.findOne({
+        _id: activityId,
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    }).lean();
     if (!activity) throw new Error('Activity not found or unauthorized');
 
-    const submission = await ActivitySubmission.findOne({ _id: submissionId, activityId, submittedByTeacher: teacherId });
-    if (!submission) throw new Error('Submission not found or unauthorized');
+    const submission = await ActivitySubmission.findOne({ _id: submissionId, activityId });
+    if (!submission) throw new Error('Submission not found');
 
     const { criteriaMarks, feedback } = updateData;
 
@@ -392,6 +456,7 @@ export const editActivityMarksService = async (teacherId, activityId, submission
 
     await submission.save();
 
+    clearReportsSummaryCache();
     return {
         message: 'Marks updated successfully',
         submission: {
@@ -406,14 +471,20 @@ export const editActivityMarksService = async (teacherId, activityId, submission
 };
 
 export const getActivityAnalyticsService = async (teacherId, activityId) => {
-    const activity = await Activity.findOne({ _id: activityId, teacherId }).lean();
+    const activity = await Activity.findOne({
+        _id: activityId,
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    }).lean();
     if (!activity) {
         throw new Error('Activity not found or unauthorized');
     }
 
-    const totalSubmissions = await ActivitySubmission.countDocuments({ activityId: activity._id, submittedByTeacher: teacherId });
+    const totalSubmissions = await ActivitySubmission.countDocuments({ activityId: activity._id });
     const summary = await ActivitySubmission.aggregate([
-        { $match: { activityId: activity._id, submittedByTeacher: teacherId } },
+        { $match: { activityId: activity._id } },
         {
             $group: {
                 _id: null,
@@ -425,7 +496,7 @@ export const getActivityAnalyticsService = async (teacherId, activityId) => {
     ]);
 
     const distribution = await ActivitySubmission.aggregate([
-        { $match: { activityId: activity._id, submittedByTeacher: teacherId } },
+        { $match: { activityId: activity._id } },
         {
             $bucket: {
                 groupBy: '$totalMarks',
@@ -447,7 +518,13 @@ export const getActivityAnalyticsService = async (teacherId, activityId) => {
 };
 
 export const downloadActivityTemplateService = async (teacherId, activityId) => {
-    const activity = await Activity.findOne({ _id: activityId, teacherId }).populate('classIds', 'name section').lean();
+    const activity = await Activity.findOne({
+        _id: activityId,
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    }).populate('classIds', 'name section').lean();
     if (!activity) throw new Error('Activity not found or unauthorized');
 
     // For multi-class, use first class for student extraction
@@ -464,7 +541,13 @@ export const downloadActivityTemplateService = async (teacherId, activityId) => 
 };
 
 export const uploadActivityMarksService = async (teacherId, activityId, fileBuffer) => {
-    const activity = await Activity.findOne({ _id: activityId, teacherId }).populate('classIds', 'name section').lean();
+    const activity = await Activity.findOne({
+        _id: activityId,
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    }).populate('classIds', 'name section').lean();
     if (!activity) throw new Error('Activity not found or unauthorized');
 
     // For multi-class, use first class for student extraction
@@ -543,6 +626,7 @@ export const uploadActivityMarksService = async (teacherId, activityId, fileBuff
                         }
                     }
 
+                    clearReportsSummaryCache();
                     resolve({
                         message: `Processed ${written} students`,
                         count: written,
@@ -557,36 +641,58 @@ export const uploadActivityMarksService = async (teacherId, activityId, fileBuff
 };
 
 export const getTeacherReportsSummaryService = async (teacherId, classId = null) => {
-    // 1. Fetch classes for this teacher (optionally filtered by classId)
+    const cacheKey = `${teacherId}_${classId || 'all'}`;
+    const cached = reportsSummaryCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return cached.data;
+    }
+
+    // 1. Fetch activities for this teacher (optionally filtered by classId)
+    // Activities where creator or appointed evaluator
+    const activityQuery = {
+        $or: [
+            { teacherId },
+            { appointedTeacherId: teacherId }
+        ]
+    };
+    if (classId && classId !== 'all') {
+        activityQuery.classIds = classId;
+    }
+    const activities = await Activity.find(activityQuery).lean();
+    const activityIds = activities.map(a => a._id);
+
+    // 2. Fetch classes for this teacher
+    const activityClassIds = activities.reduce((acc, act) => {
+        if (act.classIds) {
+            act.classIds.forEach(id => acc.add(String(id)));
+        }
+        return acc;
+    }, new Set());
+
     let classes;
     if (classId && classId !== 'all') {
-        classes = await Class.find({ _id: classId, teacherId }).lean();
+        classes = await Class.find({ _id: classId }).lean();
     } else {
-        classes = await Class.find({ teacherId }).lean();
+        classes = await Class.find({
+            $or: [
+                { teacherId },
+                { _id: { $in: Array.from(activityClassIds) } }
+            ]
+        }).lean();
     }
     const classIds = classes.map(c => c._id);
 
-    // 2. Fetch activities for this teacher (optionally filtered by classId)
-    let activities;
-    if (classId && classId !== 'all') {
-        activities = await Activity.find({ teacherId, classIds: classId }).lean();
-    } else {
-        activities = await Activity.find({ teacherId }).lean();
-    }
-    const activityIds = activities.map(a => a._id);
-
-    // 4. Fetch students in these classes
+    // 3. Fetch students in these classes
     const students = await User.find({ classId: { $in: classIds }, role: 'student' })
         .select('name email rollNo classId')
         .lean();
     const totalStudentsCount = students.length;
     const studentIds = students.map(s => s._id);
 
-    // 3. Fetch submissions for these activities and students
+    // 4. Fetch submissions for these activities and students
     const submissions = await ActivitySubmission.find({ 
         activityId: { $in: activityIds },
-        studentId: { $in: studentIds },
-        submittedByTeacher: teacherId 
+        studentId: { $in: studentIds }
     }).lean();
 
     // 5. Calculate stats
@@ -818,6 +924,13 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
         },
         topCriterion
     };
+
+    reportsSummaryCache.set(cacheKey, {
+        timestamp: Date.now(),
+        data: result
+    });
+
+    return result;
 };
 
 export const addStudentManuallyService = async (teacherId, classId, studentData) => {
@@ -880,3 +993,8 @@ export const addStudentManuallyService = async (teacherId, classId, studentData)
         }
     };
 };
+
+export const getTeachersService = async () => {
+    return await User.find({ role: 'teacher' }).select('name email deptName').sort({ name: 1 }).lean();
+};
+

@@ -7,29 +7,31 @@ export const loginUser = async (req, res) => {
         const { email, password, turnstileToken } = req.body;
 
 
-        if (!turnstileToken) {
-            return res.status(400).json({ message: 'Security check missing. Please refresh.' });
-        }
+        if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
+            if (!turnstileToken) {
+                return res.status(400).json({ message: 'Security check missing. Please refresh.' });
+            }
 
-        const formData = new URLSearchParams();
-        formData.append('secret', process.env.TURNSTILE_SECRET_KEY);
-        formData.append('response', turnstileToken);
+            const formData = new URLSearchParams();
+            formData.append('secret', process.env.TURNSTILE_SECRET_KEY);
+            formData.append('response', turnstileToken);
 
-        console.log('Verifying Turnstile with secret:', process.env.TURNSTILE_SECRET_KEY ? 'Present' : 'MISSING');
+            console.log('Verifying Turnstile with secret:', process.env.TURNSTILE_SECRET_KEY ? 'Present' : 'MISSING');
 
-        const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-            method: 'POST',
-            body: formData
-        });
-
-        const verifyData = await verifyResponse.json();
-
-        if (!verifyData.success) {
-            console.error('Turnstile verification failed:', verifyData);
-            return res.status(403).json({
-                message: 'Security check failed. Please try again.',
-                details: verifyData['error-codes'] || []
+            const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                body: formData
             });
+
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyData.success) {
+                console.error('Turnstile verification failed:', verifyData);
+                return res.status(403).json({
+                    message: 'Security check failed. Please try again.',
+                    details: verifyData['error-codes'] || []
+                });
+            }
         }
 
         // Let the Service handle the business logic
@@ -47,26 +49,28 @@ export const forgotPassword = async (req, res) => {
         const { email, turnstileToken } = req.body;
 
         // Verify Turnstile Token
-        if (!turnstileToken) {
-            return res.status(400).json({ message: 'Security check missing. Please refresh.' });
-        }
+        if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
+            if (!turnstileToken) {
+                return res.status(400).json({ message: 'Security check missing. Please refresh.' });
+            }
 
-        const turnstileData = new URLSearchParams();
-        turnstileData.append('secret', process.env.TURNSTILE_SECRET_KEY);
-        turnstileData.append('response', turnstileToken);
+            const turnstileData = new URLSearchParams();
+            turnstileData.append('secret', process.env.TURNSTILE_SECRET_KEY);
+            turnstileData.append('response', turnstileToken);
 
-        const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-            method: 'POST',
-            body: turnstileData
-        });
-
-        const verifyData = await verifyResponse.json();
-        if (!verifyData.success) {
-            console.error('Turnstile verification failed (Forgot Password):', verifyData);
-            return res.status(403).json({
-                message: 'Security check failed. Please try again.',
-                details: verifyData['error-codes'] || []
+            const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                body: turnstileData
             });
+
+            const verifyData = await verifyResponse.json();
+            if (!verifyData.success) {
+                console.error('Turnstile verification failed (Forgot Password):', verifyData);
+                return res.status(403).json({
+                    message: 'Security check failed. Please try again.',
+                    details: verifyData['error-codes'] || []
+                });
+            }
         }
 
         const result = await forgotPasswordService(email);
@@ -81,26 +85,28 @@ export const resetPassword = async (req, res) => {
         const { email, otp, newPassword, turnstileToken } = req.body;
 
         // Verify Turnstile Token
-        if (!turnstileToken) {
-            return res.status(400).json({ message: 'Security check missing. Please refresh.' });
-        }
+        if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
+            if (!turnstileToken) {
+                return res.status(400).json({ message: 'Security check missing. Please refresh.' });
+            }
 
-        const turnstileData = new URLSearchParams();
-        turnstileData.append('secret', process.env.TURNSTILE_SECRET_KEY);
-        turnstileData.append('response', turnstileToken);
+            const turnstileData = new URLSearchParams();
+            turnstileData.append('secret', process.env.TURNSTILE_SECRET_KEY);
+            turnstileData.append('response', turnstileToken);
 
-        const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-            method: 'POST',
-            body: turnstileData
-        });
-
-        const verifyData = await verifyResponse.json();
-        if (!verifyData.success) {
-            console.error('Turnstile verification failed (Reset Password):', verifyData);
-            return res.status(403).json({
-                message: 'Security check failed. Please try again.',
-                details: verifyData['error-codes'] || []
+            const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                body: turnstileData
             });
+
+            const verifyData = await verifyResponse.json();
+            if (!verifyData.success) {
+                console.error('Turnstile verification failed (Reset Password):', verifyData);
+                return res.status(403).json({
+                    message: 'Security check failed. Please try again.',
+                    details: verifyData['error-codes'] || []
+                });
+            }
         }
 
         const result = await resetPasswordService(email, otp, newPassword);

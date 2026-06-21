@@ -1,0 +1,43 @@
+config:
+  target: "http://localhost:5001"
+  phases:
+    - duration: 20
+      arrivalRate: 80
+      name: "Sustained load representing 1600 users"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Teacher dashboard loading flow"
+    flow:
+      # 1. Log in using correct credentials and the dummy Cloudflare Turnstile token
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "somesh.loadtest@kiet.edu"
+            password: "password123"
+            turnstileToken: "1x0000000000000000000000000000000AA"
+          capture:
+            json: "$.token"
+            as: "token"
+      # 2. Get active classes
+      - get:
+          url: "/api/teacher/classes"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      # 3. Get activities
+      - get:
+          url: "/api/teacher/activities"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      # 4. Get teachers list
+      - get:
+          url: "/api/teacher/teachers"
+          headers:
+            Authorization: "Bearer {{ token }}"
+      # 5. Get reports summary
+      - get:
+          url: "/api/teacher/reports/summary"
+          headers:
+            Authorization: "Bearer {{ token }}"
