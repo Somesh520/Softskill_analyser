@@ -3,6 +3,7 @@ import React, { useState, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { logout } from '../../api/authApi';
 import {
   LayoutDashboard,
   Users,
@@ -127,13 +128,19 @@ const Sidebar = ({ role = 'student', userName = '' }) => {
   const colors = roleColors[role] || roleColors.student;
   const RoleIcon = colors.icon;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    setUser(null);
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      setUser(null);
+      router.push('/login');
+    }
   };
 
   return (

@@ -2,12 +2,14 @@ import jwt from 'jsonwebtoken';
 
 // 1. Middleware to verify if the user is logged in
 export const verifyToken = (req, res, next) => {
-    let token;
+    let token = req.cookies?.accessToken;
     
-    // Check if token is in the Authorization header
-    let authHeader = req.headers.authorization || req.headers.Authorization;
-    if (authHeader && authHeader.startsWith('Bearer')) {
-        token = authHeader.split(' ')[1];
+    // Fallback: Check if token is in the Authorization header
+    if (!token) {
+        let authHeader = req.headers.authorization || req.headers.Authorization;
+        if (authHeader && authHeader.startsWith('Bearer')) {
+            token = authHeader.split(' ')[1];
+        }
     }
 
     if (!token) {
@@ -16,10 +18,13 @@ export const verifyToken = (req, res, next) => {
 
     try {
         // Verify the token using your secret key
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'superSecretKeyThatNobodyKnows123');
         req.user = decoded; // Attach the decoded payload (like userId and role) to the request
         next();
     } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'TokenExpiredError', expired: true });
+        }
         return res.status(403).json({ message: 'Invalid or expired token' });
     }
 };

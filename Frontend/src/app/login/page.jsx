@@ -46,19 +46,16 @@ const Login = () => {
       
       const storage = rememberMe ? localStorage : sessionStorage;
       
-      storage.setItem('token', data.token);
       storage.setItem('user', JSON.stringify(data));
       setUser(data);
 
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', formData.email.trim().toLowerCase());
         localStorage.setItem('rememberedPassword', formData.password);
-        sessionStorage.removeItem('token');
         sessionStorage.removeItem('user');
       } else {
         localStorage.removeItem('rememberedEmail');
         localStorage.removeItem('rememberedPassword');
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
 

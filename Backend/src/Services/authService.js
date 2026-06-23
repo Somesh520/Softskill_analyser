@@ -19,33 +19,79 @@ export const loginUserService = async (email, password) => {
         throw new Error('Invalid email or password');
     }
 
-    // 3. Generate JWT Token
-    const token = jwt.sign(
+    // 3. Generate Access and Refresh Tokens
+    const accessToken = jwt.sign(
         { id: user._id, role: user.role },
         process.env.JWT_SECRET || 'superSecretKeyThatNobodyKnows123', 
-        { expiresIn: '1d' }
+        { expiresIn: '1h' }
+    );
+
+    const refreshToken = jwt.sign(
+        { id: user._id },
+        process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET ? process.env.JWT_SECRET + '_refresh' : 'superSecretRefreshTokenKey'),
+        { expiresIn: '7d' }
     );
 
     return {
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: token
+        user: {
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        },
+        accessToken,
+        refreshToken
     };
+};
+
+export const refreshAccessTokenService = async (refreshToken) => {
+    if (!refreshToken) {
+        throw new Error('Refresh token is required');
+    }
+
+    try {
+        const secret = process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET ? process.env.JWT_SECRET + '_refresh' : 'superSecretRefreshTokenKey');
+        const decoded = jwt.verify(refreshToken, secret);
+        
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        if (user.isActive === false) {
+            throw new Error('User is inactive');
+        }
+
+        const accessToken = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET || 'superSecretKeyThatNobodyKnows123',
+            { expiresIn: '1h' }
+        );
+
+        return {
+            user: {
+                _id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            },
+            accessToken
+        };
+    } catch (error) {
+        throw new Error('Invalid or expired refresh token');
+    }
 };
 
 export const forgotPasswordService = async (email) => {
     const normalizedEmail = email?.trim().toLowerCase();
     const user = await User.findOne({ email: normalizedEmail });
-    
+
     if (!user) {
         throw new Error('User not found with this email');
     }
 
     // Generate a 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Hash the OTP (so even db-admins don't see the raw OTP) - Optional but good for security. Let's just store raw for simplicity/learning here, or hash it. We'll store it raw but hashed is better.
     // For this context, standard string match is fine:
     user.resetPasswordOTP = otp;
@@ -73,10 +119,10 @@ export const forgotPasswordService = async (email) => {
 
 export const resetPasswordService = async (email, otp, newPassword) => {
     const normalizedEmail = email?.trim().toLowerCase();
-    const user = await User.findOne({ 
+    const user = await User.findOne({
         email: normalizedEmail,
         resetPasswordOTP: otp,
-        resetPasswordExpires: { $gt: Date.now() } 
+        resetPasswordExpires: { $gt: Date.now() }
     });
 
     if (!user) {
@@ -90,7 +136,7 @@ export const resetPasswordService = async (email, otp, newPassword) => {
     // Clear reset token fields
     user.resetPasswordOTP = undefined;
     user.resetPasswordExpires = undefined;
-    
+
     await user.save();
 
     return { message: 'Password has been reset successfully. You can now login.' };

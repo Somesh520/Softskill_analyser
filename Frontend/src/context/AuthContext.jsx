@@ -11,10 +11,9 @@ export const AuthProvider = ({ children }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
     const userString = typeof window !== 'undefined' ? (localStorage.getItem('user') || sessionStorage.getItem('user')) : null;
 
-    if (!token || !userString) {
+    if (!userString) {
       setUser(null);
       setLoading(false);
       return;

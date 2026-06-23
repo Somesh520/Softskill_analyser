@@ -26,3 +26,12 @@ export const resetPassword = async (email, otp, newPassword, turnstileToken) => 
     throw error.response?.data || { message: 'Network Error' };
   }
 };
+
+export const logout = async () => {
+  try {
+    const response = await axiosInstance.post('/auth/logout');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Network Error' };
+  }
+};
