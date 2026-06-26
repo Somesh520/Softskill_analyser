@@ -11,6 +11,7 @@ const ManageStudents = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('ALL'); // 'ALL' or 'BY_TEACHER'
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -29,16 +30,95 @@ const ManageStudents = () => {
     fetchStudents();
   }, []);
 
-  const filteredStudents = students.filter(s =>
-    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.rollNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.assignedByTeacher?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    const searchLower = searchTerm.toLowerCase();
+    const deptString = Array.isArray(s.assignedByTeacher?.deptName) ? s.assignedByTeacher.deptName.join(', ') : (s.assignedByTeacher?.deptName || '');
+    
+    return (s.name || '').toLowerCase().includes(searchLower) ||
+           (s.email || '').toLowerCase().includes(searchLower) ||
+           String(s.rollNo || '').toLowerCase().includes(searchLower) ||
+           (s.assignedByTeacher?.name || '').toLowerCase().includes(searchLower) ||
+           deptString.toLowerCase().includes(searchLower);
+  });
 
   const totalStudents = students.length;
   const activeStudents = students.filter(s => s.isActive).length;
   const assignedStudents = students.filter(s => s.assignedByTeacher).length;
+
+  const groupedByTeacher = filteredStudents.reduce((acc, student) => {
+    const teacherName = student.assignedByTeacher?.name || 'Unassigned';
+    if (!acc[teacherName]) acc[teacherName] = [];
+    acc[teacherName].push(student);
+    return acc;
+  }, {});
+
+  const renderStudentCard = (student, index) => (
+    <motion.div
+      key={student._id}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: (index % 10) * 0.04 }}
+      className="bg-white border-8 border-black p-6 hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all group relative overflow-hidden"
+      style={{ boxShadow: '12px 12px 0px #000' }}
+    >
+      {/* Active badge */}
+      <div
+        className={`absolute top-4 right-4 px-3 py-1 font-black uppercase text-xs border-4 border-black ${student.isActive ? 'bg-[#00FF00] text-black' : 'bg-[#FF0000] text-white'}`}
+      >
+        {student.isActive ? 'Active' : 'Inactive'}
+      </div>
+
+      <h3 className="text-xl font-black uppercase mb-4 pr-20 leading-tight">{student.name}</h3>
+
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
+          <Mail size={16} strokeWidth={3} className="shrink-0 text-[#FF00FF]" />
+          <span className="truncate">{student.email}</span>
+        </div>
+
+        {student.rollNo && (
+          <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
+            <Hash size={16} strokeWidth={3} className="shrink-0 text-[#FF6600]" />
+            <span>Roll No: {student.rollNo}</span>
+          </div>
+        )}
+
+        {student.semester && (
+          <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
+            <BookOpen size={16} strokeWidth={3} className="shrink-0 text-[#00FFFF]" />
+            <span>Semester {student.semester}</span>
+          </div>
+        )}
+
+        {student.classId && (
+          <div className="flex items-center gap-3 bg-[#FFEB3B] border-4 border-black p-3 font-bold text-sm">
+            <BookOpen size={16} strokeWidth={3} className="shrink-0" />
+            <span>Class: {student.classId.name || 'N/A'}</span>
+          </div>
+        )}
+
+        {student.assignedByTeacher ? (
+          <div className="flex items-start gap-3 bg-[#00FFFF] border-4 border-black p-3 font-bold text-sm">
+            <User size={16} strokeWidth={3} className="shrink-0 mt-1" />
+            <div className="flex flex-col">
+              <span>Teacher: {student.assignedByTeacher.name}</span>
+              <span className="text-xs mt-1 opacity-80">Dept: {Array.isArray(student.assignedByTeacher.deptName) ? student.assignedByTeacher.deptName.join(', ') : (student.assignedByTeacher.deptName || 'N/A')}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black border-dashed p-3 font-bold text-sm text-gray-500">
+            <User size={16} strokeWidth={3} className="shrink-0" />
+            <span>Unassigned</span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
+          <Calendar size={16} strokeWidth={3} className="shrink-0 text-gray-500" />
+          <span>Joined {new Date(student.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="min-h-screen bg-[#F0F0F0] p-4 md:p-8">
@@ -109,12 +189,37 @@ const ManageStudents = () => {
           </div>
           <input
             type="text"
-            placeholder="SEARCH BY NAME, EMAIL, ROLL NO OR TEACHER..."
+            placeholder="SEARCH BY NAME, ROLL NO, DEPT OR TEACHER..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-white border-8 border-black p-5 pl-16 text-xl font-black uppercase placeholder:text-gray-400 focus:outline-none focus:bg-[#FFFF00] transition-colors text-black"
             style={{ boxShadow: '12px 12px 0px #000' }}
           />
+        </motion.div>
+
+        {/* View Mode Toggles */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex flex-col md:flex-row gap-4 mb-8"
+        >
+          <button
+            onClick={() => setViewMode('ALL')}
+            className={`flex-1 py-4 text-xl font-black uppercase border-4 border-black transition-all ${
+              viewMode === 'ALL' ? 'bg-[#00FFFF] text-black shadow-[4px_4px_0px_#000] translate-x-[-2px] translate-y-[-2px]' : 'bg-white text-gray-500 hover:bg-[#f0f0f0]'
+            }`}
+          >
+            Full College View
+          </button>
+          <button
+            onClick={() => setViewMode('BY_TEACHER')}
+            className={`flex-1 py-4 text-xl font-black uppercase border-4 border-black transition-all ${
+              viewMode === 'BY_TEACHER' ? 'bg-[#00FF00] text-black shadow-[4px_4px_0px_#000] translate-x-[-2px] translate-y-[-2px]' : 'bg-white text-gray-500 hover:bg-[#f0f0f0]'
+            }`}
+          >
+            Teacher Wise View
+          </button>
         </motion.div>
 
         {/* Content */}
@@ -144,75 +249,31 @@ const ManageStudents = () => {
           </div>
         ) : (
           <>
-            <p className="font-black uppercase text-lg mb-4 text-black">
-              Showing <span className="bg-black text-white px-2">{filteredStudents.length}</span> students
+            <p className="font-black uppercase text-lg mb-6 text-black">
+              Showing <span className="bg-black text-white px-2 py-1 mx-1 border-2 border-black">{filteredStudents.length}</span> students
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 text-black">
-              {filteredStudents.map((student, index) => (
-                <motion.div
-                  key={student._id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.04 }}
-                  className="bg-white border-8 border-black p-6 hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all group relative overflow-hidden"
-                  style={{ boxShadow: '12px 12px 0px #000' }}
-                >
-                  {/* Active badge */}
-                  <div
-                    className={`absolute top-4 right-4 px-3 py-1 font-black uppercase text-xs border-4 border-black ${student.isActive ? 'bg-[#00FF00] text-black' : 'bg-[#FF0000] text-white'}`}
-                  >
-                    {student.isActive ? 'Active' : 'Inactive'}
-                  </div>
-
-                  <h3 className="text-xl font-black uppercase mb-4 pr-20 leading-tight">{student.name}</h3>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
-                      <Mail size={16} strokeWidth={3} className="shrink-0 text-[#FF00FF]" />
-                      <span className="truncate">{student.email}</span>
-                    </div>
-
-                    {student.rollNo && (
-                      <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
-                        <Hash size={16} strokeWidth={3} className="shrink-0 text-[#FF6600]" />
-                        <span>Roll No: {student.rollNo}</span>
-                      </div>
-                    )}
-
-                    {student.semester && (
-                      <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
-                        <BookOpen size={16} strokeWidth={3} className="shrink-0 text-[#00FFFF]" />
-                        <span>Semester {student.semester}</span>
-                      </div>
-                    )}
-
-                    {student.classId && (
-                      <div className="flex items-center gap-3 bg-[#FFEB3B] border-4 border-black p-3 font-bold text-sm">
-                        <BookOpen size={16} strokeWidth={3} className="shrink-0" />
-                        <span>Class: {student.classId.name || 'N/A'}</span>
-                      </div>
-                    )}
-
-                    {student.assignedByTeacher ? (
-                      <div className="flex items-center gap-3 bg-[#00FFFF] border-4 border-black p-3 font-bold text-sm">
-                        <User size={16} strokeWidth={3} className="shrink-0" />
-                        <span>Teacher: {student.assignedByTeacher.name}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black border-dashed p-3 font-bold text-sm text-gray-500">
-                        <User size={16} strokeWidth={3} className="shrink-0" />
-                        <span>Unassigned</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
-                      <Calendar size={16} strokeWidth={3} className="shrink-0 text-gray-500" />
-                      <span>Joined {new Date(student.createdAt).toLocaleDateString()}</span>
+            
+            {viewMode === 'ALL' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 text-black">
+                {filteredStudents.map((student, index) => renderStudentCard(student, index))}
+              </div>
+            ) : (
+              <div className="space-y-12">
+                {Object.entries(groupedByTeacher)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([teacherName, teacherStudents]) => (
+                  <div key={teacherName} className="bg-[#f8f8f8] border-8 border-black p-6 md:p-8" style={{ boxShadow: '16px 16px 0px #000' }}>
+                    <h2 className="text-3xl font-black uppercase mb-8 bg-[#FFEB3B] border-4 border-black inline-block px-6 py-3 shadow-[6px_6px_0px_#000] text-black">
+                      <User className="inline-block mr-3 mb-1" strokeWidth={3} size={28} />
+                      Teacher: {teacherName} <span className="bg-black text-white px-2 py-1 ml-2 text-xl">{teacherStudents.length}</span>
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 text-black">
+                      {teacherStudents.map((student, index) => renderStudentCard(student, index))}
                     </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

@@ -18,6 +18,7 @@ import {
     addStudentManuallyService,
     getTeachersService
 } from '../Services/teacherService.js';
+import { createClassSchema, assignTeacherSchema, createActivitySchema, addStudentManuallySchema } from '../Schemas_zod/teacherSchema_zod.js';
 
 // ... existing code ...
 
@@ -105,10 +106,14 @@ export const getActivityAnalytics = async (req, res) => {
 // @access  Private (Teacher)
 export const createActivity = async (req, res) => {
     try {
+        const parsedBody = createActivitySchema.parse(req.body);
         const teacherId = req.user.id;
-        const activity = await createActivityService(teacherId, req.body);
+        const activity = await createActivityService(teacherId, parsedBody);
         res.status(201).json(activity);
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };
@@ -146,8 +151,8 @@ export const deleteActivity = async (req, res) => {
 // @access  Private (Teacher)
 export const createClass = async (req, res) => {
     try {
+        const classData = createClassSchema.parse(req.body);
         const teacherId = req.user.id;
-        const classData = req.body;
 
         const newClass = await createClassService(teacherId, classData);
 
@@ -156,6 +161,9 @@ export const createClass = async (req, res) => {
             class: newClass
         });
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };
@@ -212,7 +220,7 @@ export const uploadStudentCsv = async (req, res) => {
 export const assignTeacher = async (req, res) => {
     try {
         const teacherId = req.user.id;
-        const { studentId, classId } = req.body;
+        const { studentId, classId } = assignTeacherSchema.parse(req.body);
 
         // Call the service to assign the student to the class
         const result = await assignTeacherService(teacherId, studentId, classId);
@@ -222,6 +230,9 @@ export const assignTeacher = async (req, res) => {
             assignment: result
         });
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };
@@ -272,11 +283,15 @@ export const getTeacherReportsSummary = async (req, res) => {
 // @access  Private (Teacher)
 export const addStudentManually = async (req, res) => {
     try {
+        const parsedBody = addStudentManuallySchema.parse(req.body);
         const teacherId = req.user.id;
         const { classId } = req.params;
-        const result = await addStudentManuallyService(teacherId, classId, req.body);
+        const result = await addStudentManuallyService(teacherId, classId, parsedBody);
         res.status(201).json(result);
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };

@@ -5,17 +5,35 @@ import { UserPlus, Mail, Lock, Building } from 'lucide-react';
 import { createTeacher } from '../../../api/adminApi';
 import { useAuth } from '../../../context/AuthContext';
 
+const DEPARTMENTS = [
+  "B.Pharma", "mechatronics", "CSE", "CSE AI", "CSE-AIML", "CS",
+  "CSE-CYBER SECURITY", "CSE- DATA SCIENCE", "IT", "CSIT", "ECE",
+  "ECE- VLSI", "EEE", "ELCE", "ME",
+  "AMIA (Advanced Mechatronics and Industrial Automation)", "MBA", "MCA"
+];
 const AssignTeacher = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    deptName: ''
+    deptName: []
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleCheckboxChange = (dept) => {
+    setFormData(prev => {
+      const isSelected = prev.deptName.includes(dept);
+      if (isSelected) {
+        return { ...prev, deptName: prev.deptName.filter(d => d !== dept) };
+      } else {
+        return { ...prev, deptName: [...prev.deptName, dept] };
+      }
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +44,7 @@ const AssignTeacher = () => {
     try {
       const response = await createTeacher(formData);
       setMessage(response.message || 'Teacher assigned successfully!');
-      setFormData({ name: '', email: '', password: '', deptName: '' });
+      setFormData({ name: '', email: '', password: '', deptName: [] });
     } catch (err) {
       setError(err.message || 'Failed to assign teacher. Please try again.');
     } finally {
@@ -39,7 +57,7 @@ const AssignTeacher = () => {
   return (
     <div className="flex flex-col flex-1 h-full w-full">
       <main className="flex-1 overflow-y-auto p-6 lg:p-10">
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="max-w-3xl"
@@ -82,10 +100,34 @@ const AssignTeacher = () => {
                   <label className="block text-lg font-black uppercase mb-2 text-black">Department</label>
                   <div className="relative group">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-black z-10"><Building strokeWidth={2.5} size={20} /></div>
-                    <input type="text" value={formData.deptName} onChange={(e) => setFormData({ ...formData, deptName: e.target.value })}
-                      className="w-full bg-[#f8f8f8] border-4 border-black pl-12 pr-4 py-3 text-lg font-bold focus:outline-none focus:bg-white focus:-translate-y-1 focus:translate-x-1 transition-all text-black"
-                      style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }} placeholder="Computer Science" required />
-                  </div>
+                    <div 
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="w-full bg-[#f8f8f8] border-4 border-black pl-12 pr-4 py-3 text-lg font-bold cursor-pointer text-black flex justify-between items-center transition-all"
+                      style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
+                    >
+                      <span className="truncate">
+                        {formData.deptName.length > 0 
+                          ? formData.deptName.join(', ') 
+                          : 'Select Department(s)'}
+                      </span>
+                      <span>{dropdownOpen ? '▲' : '▼'}</span>
+                    </div>
+
+                    {dropdownOpen && (
+                      <div className="absolute top-full left-0 w-full mt-2 bg-white border-4 border-black z-50 max-h-64 overflow-y-auto" style={{ boxShadow: '8px 8px 0px #000' }}>
+                        {DEPARTMENTS.map(dept => (
+                          <label key={dept} className="flex items-center gap-3 p-3 hover:bg-[#00FF00] hover:bg-opacity-20 border-b-4 border-black cursor-pointer last:border-b-0 transition-colors">
+                            <input 
+                              type="checkbox" 
+                              checked={formData.deptName.includes(dept)}
+                              onChange={() => handleCheckboxChange(dept)}
+                              className="w-6 h-6 border-4 border-black appearance-none checked:bg-black checked:after:content-['✓'] checked:after:text-white checked:after:flex checked:after:items-center checked:after:justify-center checked:after:w-full checked:after:h-full cursor-pointer flex-shrink-0 transition-all"
+                            />
+                            <span className="font-bold text-black">{dept}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}                  </div>
                 </div>
                 <div>
                   <label className="block text-lg font-black uppercase mb-2 text-black">Email</label>
@@ -107,7 +149,7 @@ const AssignTeacher = () => {
                 </div>
               </div>
 
-              <motion.button 
+              <motion.button
                 whileHover={!loading ? { scale: 1.02, x: -4, y: -4, boxShadow: '8px 8px 0px #000' } : {}}
                 whileTap={!loading ? { scale: 0.98, x: 0, y: 0, boxShadow: '0px 0px 0px #000' } : {}}
                 className={`w-full bg-[#FFEB3B] text-black font-black text-xl uppercase border-4 border-black py-4 mt-8 flex justify-center items-center gap-3 transition-all ${loading ? 'opacity-50 cursor-not-allowed bg-gray-300' : 'cursor-pointer hover:bg-[#00FFFF]'}`}

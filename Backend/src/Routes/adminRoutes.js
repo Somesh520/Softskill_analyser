@@ -1,5 +1,5 @@
 import express from 'express';
-import { addTeacher, getAllTeachers, removeTeacher, getAllStudents, getCollegeAnalytics, getClassPerformance, getDepartmentAnalytics, getPerformanceDistribution, getActivityAnalytics } from '../Controller/adminController.js';
+import { addTeacher, getAllTeachers, removeTeacher, getAllStudents, getCollegeAnalytics, getClassPerformance, getDepartmentAnalytics, getPerformanceDistribution, getActivityAnalytics, getLogs, getAnalyticsFilters, getAllClasses } from '../Controller/adminController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -26,5 +26,10 @@ router.get('/analytics/class-performance', getClassPerformance);
 router.get('/analytics/departments', getDepartmentAnalytics);
 router.get('/analytics/performance-distribution', getPerformanceDistribution);
 router.get('/analytics/activities', getActivityAnalytics);
+router.get('/analytics/filters', getAnalyticsFilters);
+router.get('/classes', getAllClasses);
+
+// Logs Route
+router.get('/logs', getLogs);
 
 export default router;

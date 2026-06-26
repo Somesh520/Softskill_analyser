@@ -232,15 +232,33 @@ const MyClasses = () => {
                     {/* Branch */}
                     <div>
                       <label className="block text-lg font-black uppercase mb-2">Branch / Specialization</label>
-                      <input 
-                        type="text" 
+                      <select 
                         required
                         value={formData.branch}
                         onChange={e => setFormData({...formData, branch: e.target.value})}
-                        placeholder="e.g. CSE, IT"
-                        className="w-full bg-[#f8f8f8] border-4 border-black px-4 py-3 text-lg font-bold focus:outline-none focus:bg-[#00FFFF] transition-colors text-black"
+                        className="w-full bg-[#f8f8f8] border-4 border-black px-4 py-3 text-lg font-bold focus:outline-none focus:bg-[#00FFFF] transition-colors text-black cursor-pointer appearance-none"
                         style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
-                      />
+                      >
+                        <option value="" disabled>Select Branch</option>
+                        <option value="CSE">CSE</option>
+                        <option value="IT">IT</option>
+                        <option value="CSIT">CSIT</option>
+                        <option value="CS">CS</option>
+                        <option value="CSE AI">CSE AI</option>
+                        <option value="CSE-AIML">CSE-AIML</option>
+                        <option value="CSE- DATA SCIENCE">CSE- DATA SCIENCE</option>
+                        <option value="CSE-CYBER SECURITY">CSE-CYBER SECURITY</option>
+                        <option value="ECE">ECE</option>
+                        <option value="ECE- VLSI">ECE- VLSI</option>
+                        <option value="EEE">EEE</option>
+                        <option value="ELCE">ELCE</option>
+                        <option value="ME">ME</option>
+                        <option value="mechatronics">Mechatronics</option>
+                        <option value="AMIA">AMIA (Advanced Mechatronics)</option>
+                        <option value="B.Pharma">B.Pharma</option>
+                        <option value="MBA">MBA</option>
+                        <option value="MCA">MCA</option>
+                      </select>
                     </div>
 
                     {/* Semester */}
@@ -252,7 +270,7 @@ const MyClasses = () => {
                         value={formData.semester}
                         onChange={e => setFormData({...formData, semester: e.target.value})}
                         placeholder="1 - 8"
-                        className="w-full bg-[#f8f8f8] border-4 border-black px-4 py-3 text-lg font-bold focus:outline-none focus:bg-[#00FFFF] transition-colors text-black"
+                        className="w-full bg-[#f8f8f8] border-4 border-black px-4 py-3 text-lg font-bold focus:outline-none focus:bg-[#00FFFF] transition-colors text-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.05)' }}
                       />
                     </div>

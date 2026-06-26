@@ -1,10 +1,11 @@
 import { loginUserService, forgotPasswordService, resetPasswordService, refreshAccessTokenService } from '../Services/authService.js';
+import { loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../Schemas_zod/authSchema_zod.js';
 
 
 
 export const loginUser = async (req, res) => {
     try {
-        const { email, password, turnstileToken } = req.body;
+        const { email, password, turnstileToken } = loginSchema.parse(req.body);
 
 
         if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
@@ -63,6 +64,9 @@ export const loginUser = async (req, res) => {
             res.status(200).json(user);
         }
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         // Return 401 Unauthorized for bad login
         res.status(401).json({ message: error.message });
     }
@@ -112,7 +116,7 @@ export const logoutUser = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
     try {
-        const { email, turnstileToken } = req.body;
+        const { email, turnstileToken } = forgotPasswordSchema.parse(req.body);
 
         // Verify Turnstile Token
         if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
@@ -142,13 +146,16 @@ export const forgotPassword = async (req, res) => {
         const result = await forgotPasswordService(email);
         res.status(200).json(result);
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };
 
 export const resetPassword = async (req, res) => {
     try {
-        const { email, otp, newPassword, turnstileToken } = req.body;
+        const { email, otp, newPassword, turnstileToken } = resetPasswordSchema.parse(req.body);
 
         // Verify Turnstile Token
         if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
@@ -178,6 +185,9 @@ export const resetPassword = async (req, res) => {
         const result = await resetPasswordService(email, otp, newPassword);
         res.status(200).json(result);
     } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };

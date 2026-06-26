@@ -2,18 +2,31 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
+import {
   LayoutDashboard, UserCheck, FileText, BarChart3, Activity, TrendingUp,
   Shield, GraduationCap, User, ArrowRight, CheckCircle2, Zap, Sparkles,
   Award, HeartHandshake, BookOpen, Quote
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import NeoBrutalismCard from '../components/ui/NeoBrutalismCard';
 import NeoBrutalismButton from '../components/ui/NeoBrutalismButton';
 import NeoBrutalismMarquee from '../components/ui/NeoBrutalismMarquee';
 
 const LandingPage = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
+
+  const handleLoginClick = () => {
+    if (user) {
+      const userRole = user.role?.toLowerCase();
+      if (userRole === 'admin') router.push('/admin/dashboard');
+      else if (userRole === 'teacher') router.push('/teacher/dashboard');
+      else router.push('/student/dashboard');
+    } else {
+      router.push('/login');
+    }
+  };
 
   const features = [
     {
@@ -76,7 +89,7 @@ const LandingPage = () => {
   ];
 
   const skills = [
-    "Communication Skills", "Leadership Traits", "Teamwork & Synergy", "Self Confidence", "Analytical Thinking", 
+    "Communication Skills", "Leadership Traits", "Teamwork & Synergy", "Self Confidence", "Analytical Thinking",
     "Presentation Skills", "Time Management", "Creative Thinking", "Professional Ethics", "Interpersonal Relations"
   ];
 
@@ -128,20 +141,20 @@ const LandingPage = () => {
           <a href="#workflow" className="hover:bg-[#00F5D4] px-3 py-1 border-2 border-transparent hover:border-black transition-all">How it Works</a>
           <a href="#stats" className="hover:bg-[#FFEEAD] px-3 py-1 border-2 border-transparent hover:border-black transition-all">Analytics</a>
         </nav>
-        <NeoBrutalismButton 
-          id="nav-login-btn" 
-          variant="primary" 
-          onClick={() => router.push('/login')} 
+        <NeoBrutalismButton
+          id="nav-login-btn"
+          variant="primary"
+          onClick={handleLoginClick}
           className="py-2 px-6 text-sm"
         >
-          Sign In
+          {user ? 'Dashboard' : 'Sign In'}
         </NeoBrutalismButton>
       </header>
 
       {/* Hero Section */}
       <section className="relative w-full bg-[#FFEB3B] border-b-8 border-black overflow-hidden py-16 lg:py-24" aria-label="Introduction Hero">
         {/* Background Grid Pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10 pointer-events-none"
           style={{
             backgroundImage: `repeating-linear-gradient(0deg, #000 0px, #000 2px, transparent 2px, transparent 24px),
@@ -192,12 +205,12 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto"
             >
-              <NeoBrutalismButton id="hero-get-started-btn" variant="accent" onClick={() => router.push('/login')} className="flex items-center justify-center gap-2">
+              <NeoBrutalismButton id="hero-get-started-btn" variant="accent" onClick={handleLoginClick} className="flex items-center justify-center gap-2">
                 Launch Platform <ArrowRight className="w-5 h-5" />
               </NeoBrutalismButton>
-              <a 
+              <a
                 id="hero-learn-more-btn"
-                href="#features" 
+                href="#features"
                 className="bg-white hover:bg-gray-100 text-black font-black text-lg uppercase border-4 border-black px-8 py-4 transition-all text-center flex items-center justify-center"
                 style={{ boxShadow: '4px 4px 0px #000' }}
               >
@@ -241,8 +254,8 @@ const LandingPage = () => {
                     <span>92%</span>
                   </div>
                   <div className="h-4 bg-gray-200 border-2 border-black">
-                    <motion.div 
-                      className="h-full bg-[#00FF00]" 
+                    <motion.div
+                      className="h-full bg-[#00FF00]"
                       initial={{ width: 0 }}
                       animate={{ width: '92%' }}
                       transition={{ duration: 1.5, delay: 1 }}
@@ -256,8 +269,8 @@ const LandingPage = () => {
                     <span>88%</span>
                   </div>
                   <div className="h-4 bg-gray-200 border-2 border-black">
-                    <motion.div 
-                      className="h-full bg-[#00FFFF]" 
+                    <motion.div
+                      className="h-full bg-[#00FFFF]"
                       initial={{ width: 0 }}
                       animate={{ width: '88%' }}
                       transition={{ duration: 1.5, delay: 1.2 }}
@@ -271,8 +284,8 @@ const LandingPage = () => {
                     <span>85%</span>
                   </div>
                   <div className="h-4 bg-gray-200 border-2 border-black">
-                    <motion.div 
-                      className="h-full bg-[#FF00FF]" 
+                    <motion.div
+                      className="h-full bg-[#FF00FF]"
                       initial={{ width: 0 }}
                       animate={{ width: '85%' }}
                       transition={{ duration: 1.5, delay: 1.4 }}
@@ -286,8 +299,8 @@ const LandingPage = () => {
                     <span>95%</span>
                   </div>
                   <div className="h-4 bg-gray-200 border-2 border-black">
-                    <motion.div 
-                      className="h-full bg-[#FFD700]" 
+                    <motion.div
+                      className="h-full bg-[#FFD700]"
                       initial={{ width: 0 }}
                       animate={{ width: '95%' }}
                       transition={{ duration: 1.5, delay: 1.6 }}
@@ -298,7 +311,7 @@ const LandingPage = () => {
 
               {/* Bottom Note */}
               <div className="mt-6 pt-4 border-t-2 border-black border-dashed flex items-center justify-between text-xs font-bold text-gray-700">
-                <span>Evaluator: Dr. Verma</span>
+                <span>Evaluator: Mr.Himanshu Saxsena </span>
                 <span className="flex items-center gap-1 text-black font-black uppercase">
                   <Award className="w-4 h-4 text-[#FF00FF]" /> VERIFIED
                 </span>
@@ -393,16 +406,15 @@ const LandingPage = () => {
               {/* Left side: Timeline Steps */}
               <div className="lg:col-span-6 space-y-4">
                 {steps.map((step, i) => (
-                  <button 
+                  <button
                     key={i}
                     id={`workflow-step-${i}`}
                     onClick={() => setActiveStep(i)}
-                    className={`w-full text-left flex items-center gap-6 border-4 border-black p-5 transition-all outline-none ${
-                      activeStep === i 
-                        ? 'bg-[#00F5D4] translate-x-2' 
+                    className={`w-full text-left flex items-center gap-6 border-4 border-black p-5 transition-all outline-none ${activeStep === i
+                        ? 'bg-[#00F5D4] translate-x-2'
                         : 'bg-white hover:bg-gray-100'
-                    }`}
-                    style={{ 
+                      }`}
+                    style={{
                       boxShadow: activeStep === i ? '6px 6px 0px #000' : '3px 3px 0px #000',
                     }}
                   >
@@ -416,7 +428,7 @@ const LandingPage = () => {
 
               {/* Right side: Detailed Step Box */}
               <div className="lg:col-span-6 flex">
-                <div 
+                <div
                   className="w-full bg-[#FFEEAD] border-8 border-black p-8 flex flex-col justify-center relative"
                   style={{ boxShadow: '10px 10px 0px #000' }}
                 >
@@ -446,8 +458,8 @@ const LandingPage = () => {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {stats.map((s, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="bg-black text-white p-6 border-4 border-black flex flex-col items-center justify-center text-center transition-transform hover:-translate-y-1"
                   style={{ boxShadow: '6px 6px 0px #FF00FF' }}
                 >
@@ -465,8 +477,8 @@ const LandingPage = () => {
             <h2 className="text-4xl md:text-5xl font-black uppercase mb-12">
               Faculty Endorsement
             </h2>
-            
-            <div 
+
+            <div
               className="bg-black text-white p-8 md:p-12 border-8 border-black text-left relative mb-12"
               style={{ boxShadow: '12px 12px 0px #00F5D4' }}
             >
@@ -488,11 +500,11 @@ const LandingPage = () => {
             <h3 className="text-2xl md:text-3xl font-black uppercase mb-8">
               Start evaluating and profiling soft skills today.
             </h3>
-            <NeoBrutalismButton 
-              id="cta-start-btn" 
-              variant="secondary" 
-              className="scale-110 md:scale-125" 
-              onClick={() => router.push('/login')}
+            <NeoBrutalismButton
+              id="cta-start-btn"
+              variant="secondary"
+              className="scale-110 md:scale-125"
+              onClick={handleLoginClick}
             >
               Get Started Now
             </NeoBrutalismButton>

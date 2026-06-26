@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
         ref: 'User'
     },
     deptName: {
-        type: String
+        type: [String]
     },
 
     // --- Student-specific fields ---

@@ -8,6 +8,8 @@ import authRoutes from './src/Routes/authRoutes.js';
 import adminRoutes from './src/Routes/adminRoutes.js';
 import teacherRoutes from './src/Routes/teacherRoutes.js';
 import studentRoutes from './src/Routes/studentRoutes.js';
+import leaderboardRoutes from './src/Routes/leaderboardRoutes.js';
+import surveyRoutes from './src/Routes/surveyRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +55,12 @@ app.use('/api/teacher', teacherRoutes);
 
 // Student-specific routes
 app.use('/api/student', studentRoutes);
+
+// Leaderboard-specific routes
+app.use('/api/leaderboard', leaderboardRoutes);
+
+// Survey-specific routes
+app.use('/api/surveys', surveyRoutes);
 
 app.get('/', (req, res) => {
   res.send('soft skill analyser backend is running');

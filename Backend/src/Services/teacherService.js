@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import cloudinary from '../Config/cloudinary.js';
 import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
 import { generateActivityCSV } from '../utils/csvGenerator.js';
+import { createLogService } from './logService.js';
 
 const reportsSummaryCache = new Map();
 const CACHE_TTL = 15000; // 15 seconds TTL
@@ -54,6 +55,7 @@ export const createClassService = async (teacherId, classData) => {
     });
 
     clearReportsSummaryCache();
+    await createLogService(teacherId, 'CREATED_CLASS', `Created class: ${name} (Sem ${semester})`);
     return newClass;
 };
 
@@ -97,6 +99,8 @@ export const assignTeacherService = async (teacherId, studentId, classId) => {
     if (!student) {
         throw new Error('Student not found.');
     }
+
+    await createLogService(teacherId, 'ASSIGNED_STUDENT', `Assigned student ${student.name} to class ${classObj.name}`);
 
     return {
         classId: classObj._id,
@@ -219,6 +223,8 @@ export const uploadStudentCsvService = async (teacherId, classId, fileBuffer) =>
         sendWelcomeEmailsInBackground(newStudentsToEmail);
     }
 
+    await createLogService(teacherId, 'UPLOADED_STUDENTS_CSV', `Uploaded CSV adding/updating ${result.upsertedCount + result.modifiedCount} students in class ${classObj.name}`);
+
     return {
         message: `CSV processed successfully. Uploaded to Cloudinary backup.`,
         cloudinaryUrl,
@@ -268,6 +274,7 @@ export const deleteClassService = async (teacherId, classId) => {
     }
 
     clearReportsSummaryCache();
+    await createLogService(teacherId, 'DELETED_CLASS', `Deleted class: ${classObj.name} (Sem ${classObj.semester})`);
     return true;
 };
 export const deleteStudentFromClassService = async (teacherId, classId, studentId) => {
@@ -283,6 +290,8 @@ export const deleteStudentFromClassService = async (teacherId, classId, studentI
     if (!deletedStudent) {
         throw new Error('Student not found in this class.');
     }
+
+    await createLogService(teacherId, 'DELETED_STUDENT', `Removed student ${deletedStudent.name} from class ${classObj.name}`);
 
     return true;
 };
@@ -321,6 +330,7 @@ export const createActivityService = async (teacherId, activityData) => {
     });
 
     clearReportsSummaryCache();
+    await createLogService(teacherId, 'CREATED_ACTIVITY', `Created activity: ${title} (${type})`);
     return activity;
 };
 
@@ -391,6 +401,7 @@ export const deleteActivityService = async (teacherId, activityId) => {
     await ActivitySubmission.deleteMany({ activityId: activityId });
 
     clearReportsSummaryCache();
+    await createLogService(teacherId, 'DELETED_ACTIVITY', `Deleted activity: ${activity.title}`);
     return { message: 'Activity deleted successfully' };
 };
 
@@ -457,6 +468,7 @@ export const editActivityMarksService = async (teacherId, activityId, submission
     await submission.save();
 
     clearReportsSummaryCache();
+    await createLogService(teacherId, 'EDITED_MARKS', `Edited marks for student ${submission.studentName} in activity ${activity.title}`);
     return {
         message: 'Marks updated successfully',
         submission: {
@@ -627,6 +639,7 @@ export const uploadActivityMarksService = async (teacherId, activityId, fileBuff
                     }
 
                     clearReportsSummaryCache();
+                    await createLogService(teacherId, 'UPLOADED_MARKS_CSV', `Uploaded marks CSV for activity ${activity.title}, processed ${written} students`);
                     resolve({
                         message: `Processed ${written} students`,
                         count: written,
@@ -981,6 +994,8 @@ export const addStudentManuallyService = async (teacherId, classId, studentData)
         email: newStudent.email,
         plainPassword
     }]);
+
+    await createLogService(teacherId, 'ADDED_STUDENT_MANUALLY', `Manually added student ${newStudent.name} to class ${classObj.name}`);
 
     return {
         message: 'Student added successfully',

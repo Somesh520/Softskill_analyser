@@ -499,7 +499,7 @@ const CreateActivity = () => {
                     <option value="">-- SELECT TEACHER --</option>
                     {teachers.map(t => (
                       <option key={t._id} value={t._id}>
-                        {t.name.toUpperCase()} ({t.deptName || 'DEPT'})
+                        {t.name.toUpperCase()} ({(Array.isArray(t.deptName) ? t.deptName.join(', ') : t.deptName) || 'DEPT'})
                       </option>
                     ))}
                   </select>

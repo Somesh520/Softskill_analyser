@@ -20,6 +20,8 @@ import {
   ShieldCheck,
   Upload,
   FolderOpen,
+  Terminal,
+  Trophy,
 } from 'lucide-react';
 
 // ─── Sidebar Context ─────────────────────────────────────────
@@ -47,14 +49,19 @@ export const SidebarProvider = ({ children, defaultCollapsed = false }) => {
 const menuConfigs = {
   admin: [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, href: '/admin/leaderboard' },
+    { id: 'surveys', label: 'Surveys', icon: FileText, href: '/admin/surveys' },
     { id: 'assign-teacher', label: 'Assign Teacher', icon: UserPlus, href: '/admin/assign-teacher' },
     { id: 'manage-teachers', label: 'All Teachers', icon: Users, href: '/admin/teachers' },
     { id: 'manage-students', label: 'All Students', icon: GraduationCap, href: '/admin/students' },
+    { id: 'activity-logs', label: 'Activity Logs', icon: Terminal, href: '/admin/logs' },
     { id: 'college-report', label: 'College Report', icon: BarChart, href: '/admin/college-report' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/admin/settings' },
   ],
   teacher: [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/teacher/dashboard' },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, href: '/teacher/leaderboard' },
+    { id: 'surveys', label: 'Surveys', icon: FileText, href: '/teacher/surveys' },
     { id: 'my-classes', label: 'My Classes', icon: FolderOpen, href: '/teacher/classes' },
     { id: 'assigned-students', label: 'My Students', icon: Users, href: '/teacher/assigned-students' },
     { id: 'create-activity', label: 'Create Activity', icon: ClipboardCheck, href: '/teacher/create-activity' },
@@ -64,6 +71,8 @@ const menuConfigs = {
   ],
   student: [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/student/dashboard' },
+    { id: 'surveys', label: 'Pending Surveys', icon: FileText, href: '/student/surveys' },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, href: '/student/leaderboard' },
     { id: 'my-reports', label: 'My Reports', icon: FileText, href: '/student/my-reports' },
     { id: 'semester-report', label: 'Semester Report', icon: BarChart, href: '/student/semester-report' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/student/settings' },

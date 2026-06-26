@@ -124,7 +124,7 @@ const StudentDashboard = () => {
               <div>
                 <p className="text-xs font-bold text-gray-500 uppercase">DEPARTMENT</p>
                 <span className="inline-block bg-[#00FFFF] border-2 border-black font-black uppercase text-xs px-3 py-1 mt-1 text-black">
-                  {summary.teacher.deptName}
+                  {Array.isArray(summary.teacher.deptName) ? summary.teacher.deptName.join(', ') : summary.teacher.deptName}
                 </span>
               </div>
             </div>

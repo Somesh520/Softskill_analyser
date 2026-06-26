@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Users, Mail, Building, Calendar, ArrowLeft, RefreshCw, UserPlus, Search, Trash2, AlertTriangle, X } from 'lucide-react';
-import { getTeachers, deleteTeacher } from '../../../api/adminApi';
+import { Users, Mail, Building, Calendar, ArrowLeft, RefreshCw, UserPlus, Search, Trash2, AlertTriangle, X, Info } from 'lucide-react';
+import { getTeachers, deleteTeacher, getStudents } from '../../../api/adminApi';
 
 // ── Confirmation Popup Component ─────────────────────────────────────────────
 const ConfirmDialog = ({ teacher, onConfirm, onCancel, loading }) => (
@@ -48,7 +48,7 @@ const ConfirmDialog = ({ teacher, onConfirm, onCancel, loading }) => (
         <div className="bg-[#FFEB3B] border-4 border-black p-4 mb-6 text-center">
           <p className="text-xl font-black uppercase">{teacher.name}</p>
           <p className="font-bold text-sm">{teacher.email}</p>
-          <p className="font-bold text-sm text-gray-600">{teacher.deptName}</p>
+          <p className="font-bold text-sm text-gray-600">{Array.isArray(teacher.deptName) ? teacher.deptName.join(', ') : teacher.deptName}</p>
         </div>
         <p className="text-center font-black uppercase text-sm text-[#FF0000] mb-8 border-4 border-[#FF0000] border-dashed p-3">
           ⚠ This action cannot be undone!
@@ -81,6 +81,91 @@ const ConfirmDialog = ({ teacher, onConfirm, onCancel, loading }) => (
   </AnimatePresence>
 );
 
+// ── Teacher Info (Students List) Dialog Component ──────────────────────────────
+const TeacherInfoDialog = ({ teacher, onClose }) => {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAndFilterStudents = async () => {
+      try {
+        const allStudents = await getStudents();
+        const teacherStudents = allStudents.filter(s => s.assignedByTeacher?._id === teacher._id);
+        setStudents(teacherStudents);
+      } catch (err) {
+        console.error("Failed to fetch students", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAndFilterStudents();
+  }, [teacher._id]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white border-8 border-black w-full max-w-2xl max-h-[80vh] flex flex-col relative text-black"
+        style={{ boxShadow: '16px 16px 0px #000' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="bg-[#00FFFF] p-6 border-b-8 border-black flex justify-between items-center shrink-0">
+          <div>
+            <h2 className="text-3xl font-black uppercase leading-tight line-clamp-1">{teacher.name}'s</h2>
+            <p className="text-xl font-bold uppercase text-black/70">Assigned Students</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="bg-black text-white p-2 hover:bg-[#FF0000] transition-colors border-4 border-black cursor-pointer"
+          >
+            <X strokeWidth={3} size={24} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto flex-1 bg-[#F0F0F0]">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-16 h-16 border-8 border-black border-t-[#00FFFF] animate-spin mb-4" />
+              <p className="font-black uppercase">Loading Students...</p>
+            </div>
+          ) : students.length === 0 ? (
+            <div className="bg-white border-4 border-black p-8 text-center text-gray-500" style={{ boxShadow: '8px 8px 0px #000' }}>
+              <p className="text-2xl font-black uppercase text-black mb-2">No Students</p>
+              <p className="font-bold uppercase">This teacher hasn't been assigned any students yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {students.map(student => (
+                <div key={student._id} className="bg-white border-4 border-black p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all" style={{ boxShadow: '4px 4px 0px #000' }}>
+                  <div>
+                    <h4 className="text-lg font-black uppercase text-black">{student.name}</h4>
+                    <p className="font-bold text-sm text-gray-600">{student.email}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {student.classId && <span className="bg-[#FFEB3B] border-2 border-black px-2 py-1 text-xs font-black uppercase shrink-0">Class: {student.classId.name || 'N/A'}</span>}
+                    {student.semester && <span className="bg-[#00FF00] border-2 border-black px-2 py-1 text-xs font-black uppercase shrink-0">Sem: {student.semester}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+
 // ── Main Component ────────────────────────────────────────────────────────────
 const ManageTeachers = () => {
   const router = useRouter();
@@ -89,6 +174,7 @@ const ManageTeachers = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherToRemove, setTeacherToRemove] = useState(null); // teacher object for confirmation
+  const [teacherForInfo, setTeacherForInfo] = useState(null); // teacher object for info modal
   const [removing, setRemoving] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -131,7 +217,7 @@ const ManageTeachers = () => {
   const filteredTeachers = teachers.filter(t =>
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.deptName?.toLowerCase().includes(searchTerm.toLowerCase())
+    (Array.isArray(t.deptName) ? t.deptName.join(', ') : (t.deptName || '')).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -162,6 +248,16 @@ const ManageTeachers = () => {
             loading={removing}
           />
         )}
+
+        {/* Teacher Info Dialog */}
+        <AnimatePresence>
+          {teacherForInfo && (
+            <TeacherInfoDialog 
+              teacher={teacherForInfo} 
+              onClose={() => setTeacherForInfo(null)} 
+            />
+          )}
+        </AnimatePresence>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
@@ -259,7 +355,7 @@ const ManageTeachers = () => {
                   </div>
                   <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
                     <Building size={18} strokeWidth={3} className="text-[#00FFFF] shrink-0" />
-                    <span>{teacher.deptName || 'N/A'}</span>
+                    <span>{Array.isArray(teacher.deptName) ? teacher.deptName.join(', ') : (teacher.deptName || 'N/A')}</span>
                   </div>
                   <div className="flex items-center gap-3 bg-[#F0F0F0] border-4 border-black p-3 font-bold text-sm">
                     <Calendar size={18} strokeWidth={3} className="text-[#00FF00] shrink-0" />
@@ -269,11 +365,19 @@ const ManageTeachers = () => {
 
                 <div className="mt-8 pt-6 border-t-4 border-black border-dashed flex gap-3">
                   <button
+                    onClick={() => setTeacherForInfo(teacher)}
+                    className="w-12 h-12 bg-[#00FFFF] text-black font-black flex items-center justify-center border-4 border-black hover:bg-black hover:text-white transition-all cursor-pointer shrink-0"
+                    style={{ boxShadow: '4px 4px 0px #000' }}
+                    title="View Students"
+                  >
+                    <Info strokeWidth={3} size={20} />
+                  </button>
+                  <button
                     onClick={() => setTeacherToRemove(teacher)}
-                    className="w-full bg-[#FF0000] text-white font-black uppercase py-3 border-4 border-black hover:bg-black transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    className="flex-1 bg-[#FF0000] text-white font-black uppercase h-12 border-4 border-black hover:bg-black transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
                     style={{ boxShadow: '4px 4px 0px #000' }}
                   >
-                    <Trash2 strokeWidth={3} size={16} /> Remove Teacher
+                    <Trash2 strokeWidth={3} size={16} /> Remove
                   </button>
                 </div>
               </motion.div>

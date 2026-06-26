@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, User, Lock, ExternalLink, Eye, EyeOff, ShieldCheck } from 'lucide-react';
@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
   const savedEmail = typeof window !== 'undefined' ? (localStorage.getItem('rememberedEmail') || '') : '';
   const savedPassword = typeof window !== 'undefined' ? (localStorage.getItem('rememberedPassword') || '') : '';
   const [formData, setFormData] = useState({ email: savedEmail, password: savedPassword });
@@ -23,6 +23,19 @@ const Login = () => {
   const [redirectRole, setRedirectRole] = useState('');
   const turnstileRef = useRef();
   const isSubmitting = useRef(false);
+
+  useEffect(() => {
+    if (!authLoading && user && !isSuccessRedirect) {
+      const userRole = user.role?.toLowerCase();
+      if (userRole === 'admin') {
+        router.push('/admin/dashboard');
+      } else if (userRole === 'teacher') {
+        router.push('/teacher/dashboard');
+      } else {
+        router.push('/student/dashboard');
+      }
+    }
+  }, [user, authLoading, isSuccessRedirect, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -82,6 +95,15 @@ const Login = () => {
       isSubmitting.current = false;
     }
   };
+
+  // If already authenticated and redirecting, show nothing or a loading state to prevent flash
+  if (!authLoading && user && !isSuccessRedirect) {
+    return (
+      <div className="min-h-screen bg-[#F0F0F0] flex items-center justify-center">
+        <div className="w-16 h-16 border-8 border-black border-t-[#00FFFF] animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <section className="min-h-screen bg-[#F0F0F0] flex flex-col justify-center items-center p-6 relative overflow-hidden">
