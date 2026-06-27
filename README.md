@@ -95,9 +95,9 @@ sequenceDiagram
 ```mermaid
 erDiagram
     COLLEGE ||--o{ USER : "has many (Admins/Teachers)"
-    USER ||--o{ CLASS : "teaches"
-    CLASS ||--o{ USER : "contains (Students)"
-    CLASS ||--o{ ACTIVITY : "has"
+    USER ||--o{ COURSE_CLASS : "teaches"
+    COURSE_CLASS ||--o{ USER : "contains (Students)"
+    COURSE_CLASS ||--o{ ACTIVITY : "has"
     ACTIVITY ||--o{ SCORE : "generates"
     USER ||--o{ SCORE : "receives"
     USER ||--o{ REPORT : "has cached"
