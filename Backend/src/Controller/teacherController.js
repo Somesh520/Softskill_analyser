@@ -112,7 +112,8 @@ export const createActivity = async (req, res) => {
         res.status(201).json(activity);
     } catch (error) {
         if (error.name === 'ZodError') {
-            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+            const errList = error.errors || error.issues;
+            return res.status(400).json({ message: errList ? errList.map(e => e.message).join(', ') : error.message });
         }
         res.status(400).json({ message: error.message });
     }

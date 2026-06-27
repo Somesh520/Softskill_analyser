@@ -9,6 +9,7 @@ import cloudinary from '../Config/cloudinary.js';
 import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
 import { generateActivityCSV } from '../utils/csvGenerator.js';
 import { createLogService } from './logService.js';
+import groq from '../Config/groq.js'
 
 const reportsSummaryCache = new Map();
 const CACHE_TTL = 15000; // 15 seconds TTL
@@ -300,6 +301,7 @@ export const deleteStudentFromClassService = async (teacherId, classId, studentI
 export const createActivityService = async (teacherId, activityData) => {
     const { title, description, classIds, dueDate, maxPoints, type, rubrics, appointedTeacherId } = activityData;
 
+
     // Ensure classIds is an array
     const classIdArray = Array.isArray(classIds) ? classIds : [classIds];
 
@@ -317,9 +319,27 @@ export const createActivityService = async (teacherId, activityData) => {
         }
     }
 
+    const system_prompt = 'your job is to give title and description of activity based on the user description. Return ONLY a JSON object with "newtitle" and "newdescription" keys. No markdown, no extra text.';
+
+    const aiResponse = await groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+            { role: 'system', content: system_prompt },
+            { role: 'user', content: description }
+        ],
+        response_format: { type: 'json_object' }
+    });
+
+    const response = JSON.parse(aiResponse.choices[0].message.content);
+    const { newtitle, newdescription } = response;
+    if (!newtitle || !newdescription) {
+        throw new Error('Failed to generate title and description from AI');
+    }
+
+
     const activity = await Activity.create({
-        title,
-        description,
+        title: newtitle || title,
+        description: newdescription || description,
         teacherId,
         classIds: classIdArray,
         dueDate,
@@ -328,6 +348,7 @@ export const createActivityService = async (teacherId, activityData) => {
         rubrics,
         appointedTeacherId: type === 'Interview' ? appointedTeacherId : undefined
     });
+
 
     clearReportsSummaryCache();
     await createLogService(teacherId, 'CREATED_ACTIVITY', `Created activity: ${title} (${type})`);
@@ -348,7 +369,7 @@ export const getActivitiesService = async (teacherId, classId = null) => {
         .populate('teacherId', 'name email deptName')
         .populate('appointedTeacherId', 'name email deptName')
         .sort({ createdAt: -1 });
-};  
+};
 
 export const getActivitySubmissionsService = async (teacherId, activityId) => {
     const activity = await Activity.findOne({
@@ -544,7 +565,7 @@ export const downloadActivityTemplateService = async (teacherId, activityId) => 
     const students = await User.find({ classId, role: 'student' })
         .select('name email rollNo')
         .lean();
-    
+
     const csvContent = generateActivityCSV(activity, students);
     return {
         filename: `template_${activity.title.replace(/\s+/g, '_')}.csv`,
@@ -703,7 +724,7 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
     const studentIds = students.map(s => s._id);
 
     // 4. Fetch submissions for these activities and students
-    const submissions = await ActivitySubmission.find({ 
+    const submissions = await ActivitySubmission.find({
         activityId: { $in: activityIds },
         studentId: { $in: studentIds }
     }).lean();
@@ -790,7 +811,7 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
         classPerformance = classes.map(cls => {
             const clsStudents = students.filter(s => String(s.classId) === String(cls._id));
             const clsStudentIds = new Set(clsStudents.map(s => String(s._id)));
-            
+
             const clsSubmissions = submissions.filter(sub => clsStudentIds.has(String(sub.studentId)));
             const count = clsSubmissions.length;
             let sum = 0;
@@ -814,10 +835,10 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
 
     // 8. Scoring Trend: Group by calendar week based on submission date (updatedAt)
     const sortedSubmissions = [...submissions].sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-    
+
     const getWeekLabel = (date) => {
         const d = new Date(date);
-        d.setHours(0,0,0,0);
+        d.setHours(0, 0, 0, 0);
         const day = d.getDay();
         const diff = d.getDate() - day + (day === 0 ? -6 : 1);
         const monday = new Date(d.setDate(diff));
@@ -869,7 +890,7 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
         const sum = criteriaSums[criterion];
         const count = criteriaCounts[criterion];
         const avg = count > 0 ? Math.round((sum / count) * 10) / 10 : 0;
-        
+
         criteriaBreakdown.push({
             name: criterion.charAt(0).toUpperCase() + criterion.slice(1),
             value: avg,
@@ -898,8 +919,8 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
         totalExpectedSubmissions += activityStudents.length;
     });
 
-    const completionRate = totalExpectedSubmissions > 0 
-        ? Math.round((totalSubmissions / totalExpectedSubmissions) * 100) 
+    const completionRate = totalExpectedSubmissions > 0
+        ? Math.round((totalSubmissions / totalExpectedSubmissions) * 100)
         : 0;
 
     // 11. Improvement calculation

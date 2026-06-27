@@ -1,13 +1,8 @@
 import ActivitySubmission from '../Models/ActivitySubmissionmodel.js';
 import User from '../Models/Usermodel.js';
-import Groq from 'groq-sdk';
-import dotenv from 'dotenv';
+import groq from '../Config/groq.js'
 
-dotenv.config();
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY
-});
 
 export const getLeaderboardService = async (limit = 20) => {
     try {

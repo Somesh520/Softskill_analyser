@@ -2,33 +2,29 @@ import Survey from '../Models/SurveyModel.js';
 import SurveyResponse from '../Models/SurveyResponseModel.js';
 import User from '../Models/Usermodel.js';
 import { createLogService } from '../Services/logService.js';
-import Groq from 'groq-sdk';
-import dotenv from 'dotenv';
+import groq from '../Config/groq.js'
 
-dotenv.config();
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY
-});
+
 
 // --- TEACHER ACTIONS ---
 
 // @desc    Create a new survey
 // @route   POST /api/surveys/teacher
 // @access  Private (Teacher)
-    export const createSurvey = async (req, res) => {
-        try {
-            const { classId, isGlobal, title, description, questions, isActive } = req.body;
-            
-            const newSurvey = new Survey({
-                teacherId: req.user.id,
-                classId: isGlobal ? null : classId,
-                isGlobal: isGlobal || false,
-                title,
-                description,
-                questions,
-                isActive: isActive || false
-            });
+export const createSurvey = async (req, res) => {
+    try {
+        const { classId, isGlobal, title, description, questions, isActive } = req.body;
+
+        const newSurvey = new Survey({
+            teacherId: req.user.id,
+            classId: isGlobal ? null : classId,
+            isGlobal: isGlobal || false,
+            title,
+            description,
+            questions,
+            isActive: isActive || false
+        });
 
         await newSurvey.save();
         res.status(201).json(newSurvey);
@@ -61,7 +57,7 @@ export const generateSurveyQuestions = async (req, res) => {
         let content = chatCompletion.choices[0]?.message?.content || "[]";
         // Sometimes LLM wraps json in ```json ... ```
         content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-        
+
         let questions = JSON.parse(content);
         if (!Array.isArray(questions) && questions.questions) {
             questions = questions.questions;
@@ -80,7 +76,7 @@ export const generateSurveyQuestions = async (req, res) => {
 export const getTeacherSurveys = async (req, res) => {
     try {
         const surveys = await Survey.find({ teacherId: req.user.id }).populate('classId', 'branch semester section').sort({ createdAt: -1 });
-        
+
         // Append response counts
         const surveysWithCounts = await Promise.all(surveys.map(async (survey) => {
             const count = await SurveyResponse.countDocuments({ surveyId: survey._id });
@@ -102,7 +98,7 @@ export const getAllSurveys = async (req, res) => {
             .populate('classId', 'branch semester section')
             .populate('teacherId', 'name')
             .sort({ createdAt: -1 });
-        
+
         const surveysWithCounts = await Promise.all(surveys.map(async (survey) => {
             const count = await SurveyResponse.countDocuments({ surveyId: survey._id });
             return { ...survey.toObject(), responseCount: count };
@@ -129,7 +125,7 @@ export const toggleSurveyStatus = async (req, res) => {
         const newStatus = !survey.isActive;
         survey.isActive = newStatus;
         await survey.save();
-        
+
         res.status(200).json({ message: `Survey marked as ${newStatus ? 'LIVE' : 'DRAFT'}`, survey });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -156,8 +152,8 @@ export const deleteSurvey = async (req, res) => {
 
         // Log the action
         await createLogService(
-            req.user.id, 
-            'SURVEY_DELETED', 
+            req.user.id,
+            'SURVEY_DELETED',
             `Deleted survey: ${survey.title}`
         );
 
@@ -191,13 +187,13 @@ export const getStudentSurveys = async (req, res) => {
         if (!student.classId) return res.status(400).json({ message: "Student is not assigned to any class" });
 
         // Find active surveys for this class OR global surveys
-        const activeSurveys = await Survey.find({ 
+        const activeSurveys = await Survey.find({
             $or: [
                 { classId: student.classId, isActive: true },
                 { isGlobal: true, isActive: true }
             ]
         }).populate('teacherId', 'name role');
-        
+
         // Find which surveys the student has already submitted
         const submittedResponses = await SurveyResponse.find({ studentId: req.user.id }).select('surveyId');
         const submittedIds = submittedResponses.map(r => r.surveyId.toString());

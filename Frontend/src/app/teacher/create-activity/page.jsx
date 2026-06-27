@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ClipboardCheck, 
-  Plus, 
-  Trash2, 
-  Calendar, 
-  Type, 
-  FileText, 
-  Target, 
+import {
+  ClipboardCheck,
+  Plus,
+  Trash2,
+  Calendar,
+  Type,
+  FileText,
+  Target,
   Users,
   CheckCircle2,
   AlertCircle,
@@ -27,9 +27,9 @@ import {
   Save
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getClasses, 
-  createActivity, 
+import {
+  getClasses,
+  createActivity,
   getActivities,
   deleteActivity,
   downloadActivityTemplate,
@@ -57,7 +57,7 @@ const CustomDatePicker = ({ value, onChange }) => {
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
-    
+
     const days = [];
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
@@ -89,8 +89,8 @@ const CustomDatePicker = ({ value, onChange }) => {
     if (!day || !value) return false;
     const selectedDate = new Date(value);
     return day.getDate() === selectedDate.getDate() &&
-           day.getMonth() === selectedDate.getMonth() &&
-           day.getFullYear() === selectedDate.getFullYear();
+      day.getMonth() === selectedDate.getMonth() &&
+      day.getFullYear() === selectedDate.getFullYear();
   };
 
   const monthYearLabel = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -111,13 +111,13 @@ const CustomDatePicker = ({ value, onChange }) => {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-          
-          <div 
+
+          <div
             className="absolute top-full mt-3 left-0 bg-white border-4 border-black p-4 z-50 w-72 text-black"
             style={{ boxShadow: '6px 6px 0px #000' }}
           >
             <div className="flex justify-between items-center mb-4">
-              <button 
+              <button
                 type="button"
                 onClick={handlePrevMonth}
                 className="border-2 border-black p-1 bg-white hover:bg-yellow-200 font-black cursor-pointer text-xs"
@@ -125,7 +125,7 @@ const CustomDatePicker = ({ value, onChange }) => {
                 ◀
               </button>
               <span className="font-black uppercase text-xs">{monthYearLabel}</span>
-              <button 
+              <button
                 type="button"
                 onClick={handleNextMonth}
                 className="border-2 border-black p-1 bg-white hover:bg-yellow-200 font-black cursor-pointer text-xs"
@@ -151,11 +151,10 @@ const CustomDatePicker = ({ value, onChange }) => {
                     key={day.toISOString()}
                     type="button"
                     onClick={() => handleSelectDay(day)}
-                    className={`p-1.5 font-bold text-xs border transition-all cursor-pointer ${
-                      active 
-                        ? 'bg-black text-white border-black' 
-                        : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FF00FF] hover:text-white'
-                    }`}
+                    className={`p-1.5 font-bold text-xs border transition-all cursor-pointer ${active
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-black border-transparent hover:border-black hover:bg-[#FF00FF] hover:text-white'
+                      }`}
                   >
                     {day.getDate()}
                   </button>
@@ -173,13 +172,13 @@ const CreateActivity = () => {
   const router = useRouter();
   const { user: teacherData } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const [evaluatingId, setEvaluatingId] = useState(null);
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const [submissionsModal, setSubmissionsModal] = useState({ open: false, activity: null, data: null });
   const [editingSubmission, setEditingSubmission] = useState(null);
   const [editFormData, setEditFormData] = useState({});
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -305,7 +304,7 @@ const CreateActivity = () => {
   };
 
   const handleQuestionChange = (id, field, value) => {
-    const newQuestions = formData.questions.map(q => 
+    const newQuestions = formData.questions.map(q =>
       q.id === id ? { ...q, [field]: field === 'weight' ? Number(value) : value } : q
     );
     setFormData({ ...formData, questions: newQuestions });
@@ -313,7 +312,7 @@ const CreateActivity = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const totalWeight = formData.questions.reduce((sum, q) => sum + (q.weight || 0), 0);
     if (Number(totalWeight) !== Number(formData.maxPoints) && formData.questions.length > 0) {
       setError(`Total criteria points must equal Max Points (${formData.maxPoints})`);
@@ -326,7 +325,7 @@ const CreateActivity = () => {
     }
 
     setError('');
-    
+
     const submissionData = {
       ...formData,
       rubrics: formData.questions.map(q => ({ criteria: q.title, weight: q.weight }))
@@ -411,8 +410,8 @@ const CreateActivity = () => {
   return (
     <div className="flex flex-col flex-1 h-full w-full text-black">
       <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative">
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-10 bg-gradient-to-r from-[#FFEB3B] to-[#FF00FF] border-8 border-black p-8 relative overflow-hidden text-black"
@@ -435,19 +434,19 @@ const CreateActivity = () => {
             <h3 className="text-3xl font-black uppercase flex items-center gap-3 mb-6 bg-white border-6 border-black p-4 inline-block text-black" style={{ boxShadow: '6px 6px 0px #000' }}>
               <Zap size={32} className="text-[#FF00FF]" /> Create Activity
             </h3>
-            
+
             <form onSubmit={handleSubmit} className="space-y-5 text-black">
               <div className="bg-white border-6 border-black p-5" style={{ boxShadow: '8px 8px 0px #000' }}>
                 <label className="block text-base font-black uppercase mb-2 text-[#000] flex items-center gap-2">
                   <Type size={20} /> Title *
                 </label>
-                <input 
+                <input
                   required
-                  type="text" 
+                  type="text"
                   placeholder="E.G. SEMESTER PRESENTATION"
                   className="w-full border-4 border-black p-4 font-bold uppercase focus:bg-[#00FFFF] outline-none transition-all text-lg text-black"
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
@@ -455,13 +454,13 @@ const CreateActivity = () => {
                 <label className="block text-base font-black uppercase mb-2 text-[#000] flex items-center gap-2">
                   <FileText size={20} /> Description *
                 </label>
-                <textarea 
+                <textarea
                   required
                   rows="3"
                   placeholder="DESCRIBE THE TASK..."
                   className="w-full border-4 border-black p-4 font-bold focus:bg-[#00FF00] outline-none transition-all text-base text-black"
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 
@@ -469,11 +468,11 @@ const CreateActivity = () => {
                 <label className="block text-base font-black uppercase mb-2 text-[#000] flex items-center gap-2">
                   📋 Activity Type *
                 </label>
-                <select 
+                <select
                   required
                   className="w-full border-4 border-black p-4 font-bold uppercase focus:bg-[#00FFFF] outline-none transition-all text-lg bg-white text-black"
                   value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value, appointedTeacherId: e.target.value === 'Interview' ? formData.appointedTeacherId : ''})}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value, appointedTeacherId: e.target.value === 'Interview' ? formData.appointedTeacherId : '' })}
                 >
                   <option value="Assessment">Assessment</option>
                   <option value="Presentation">Presentation</option>
@@ -490,11 +489,11 @@ const CreateActivity = () => {
                   <label className="block text-base font-black uppercase mb-2 text-[#000] flex items-center gap-2">
                     👤 Appoint Evaluator *
                   </label>
-                  <select 
+                  <select
                     required
                     className="w-full border-4 border-black p-4 font-bold uppercase focus:bg-[#FF00FF] focus:text-white outline-none transition-all text-lg bg-white text-black"
                     value={formData.appointedTeacherId}
-                    onChange={(e) => setFormData({...formData, appointedTeacherId: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, appointedTeacherId: e.target.value })}
                   >
                     <option value="">-- SELECT TEACHER --</option>
                     {teachers.map(t => (
@@ -513,7 +512,7 @@ const CreateActivity = () => {
                 <div className="space-y-3 max-h-56 overflow-y-auto pr-2">
                   {classes.map(cls => (
                     <label key={cls._id} className="flex items-center gap-4 cursor-pointer hover:bg-[#FFEB3B] p-3 transition-all border-2 border-transparent hover:border-black text-black">
-                      <input 
+                      <input
                         type="checkbox"
                         checked={formData.classIds.includes(cls._id)}
                         onChange={() => handleClassToggle(cls._id)}
@@ -534,21 +533,21 @@ const CreateActivity = () => {
                   <label className="block text-sm font-black uppercase mb-2 text-[#000] flex items-center gap-2">
                     <Calendar size={18} /> Due Date *
                   </label>
-                  <CustomDatePicker 
+                  <CustomDatePicker
                     value={formData.dueDate}
-                    onChange={(dateVal) => setFormData({...formData, dueDate: dateVal})}
+                    onChange={(dateVal) => setFormData({ ...formData, dueDate: dateVal })}
                   />
                 </div>
                 <div className="bg-white border-6 border-black p-5" style={{ boxShadow: '8px 8px 0px #000' }}>
                   <label className="block text-sm font-black uppercase mb-2 text-[#000] flex items-center gap-2">
                     <Target size={18} /> Max Points *
                   </label>
-                  <input 
+                  <input
                     required
-                    type="number" 
+                    type="number"
                     className="w-full border-4 border-black p-4 font-bold focus:bg-[#00FFFF] outline-none transition-all text-lg text-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     value={formData.maxPoints}
-                    onChange={(e) => setFormData({...formData, maxPoints: Number(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, maxPoints: Number(e.target.value) })}
                   />
                 </div>
               </div>
@@ -558,7 +557,7 @@ const CreateActivity = () => {
                   <label className="text-xl font-black uppercase flex items-center gap-2 text-[#000]">
                     📋 Evaluation Criteria
                   </label>
-                  <button 
+                  <button
                     type="button"
                     onClick={handleAddQuestion}
                     className="bg-[#00FF00] border-4 border-black px-4 py-2 font-black uppercase text-sm flex items-center gap-2 hover:-translate-y-1 active:translate-y-0 transition-all cursor-pointer text-black"
@@ -567,70 +566,69 @@ const CreateActivity = () => {
                     <Plus size={18} /> Add
                   </button>
                 </div>
-                
+
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                   {formData.questions.map((question, idx) => (
-                    <motion.div 
+                    <motion.div
                       key={question.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="bg-[#F8F9FA] border-4 border-black p-4 hover:border-[#FF00FF] hover:bg-[#FFE5FF] transition-all text-black"
                     >
-                       <div className="flex flex-col gap-3">
-                          <div className="flex gap-3">
-                            <span className="bg-black text-white w-10 h-10 flex items-center justify-center font-black text-lg shrink-0 rounded-sm">
-                              {idx + 1}
-                            </span>
-                            <input 
-                              type="text"
-                              placeholder="Criterion (e.g., Communication)"
-                              className="flex-1 border-b-4 border-black bg-transparent p-2 font-bold focus:outline-none focus:bg-[#00FFFF] text-black"
-                              value={question.title}
-                              onChange={(e) => handleQuestionChange(question.id, 'title', e.target.value)}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between pl-12">
-                            <div className="flex items-center gap-3">
-                              <label className="text-xs font-black uppercase">Points</label>
-                              <div className="flex items-center border-3 border-black bg-white">
-                                <input 
-                                  type="number"
-                                  placeholder="0"
-                                  className="w-16 p-2 font-black text-center outline-none text-lg text-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                  value={question.weight}
-                                  onChange={(e) => handleQuestionChange(question.id, 'weight', e.target.value)}
-                                />
-                                <span className="px-3 font-black border-l-3 border-black bg-[#FFEB3B] text-lg text-black">PTS</span>
-                              </div>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex gap-3">
+                          <span className="bg-black text-white w-10 h-10 flex items-center justify-center font-black text-lg shrink-0 rounded-sm">
+                            {idx + 1}
+                          </span>
+                          <input
+                            type="text"
+                            placeholder="Criterion (e.g., Communication)"
+                            className="flex-1 border-b-4 border-black bg-transparent p-2 font-bold focus:outline-none focus:bg-[#00FFFF] text-black"
+                            value={question.title}
+                            onChange={(e) => handleQuestionChange(question.id, 'title', e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between pl-12">
+                          <div className="flex items-center gap-3">
+                            <label className="text-xs font-black uppercase">Points</label>
+                            <div className="flex items-center border-3 border-black bg-white">
+                              <input
+                                type="number"
+                                placeholder="0"
+                                className="w-16 p-2 font-black text-center outline-none text-lg text-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                value={question.weight}
+                                onChange={(e) => handleQuestionChange(question.id, 'weight', e.target.value)}
+                              />
+                              <span className="px-3 font-black border-l-3 border-black bg-[#FFEB3B] text-lg text-black">PTS</span>
                             </div>
-
-                            <button 
-                              type="button"
-                              onClick={() => handleRemoveQuestion(question.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 transition-all font-black cursor-pointer"
-                            >
-                              <Trash2 size={20} />
-                            </button>
                           </div>
-                       </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuestion(question.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 transition-all font-black cursor-pointer"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      </div>
                     </motion.div>
                   ))}
                 </div>
-                
+
                 <div className="mt-6 p-4 bg-black text-white flex justify-between items-center font-black text-lg border-4 border-white">
                   <span className="uppercase text-sm">Total Allocation</span>
-                  <span className={`text-2xl ${
-                    formData.questions.reduce((sum, q) => sum + (q.weight || 0), 0) === Number(formData.maxPoints) 
-                      ? 'text-[#00FF00]' 
-                      : 'text-[#FF0000]'
-                  }`}>
+                  <span className={`text-2xl ${formData.questions.reduce((sum, q) => sum + (q.weight || 0), 0) === Number(formData.maxPoints)
+                    ? 'text-[#00FF00]'
+                    : 'text-[#FF0000]'
+                    }`}>
                     {formData.questions.reduce((sum, q) => sum + (q.weight || 0), 0)} / {formData.maxPoints} PTS
                   </span>
                 </div>
                 {error && <p className="mt-4 text-red-600 font-black uppercase text-sm bg-red-100 p-2 border-2 border-red-600">⚠️ {error}</p>}
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={submitting}
                 className="w-full bg-black text-white border-6 border-black p-6 text-xl font-black uppercase flex items-center justify-center gap-3 hover:bg-[#FF00FF] active:scale-95 transition-all cursor-pointer"
@@ -646,7 +644,7 @@ const CreateActivity = () => {
               <h3 className="text-3xl font-black uppercase flex items-center gap-3 bg-[#00FF00] border-6 border-black p-4 inline-block text-black" style={{ boxShadow: '6px 6px 0px #000' }}>
                 <FolderOpen size={32} className="text-black" /> Activities
               </h3>
-              <button 
+              <button
                 type="button"
                 onClick={() => fetchActivitiesList()}
                 disabled={listLoading}
@@ -663,8 +661,8 @@ const CreateActivity = () => {
               {listLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((n) => (
-                    <div 
-                      key={n} 
+                    <div
+                      key={n}
                       className="bg-white border-6 border-black p-6 animate-pulse"
                       style={{ boxShadow: '8px 8px 0px #000' }}
                     >
@@ -690,7 +688,7 @@ const CreateActivity = () => {
                 </div>
               ) : (
                 activities.map((activity, idx) => (
-                  <motion.div 
+                  <motion.div
                     key={activity._id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -700,15 +698,14 @@ const CreateActivity = () => {
                   >
                     <div className="flex justify-between items-start mb-3 text-black">
                       <h4 className="text-2xl font-black uppercase flex-1 pr-3">{activity.title}</h4>
-                      <span className={`text-xs font-black uppercase px-3 py-1 border-2 border-black whitespace-nowrap text-black ${
-                        activity.status === 'Active' ? 'bg-[#00FF00]' : 'bg-gray-400'
-                      }`}>
+                      <span className={`text-xs font-black uppercase px-3 py-1 border-2 border-black whitespace-nowrap text-black ${activity.status === 'Active' ? 'bg-[#00FF00]' : 'bg-gray-400'
+                        }`}>
                         {activity.status}
                       </span>
                     </div>
-                    
+
                     <p className="text-sm font-bold text-gray-700 line-clamp-2 mb-4">{activity.description}</p>
-                    
+
                     <div className="flex flex-wrap gap-2 text-xs font-black uppercase mb-5">
                       <span className="bg-[#FF00FF] text-white border-2 border-black px-3 py-1 flex items-center gap-1 font-bold">
                         🏷️ {activity.type || 'Assessment'}
@@ -724,8 +721,8 @@ const CreateActivity = () => {
                       </span>
                       {activity.appointedTeacherId && (
                         <span className={`${teacherData && activity.appointedTeacherId._id === teacherData._id ? 'bg-[#00FF00] text-black' : 'bg-yellow-200 text-black'} border-2 border-black px-3 py-1 font-bold`}>
-                          {teacherData && activity.appointedTeacherId._id === teacherData._id 
-                            ? `🎯 Evaluator (Assigned by ${activity.teacherId?.name || 'Teacher'})` 
+                          {teacherData && activity.appointedTeacherId._id === teacherData._id
+                            ? `🎯 Evaluator (Assigned by ${activity.teacherId?.name || 'Teacher'})`
                             : `👤 Appointed: ${activity.appointedTeacherId.name}`
                           }
                         </span>
@@ -733,21 +730,21 @@ const CreateActivity = () => {
                     </div>
 
                     <div className="mt-5 pt-5 border-t-4 border-black flex gap-2 flex-wrap text-black">
-                      <button 
+                      <button
                         onClick={() => handleDownloadTemplate(activity)}
                         className="flex-1 min-w-24 bg-white border-4 border-black p-3 font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-[#FFEB3B] active:scale-95 transition-all cursor-pointer text-black"
                         style={{ boxShadow: '4px 4px 0px #000' }}
                       >
                         <Download size={16} /> Template
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleViewSubmissions(activity._id)}
                         className="flex-1 min-w-24 bg-[#00FF00] border-4 border-black p-3 font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-[#00FFFF] active:scale-95 transition-all cursor-pointer text-black"
                         style={{ boxShadow: '4px 4px 0px #000' }}
                       >
                         <Eye size={16} /> View
                       </button>
-                      <button 
+                      <button
                         onClick={() => setEvaluatingId(evaluatingId === activity._id ? null : activity._id)}
                         className="flex-1 min-w-24 bg-black text-white border-4 border-black p-3 font-black uppercase text-xs flex items-center justify-center gap-2 hover:bg-[#FF00FF] active:scale-95 transition-all cursor-pointer"
                         style={{ boxShadow: '4px 4px 0px #000' }}
@@ -758,7 +755,7 @@ const CreateActivity = () => {
 
                     <AnimatePresence>
                       {evaluatingId === activity._id && (
-                        <motion.div 
+                        <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
@@ -767,8 +764,8 @@ const CreateActivity = () => {
                           <div className="bg-[#00FF00] border-4 border-black p-5 text-black">
                             <p className="text-xs font-black uppercase mb-3">⬆️ Upload CSV:</p>
                             <div className="relative">
-                              <input 
-                                type="file" 
+                              <input
+                                type="file"
                                 accept=".csv"
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 onChange={(e) => handleUploadMarks(e, activity._id)}
@@ -784,7 +781,7 @@ const CreateActivity = () => {
                     </AnimatePresence>
 
                     {(!activity.teacherId || (teacherData && (activity.teacherId._id === teacherData._id || activity.teacherId === teacherData._id))) && (
-                      <button 
+                      <button
                         onClick={() => handleDeleteActivity(activity._id)}
                         className="absolute top-4 right-4 text-gray-400 hover:text-red-600 hover:bg-red-100 p-2 opacity-0 group-hover:opacity-100 transition-all font-black cursor-pointer border-none"
                       >
@@ -801,14 +798,14 @@ const CreateActivity = () => {
         {/* Submissions Modal */}
         <AnimatePresence>
           {submissionsModal.open && submissionsModal.data && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
               onClick={() => setSubmissionsModal({ open: false, activity: null, data: null })}
             >
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.8, opacity: 0, y: 50 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.8, opacity: 0, y: 50 }}
@@ -818,7 +815,7 @@ const CreateActivity = () => {
               >
                 <div className="sticky top-0 bg-gradient-to-r from-[#FFEB3B] to-[#00FFFF] border-b-8 border-black p-6 flex justify-between items-center text-black z-10">
                   <h3 className="text-3xl font-black uppercase">{submissionsModal.data.activity.title}</h3>
-                  <button 
+                  <button
                     onClick={() => setSubmissionsModal({ open: false, activity: null, data: null })}
                     className="bg-black text-white p-3 hover:bg-red-600 border-2 border-white font-black transition-all cursor-pointer"
                   >
@@ -835,25 +832,25 @@ const CreateActivity = () => {
                         <span>📧 {editingSubmission.email}</span>
                       </p>
                     </div>
-                    
+
                     <div className="bg-white border-6 border-black p-6 space-y-5">
                       <div>
                         <label className="block font-black uppercase text-2xl mb-6 flex items-center gap-2 text-[#FF00FF]">
                           ✏️ EDIT MARKS
                         </label>
-                        
+
                         <div className="border-6 border-black bg-white overflow-hidden text-black">
                           <div className="bg-black text-white border-b-4 border-black flex font-black uppercase text-sm">
                             <div className="flex-1 p-4 border-r-4 border-white">Criterion</div>
                             <div className="w-32 p-4 text-center">Marks</div>
                           </div>
-                          
+
                           <div className="divide-y-3 divide-black">
                             {editingSubmission.rubrics.map((criterion) => (
                               <div key={criterion} className="flex items-center hover:bg-[#FFFACD] transition-all">
                                 <div className="flex-1 p-4 border-r-2 border-gray-300 font-bold">{criterion}</div>
                                 <div className="w-32 p-4">
-                                  <input 
+                                  <input
                                     type="number"
                                     value={editFormData.criteriaMarks?.[criterion] || 0}
                                     onChange={(e) => handleEditMarkChange(criterion, e.target.value)}
@@ -878,10 +875,10 @@ const CreateActivity = () => {
                       <label className="block font-black uppercase text-lg mb-4 flex items-center gap-2 text-[#00FFFF]">
                         💬 FEEDBACK
                       </label>
-                      <textarea 
+                      <textarea
                         rows="5"
                         value={editFormData.feedback || ''}
-                        onChange={(e) => setEditFormData({...editFormData, feedback: e.target.value})}
+                        onChange={(e) => setEditFormData({ ...editFormData, feedback: e.target.value })}
                         className="w-full border-4 border-black p-4 font-bold text-base focus:bg-[#00FF00] focus:text-black outline-none transition-all text-black"
                         placeholder="Add feedback for the student..."
                       />
@@ -904,7 +901,7 @@ const CreateActivity = () => {
                               <div className="mt-3 space-y-2">
                                 {Object.entries(edit.changes || {}).map(([key, val]) => (
                                   <div key={key} className="bg-[#FFEB3B] p-2 border-2 border-black font-bold text-sm text-black">
-                                    <span className="font-black">{key}:</span> 
+                                    <span className="font-black">{key}:</span>
                                     <span className="line-through text-red-600"> {val.oldValue}</span>
                                     <span className="text-green-600 font-black"> → {val.newValue}</span>
                                   </div>
@@ -917,7 +914,7 @@ const CreateActivity = () => {
                     )}
 
                     <div className="flex gap-4">
-                      <button 
+                      <button
                         onClick={handleSaveEditedMarks}
                         disabled={editSaving}
                         className="flex-1 bg-[#00FF00] border-6 border-black p-4 font-black uppercase text-lg flex items-center justify-center gap-3 hover:shadow-lg active:scale-95 transition-all cursor-pointer text-black"
@@ -925,7 +922,7 @@ const CreateActivity = () => {
                       >
                         {editSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />} SAVE
                       </button>
-                      <button 
+                      <button
                         onClick={() => setEditingSubmission(null)}
                         className="flex-1 bg-black text-white border-6 border-black p-4 font-black uppercase text-lg hover:bg-red-600 active:scale-95 transition-all cursor-pointer"
                         style={{ boxShadow: '6px 6px 0px #000' }}
@@ -946,7 +943,7 @@ const CreateActivity = () => {
 
                     <div className="bg-white divide-y-4 divide-black">
                       {submissionsModal.data.submissions.map((sub, idx) => (
-                        <motion.div 
+                        <motion.div
                           key={sub._id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -954,15 +951,15 @@ const CreateActivity = () => {
                           className="flex items-center border-b-2 border-black hover:bg-[#FFFACD] transition-all bg-white group"
                         >
                           <div className="flex-1 min-w-32 p-6 border-r-2 border-gray-300 font-black text-lg">{sub.rollNo}</div>
-                          
+
                           <div className="flex-1 min-w-40 p-6 border-r-2 border-gray-300">
                             <p className="font-black text-lg">{sub.studentName}</p>
                           </div>
-                          
+
                           <div className="flex-1 min-w-48 p-6 border-r-2 border-gray-300">
                             <p className="font-bold text-gray-700">{sub.email}</p>
                           </div>
-                          
+
                           <div className="w-32 min-w-32 p-6 border-r-2 border-gray-300 text-center">
                             <div className="bg-[#FF00FF] text-white px-3 py-1 border-3 border-black font-black text-lg inline-block">
                               {sub.totalMarks}/{submissionsModal.data.activity.maxPoints}
@@ -970,7 +967,7 @@ const CreateActivity = () => {
                           </div>
 
                           <div className="w-40 min-w-40 p-6 flex gap-2 justify-center">
-                            <button 
+                            <button
                               onClick={() => handleStartEditing(sub, submissionsModal.data.rubrics)}
                               className="bg-[#00FFFF] border-3 border-black px-3 py-2 text-xs font-black uppercase hover:bg-[#FF00FF] hover:text-white active:scale-90 transition-all cursor-pointer text-black"
                               style={{ boxShadow: '3px 3px 0px #000' }}
@@ -997,7 +994,7 @@ const CreateActivity = () => {
 
         <AnimatePresence>
           {status !== 'idle' && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.7, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.7, y: 50 }}

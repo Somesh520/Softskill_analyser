@@ -23,7 +23,7 @@ export const createActivitySchema = z.object({
     type: z.string().min(1, "Type is required"),
     rubrics: z.array(z.object({
         criteria: z.string().min(1, "Criteria is required"),
-        points: z.coerce.number().nonnegative()
+        weight: z.coerce.number().nonnegative()
     })).optional(),
     appointedTeacherId: z.string().optional()
 });
