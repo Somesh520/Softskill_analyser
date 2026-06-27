@@ -46,6 +46,12 @@ axiosInstance.interceptors.response.use(
 
     // Check if the response is unauthorized/expired and request hasn't been retried
     if (error.response?.status === 401 && !originalRequest._retry) {
+      
+      // Do not attempt to refresh token if the request was a login attempt
+      if (originalRequest.url?.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
