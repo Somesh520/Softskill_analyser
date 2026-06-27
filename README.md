@@ -140,3 +140,55 @@ erDiagram
 4.  **Run Locally:**
     *   Backend: `npm run dev` (or node server)
     *   Frontend: `npm run dev`
+
+---
+
+## 🌐 API Reference (Backend Routes & Services)
+
+The backend provides RESTful APIs segmented by user role. All protected routes require a valid `Bearer Token` and automatically enforce `collegeId` scoping.
+
+### Authentication (`/api/auth`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/login` | Authenticates a user (Admin/Teacher/Student), returns a short-lived JWT access token and sets an `httpOnly` refresh token. |
+| `POST` | `/refresh` | Reads the `httpOnly` refresh token and issues a new JWT access token without requiring re-login. |
+| `POST` | `/logout` | Clears the refresh token cookie and ends the user session. |
+
+### Admin Routes (`/api/admin`) - *Requires Admin Role*
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/add-teacher` | Creates a new teacher account mapped strictly to the Admin's `collegeId`. |
+| `GET`  | `/teachers` | Retrieves a list of all teachers currently registered under the Admin's college. |
+| `DELETE`| `/teacher/:id` | Deactivates or removes a teacher account. |
+| `GET`  | `/college-report` | Aggregates all soft skill data across the college for high-level admin dashboard analytics. |
+
+### Teacher Routes (`/api/teacher`) - *Requires Teacher Role*
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/create-class` | Initializes a new class (e.g., "CSE 2nd Year") under the teacher. |
+| `POST` | `/add-student` | Registers a student and assigns them to the teacher's class. |
+| `GET`  | `/my-students` | Fetches the roster of students assigned to the authenticated teacher. |
+| `GET`  | `/classes` | Retrieves a list of all classes managed by the teacher. |
+| `POST` | `/create-activity` | Creates a soft skill activity (e.g., "Mock Interview") linked to a specific class. |
+| `POST` | `/upload-csv/:activityId` | Accepts a CSV file, parses scores, maps them to students, triggers report caching, and saves them to the DB. |
+| `GET`  | `/class-report/:classId` | Retrieves aggregated performance averages for an entire class to display on the teacher's charts. |
+
+### Student Routes (`/api/student`) - *Requires Student Role*
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET`  | `/my-report` | Retrieves the pre-computed soft skill analytics (Communication, Leadership, etc.) for the logged-in student across all semesters. |
+| `GET`  | `/my-report/:semester` | Retrieves the report specific to a single semester for targeted visualization (Radar Charts). |
+
+---
+
+## 🖥️ Frontend Endpoints & Pages
+
+The frontend application uses React Router to manage views based on authentication state and user roles.
+
+| Route | Component/Page | Functionality |
+| :--- | :--- | :--- |
+| `/login` | `Login.jsx` | Public login page. Redirects users to their respective dashboards based on their RBAC role upon success. |
+| `/admin` | `AdminDashboard.jsx` | Overview of college statistics, teacher management, and college-wide skill averages. |
+| `/teacher` | `TeacherDashboard.jsx` | Management hub for teachers to view classes, add students, upload CSVs, and view class-level analytics. |
+| `/student` | `StudentDashboard.jsx` | Personalized student view featuring Recharts (Radar/Bar) to visualize their own soft skill progression. |
+| `/*` (Protected) | `ProtectedRoute.jsx` | A wrapper component that verifies JWT validity and role authorization before rendering internal pages. |
