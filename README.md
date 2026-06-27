@@ -21,7 +21,7 @@ The following diagram illustrates the high-level architecture, showing how diffe
 ```mermaid
 graph TD
     %% Frontend Layer
-    subgraph Frontend [Frontend (React + Vite)]
+    subgraph Frontend ["Frontend (React + Vite)"]
         A1[Admin Dashboard]
         A2[Teacher Dashboard]
         A3[Student Dashboard]
@@ -29,7 +29,7 @@ graph TD
     end
 
     %% Backend Layer
-    subgraph Backend [Backend (Node.js + Express)]
+    subgraph Backend ["Backend (Node.js + Express)"]
         R[Express Router]
         M[Auth & Upload Middlewares]
         C[Controllers]
@@ -38,7 +38,7 @@ graph TD
     end
 
     %% Database Layer
-    subgraph Database [Database (MongoDB)]
+    subgraph Database ["Database (MongoDB)"]
         D_Users[(Users)]
         D_Colleges[(Colleges)]
         D_Classes[(Classes)]
