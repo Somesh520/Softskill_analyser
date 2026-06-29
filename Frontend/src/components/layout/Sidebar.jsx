@@ -181,6 +181,7 @@ const Sidebar = ({ role = 'student', userName = '' }) => {
                 <RoleIcon strokeWidth={3} size={20} style={{ color: colors.accent }} />
               </div>
               <div className="flex flex-col">
+                <span className="text-xl -mb-1" style={{ fontFamily: "'Dancing Script', 'Caveat', cursive", fontWeight: 800, color: 'black' }}>KIET</span>
                 <span className="text-sm font-black uppercase tracking-tight text-black">CRPC</span>
                 <span
                   className="text-xs font-black uppercase px-1 border-2 border-black inline-block bg-white text-black"
