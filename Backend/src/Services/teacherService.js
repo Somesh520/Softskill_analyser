@@ -2,11 +2,15 @@ import Class from '../Models/Classmodel.js';
 import User from '../Models/Usermodel.js';
 import Activity from '../Models/Activitymodel.js';
 import ActivitySubmission from '../Models/ActivitySubmissionmodel.js';
+import Survey from '../Models/SurveyModel.js';
+import SurveyResponse from '../Models/SurveyResponseModel.js';
+import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
+import Groq from 'groq-sdk';
 import csv from 'csv-parser';
+import { getStudentDashboardSummaryService } from './studentService.js';
 import streamifier from 'streamifier';
 import bcrypt from 'bcryptjs';
 import cloudinary from '../Config/cloudinary.js';
-import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
 import { generateActivityCSV } from '../utils/csvGenerator.js';
 import { createLogService } from './logService.js';
 import groq from '../Config/groq.js'
@@ -1032,5 +1036,51 @@ export const addStudentManuallyService = async (teacherId, classId, studentData)
 
 export const getTeachersService = async () => {
     return await User.find({ role: 'teacher' }).select('name email deptName').sort({ name: 1 }).lean();
+};
+
+export const updateStudentPlacementService = async (teacherId, classId, studentId, placementData) => {
+    // Verify the class belongs to this teacher
+    const classObj = await Class.findOne({ _id: classId, teacherId });
+    if (!classObj) {
+        throw new Error('Class not found or unauthorized');
+    }
+
+    // Verify the student is in this class
+    const student = await User.findOne({ _id: studentId, classId, role: 'student' });
+    if (!student) {
+        throw new Error('Student not found in this class');
+    }
+
+    // Update placement details
+    student.placement = { ...student.placement, ...placementData };
+    await student.save();
+
+    await createLogService(teacherId, 'UPDATED_STUDENT_PLACEMENT', `Updated placement details for student ${student.name} in class ${classObj.name}`);
+
+    return {
+        message: 'Placement details updated successfully',
+        student: {
+            _id: student._id,
+            name: student.name,
+            placement: student.placement
+        }
+    };
+};
+
+export const getStudentReportByTeacherService = async (teacherId, classId, studentId) => {
+    // Verify the class belongs to this teacher
+    const classObj = await Class.findOne({ _id: classId, teacherId });
+    if (!classObj) {
+        throw new Error('Class not found or unauthorized');
+    }
+
+    // Verify the student is in this class
+    const student = await User.findOne({ _id: studentId, classId, role: 'student' });
+    if (!student) {
+        throw new Error('Student not found in this class');
+    }
+
+    // Call the student service to get the dashboard summary
+    return await getStudentDashboardSummaryService(studentId);
 };
 

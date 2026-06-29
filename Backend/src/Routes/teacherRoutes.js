@@ -18,7 +18,9 @@ import {
   editActivityMarks,
   getTeacherReportsSummary,
   addStudentManually,
-  getTeachersList
+  getTeachersList,
+  updateStudentPlacement,
+  getStudentReportByTeacher
 } from '../Controller/teacherController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
@@ -55,5 +57,7 @@ router.post('/activities', createActivity);
 router.get('/activities', getActivities);
 router.delete('/activities/:id', deleteActivity);
 router.get('/teachers', getTeachersList);
+router.put('/classes/:classId/students/:studentId/placement', updateStudentPlacement);
+router.get('/classes/:classId/students/:studentId/report', getStudentReportByTeacher);
 
 export default router;

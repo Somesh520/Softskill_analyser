@@ -54,6 +54,12 @@ const userSchema = new mongoose.Schema({
     rollNo: {
         type: String
     },
+    placement: {
+        company: { type: String, default: '' },
+        currentCompany: { type: String, default: '' },
+        ctc: { type: String, default: '' },
+        type: { type: String, enum: ['intern', 'full time ppo', 'none'], default: 'none' }
+    },
 
     // --- Password Reset Fields ---
     resetPasswordOTP: {

@@ -242,3 +242,21 @@ export const getTeachersList = async () => {
     throw new Error(error.response?.data?.message || 'Failed to fetch teachers');
   }
 };
+
+export const updateStudentPlacement = async (classId, studentId, placementData) => {
+  try {
+    const response = await axiosInstance.put(`/teacher/classes/${classId}/students/${studentId}/placement`, placementData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to update student placement');
+  }
+};
+
+export const getStudentReport = async (classId, studentId) => {
+  try {
+    const response = await axiosInstance.get(`/teacher/classes/${classId}/students/${studentId}/report`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch student report');
+  }
+};

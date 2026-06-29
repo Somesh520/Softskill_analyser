@@ -16,9 +16,11 @@ import {
     editActivityMarksService,
     getTeacherReportsSummaryService,
     addStudentManuallyService,
-    getTeachersService
+    getTeachersService,
+    updateStudentPlacementService,
+    getStudentReportByTeacherService
 } from '../Services/teacherService.js';
-import { createClassSchema, assignTeacherSchema, createActivitySchema, addStudentManuallySchema } from '../Schemas_zod/teacherSchema_zod.js';
+import { createClassSchema, assignTeacherSchema, createActivitySchema, addStudentManuallySchema, updatePlacementSchema } from '../Schemas_zod/teacherSchema_zod.js';
 
 // ... existing code ...
 
@@ -306,6 +308,41 @@ export const getTeachersList = async (req, res) => {
         res.status(200).json(teachers);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update student placement details
+// @route   PUT /api/teacher/classes/:classId/students/:studentId/placement
+// @access  Private (Teacher)
+export const updateStudentPlacement = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const { classId, studentId } = req.params;
+        const placementData = updatePlacementSchema.parse(req.body);
+
+        const result = await updateStudentPlacementService(teacherId, classId, studentId, placementData);
+
+        res.status(200).json(result);
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Get complete student report by teacher
+// @route   GET /api/teacher/classes/:classId/students/:studentId/report
+// @access  Private (Teacher)
+export const getStudentReportByTeacher = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const { classId, studentId } = req.params;
+        
+        const report = await getStudentReportByTeacherService(teacherId, classId, studentId);
+        res.status(200).json(report);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 };
 

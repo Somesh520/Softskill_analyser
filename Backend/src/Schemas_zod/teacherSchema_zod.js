@@ -33,3 +33,10 @@ export const addStudentManuallySchema = z.object({
     email: z.string().email("Invalid email format"),
     rollNo: z.string().min(1, "Roll number is required")
 });
+
+export const updatePlacementSchema = z.object({
+    company: z.string().optional(),
+    currentCompany: z.string().optional(),
+    ctc: z.string().optional(),
+    type: z.enum(['intern', 'full time ppo', 'none']).optional()
+});

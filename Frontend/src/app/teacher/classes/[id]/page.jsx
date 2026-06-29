@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ArrowLeft, BookOpen, Upload, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { getClassDetails, uploadStudentCsv, deleteStudent, addStudentManually } from '../../../../api/teacherApi';
+import { Users, ArrowLeft, BookOpen, Upload, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2, Briefcase } from 'lucide-react';
+import { getClassDetails, uploadStudentCsv, deleteStudent, addStudentManually, updateStudentPlacement } from '../../../../api/teacherApi';
 import { useAuth } from '../../../../context/AuthContext';
 
 const ClassDetails = () => {
@@ -27,6 +27,13 @@ const ClassDetails = () => {
   const [newStudent, setNewStudent] = useState({ name: '', email: '', rollNo: '' });
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
+
+  // Placement States
+  const [showPlacementModal, setShowPlacementModal] = useState(false);
+  const [selectedStudentForPlacement, setSelectedStudentForPlacement] = useState(null);
+  const [placementData, setPlacementData] = useState({ company: '', currentCompany: '', ctc: '', type: 'none' });
+  const [placementLoading, setPlacementLoading] = useState(false);
+  const [placementError, setPlacementError] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -115,6 +122,33 @@ const ClassDetails = () => {
       setAddError(err.message || 'Failed to add student');
     } finally {
       setAddLoading(false);
+    }
+  };
+
+  const handlePlacementClick = (student) => {
+    setSelectedStudentForPlacement(student);
+    setPlacementData({
+      company: student.placement?.company || '',
+      currentCompany: student.placement?.currentCompany || '',
+      ctc: student.placement?.ctc || '',
+      type: student.placement?.type || 'none'
+    });
+    setPlacementError('');
+    setShowPlacementModal(true);
+  };
+
+  const handlePlacementSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setPlacementLoading(true);
+      setPlacementError('');
+      await updateStudentPlacement(id, selectedStudentForPlacement._id, placementData);
+      setShowPlacementModal(false);
+      fetchDetails(); // Refresh list
+    } catch (err) {
+      setPlacementError(err.message || 'Failed to update placement');
+    } finally {
+      setPlacementLoading(false);
     }
   };
 
@@ -316,8 +350,18 @@ const ClassDetails = () => {
                           <td className="p-4 font-bold">{student.email}</td>
                           <td className="p-4">
                             <div className="flex gap-2">
-                              <button className="bg-white border-2 border-black px-3 py-1 font-black text-sm uppercase hover:bg-black hover:text-white transition-colors cursor-pointer">
+                              <button 
+                                onClick={() => router.push(`/teacher/classes/${id}/students/${student._id}`)}
+                                className="bg-white border-2 border-black px-3 py-1 font-black text-sm uppercase hover:bg-black hover:text-white transition-colors cursor-pointer"
+                              >
                                 View
+                              </button>
+                              <button 
+                                onClick={() => handlePlacementClick(student)}
+                                className="bg-[#FFEB3B] border-2 border-black p-1 text-black hover:bg-black hover:text-white transition-colors cursor-pointer"
+                                title="Update Placement"
+                              >
+                                <Briefcase size={18} />
                               </button>
                               <button 
                                 onClick={() => handleDeleteStudentClick(student)}
@@ -515,6 +559,136 @@ const ClassDetails = () => {
           )}
         </AnimatePresence>
 
+        {/* Update Placement Modal */}
+        <AnimatePresence>
+          {showPlacementModal && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm"
+              onClick={() => setShowPlacementModal(false)}
+            >
+              <motion.div 
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 50, opacity: 0 }}
+                className="bg-white border-8 border-black w-full max-w-md text-black"
+                style={{ boxShadow: '16px 16px 0px #000' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center p-6 border-b-4 border-black bg-[#FFEB3B]">
+                  <h2 className="text-2xl font-black uppercase text-black flex items-center gap-3">
+                    <Briefcase size={28} /> Update Placement
+                  </h2>
+                  <button 
+                    onClick={() => setShowPlacementModal(false)}
+                    className="bg-white border-4 border-black p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
+                    style={{ boxShadow: '4px 4px 0px #000' }}
+                  >
+                    <X size={24} strokeWidth={3} />
+                  </button>
+                </div>
+
+                <form onSubmit={handlePlacementSubmit} className="p-6 space-y-6">
+                  {placementError && (
+                    <div className="bg-[#FF0000] text-white p-4 border-4 border-black font-black uppercase text-sm flex items-center gap-2">
+                      <AlertCircle size={20} /> {placementError}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label htmlFor="placement-company" className="text-sm font-black uppercase text-black block">
+                      Placement Company
+                    </label>
+                    <input
+                      id="placement-company"
+                      type="text"
+                      value={placementData.company}
+                      onChange={(e) => setPlacementData({ ...placementData, company: e.target.value })}
+                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      placeholder="e.g. Google"
+                      style={{ borderRadius: 0 }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="placement-currentCompany" className="text-sm font-black uppercase text-black block">
+                      Current Company
+                    </label>
+                    <input
+                      id="placement-currentCompany"
+                      type="text"
+                      value={placementData.currentCompany}
+                      onChange={(e) => setPlacementData({ ...placementData, currentCompany: e.target.value })}
+                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      placeholder="e.g. Amazon"
+                      style={{ borderRadius: 0 }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="placement-ctc" className="text-sm font-black uppercase text-black block">
+                      CTC / LPA
+                    </label>
+                    <input
+                      id="placement-ctc"
+                      type="text"
+                      value={placementData.ctc}
+                      onChange={(e) => setPlacementData({ ...placementData, ctc: e.target.value })}
+                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      placeholder="e.g. 12 LPA"
+                      style={{ borderRadius: 0 }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="placement-type" className="text-sm font-black uppercase text-black block">
+                      Placement Type
+                    </label>
+                    <select
+                      id="placement-type"
+                      value={placementData.type}
+                      onChange={(e) => setPlacementData({ ...placementData, type: e.target.value })}
+                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      style={{ borderRadius: 0 }}
+                    >
+                      <option value="none">None</option>
+                      <option value="intern">Intern</option>
+                      <option value="full time ppo">Full Time PPO</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-4 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setShowPlacementModal(false)}
+                      className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
+                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      disabled={placementLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      className="flex-1 bg-[#00FF00] text-black border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      disabled={placementLoading}
+                    >
+                      {placementLoading ? (
+                        <>
+                          <Loader2 className="animate-spin" size={18} /> Saving...
+                        </>
+                      ) : (
+                        'Save'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
