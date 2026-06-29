@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ArrowLeft, BookOpen, Upload, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2, Briefcase } from 'lucide-react';
+import { Users, ArrowLeft, BookOpen, Upload, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2, Briefcase, Download } from 'lucide-react';
 import { getClassDetails, uploadStudentCsv, deleteStudent, addStudentManually, updateStudentPlacement } from '../../../../api/teacherApi';
 import { useAuth } from '../../../../context/AuthContext';
 
@@ -158,6 +158,51 @@ const ClassDetails = () => {
     }
   };
 
+  const handleDownloadCSV = () => {
+    if (!students || students.length === 0) {
+      alert("No students to download");
+      return;
+    }
+
+    // Define the CSV headers
+    const headers = ['Name', 'Email', 'Roll No', 'Semester', 'Placement Company', 'Current Company', 'CTC/LPA', 'Placement Type', 'Total Company Changes', 'Company History'];
+    
+    // Map student data to rows
+    const csvRows = students.map(student => {
+      const placement = student.placement || {};
+      const history = student.placementHistory || [];
+      const changesCount = history.length ? history.length : (placement.company ? 1 : 0);
+      
+      const historyString = history.map(h => `${h.currentCompany || h.company || 'Unknown'} (${h.ctc || 'N/A'})`).join(' -> ');
+
+      return [
+        `"${student.name || ''}"`,
+        `"${student.email || ''}"`,
+        `"${student.rollNo || ''}"`,
+        `"${student.semester || ''}"`,
+        `"${placement.company || ''}"`,
+        `"${placement.currentCompany || ''}"`,
+        `"${placement.ctc || ''}"`,
+        `"${placement.type?.replace(/_/g, ' ') || 'none'}"`,
+        `"${changesCount}"`,
+        `"${historyString}"`
+      ].join(',');
+    });
+
+    // Combine headers and rows
+    const csvString = [headers.join(','), ...csvRows].join('\n');
+    
+    // Create Blob and trigger download
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${classData?.name || 'Class'}_Placements.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!teacherData) return null;
 
   return (
@@ -173,7 +218,27 @@ const ClassDetails = () => {
         </button>
 
         {loading ? (
-           <div className="text-center py-20 font-black text-2xl uppercase">Loading Details...</div>
+          <div className="w-full space-y-8 animate-pulse">
+            {/* Header Skeleton */}
+            <div className="h-40 bg-gray-300 border-8 border-black shadow-[16px_16px_0px_#000] w-full rounded-none"></div>
+            
+            {/* Action Buttons Skeleton */}
+            <div className="flex gap-4">
+              <div className="h-14 w-64 bg-gray-300 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
+              <div className="h-14 w-48 bg-gray-300 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
+              <div className="h-14 w-60 bg-gray-300 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
+            </div>
+
+            {/* Table Header Skeleton */}
+            <div className="h-16 bg-gray-300 border-4 border-black mt-8"></div>
+            
+            {/* Table Rows Skeleton */}
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-20 bg-gray-200 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
+              ))}
+            </div>
+          </div>
         ) : error ? (
            <div className="bg-[#FF0000] text-white p-6 border-8 border-black font-black uppercase text-xl" style={{ boxShadow: '8px 8px 0px #000' }}>
              Error: {error}
@@ -246,6 +311,13 @@ const ClassDetails = () => {
                 }}
               >
                 <Users size={20} strokeWidth={3} /> Add Student Manually
+              </button>
+              <button 
+                className="bg-[#00AAFF] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 hover:-translate-y-1 transition-transform text-white cursor-pointer"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+                onClick={handleDownloadCSV}
+              >
+                <Download size={20} strokeWidth={3} /> Download Placements CSV
               </button>
             </div>
 
