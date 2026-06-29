@@ -60,6 +60,13 @@ const userSchema = new mongoose.Schema({
         ctc: { type: String, default: '' },
         type: { type: String, enum: ['intern', 'full time ppo', 'none'], default: 'none' }
     },
+    placementHistory: [{
+        company: { type: String },
+        currentCompany: { type: String },
+        ctc: { type: String },
+        type: { type: String, enum: ['intern', 'full time ppo', 'none'] },
+        dateAdded: { type: Date, default: Date.now }
+    }],
 
     // --- Password Reset Fields ---
     resetPasswordOTP: {

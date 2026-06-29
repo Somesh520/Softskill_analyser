@@ -75,7 +75,7 @@ export const getClassDetailsService = async (teacherId, classId) => {
         throw new Error('Class not found or you do not have permission to view it.');
     }
 
-    const students = await User.find({ classId, role: 'student' }).select('name email rollNo semester classId').lean();
+    const students = await User.find({ classId, role: 'student' }).select('name email rollNo semester classId placement placementHistory').lean();
 
     return {
         classDetails: classObj,
@@ -1053,6 +1053,16 @@ export const updateStudentPlacementService = async (teacherId, classId, studentI
 
     // Update placement details
     student.placement = { ...student.placement, ...placementData };
+    
+    // Add to history
+    if (!student.placementHistory) {
+        student.placementHistory = [];
+    }
+    student.placementHistory.push({
+        ...placementData,
+        dateAdded: new Date()
+    });
+
     await student.save();
 
     await createLogService(teacherId, 'UPDATED_STUDENT_PLACEMENT', `Updated placement details for student ${student.name} in class ${classObj.name}`);

@@ -34,6 +34,7 @@ const ClassDetails = () => {
   const [placementData, setPlacementData] = useState({ company: '', currentCompany: '', ctc: '', type: 'none' });
   const [placementLoading, setPlacementLoading] = useState(false);
   const [placementError, setPlacementError] = useState('');
+  const [placementViewMode, setPlacementViewMode] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -134,6 +135,11 @@ const ClassDetails = () => {
       type: student.placement?.type || 'none'
     });
     setPlacementError('');
+    if (student.placement && student.placement.company) {
+      setPlacementViewMode(true);
+    } else {
+      setPlacementViewMode(false);
+    }
     setShowPlacementModal(true);
   };
 
@@ -579,7 +585,7 @@ const ClassDetails = () => {
               >
                 <div className="flex justify-between items-center p-6 border-b-4 border-black bg-[#FFEB3B]">
                   <h2 className="text-2xl font-black uppercase text-black flex items-center gap-3">
-                    <Briefcase size={28} /> Update Placement
+                    <Briefcase size={28} /> {placementViewMode ? 'Current Placement' : 'Update Placement'}
                   </h2>
                   <button 
                     onClick={() => setShowPlacementModal(false)}
@@ -590,101 +596,160 @@ const ClassDetails = () => {
                   </button>
                 </div>
 
-                <form onSubmit={handlePlacementSubmit} className="p-6 space-y-6">
-                  {placementError && (
-                    <div className="bg-[#FF0000] text-white p-4 border-4 border-black font-black uppercase text-sm flex items-center gap-2">
-                      <AlertCircle size={20} /> {placementError}
+                {placementViewMode ? (
+                  <div className="p-6 space-y-6">
+                    <div className="bg-white border-4 border-black p-0 shadow-[8px_8px_0px_#000] overflow-hidden">
+                      <div className="bg-[#00FFFF] p-4 border-b-4 border-black flex justify-between items-center">
+                        <div>
+                          <p className="text-xs font-black text-black opacity-60 uppercase mb-1 tracking-wider">Placed At</p>
+                          <p className="text-2xl font-black uppercase text-black">{selectedStudentForPlacement?.placement?.company}</p>
+                        </div>
+                        <div className="bg-white border-4 border-black p-2">
+                          <Briefcase size={28} className="text-black" />
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 grid grid-cols-2 gap-4 bg-white">
+                        {selectedStudentForPlacement?.placement?.currentCompany && (
+                          <div className="border-r-4 border-black pr-4">
+                            <p className="text-xs font-black text-black opacity-60 uppercase mb-1">Current Company</p>
+                            <p className="text-lg font-black text-black">{selectedStudentForPlacement.placement.currentCompany}</p>
+                          </div>
+                        )}
+                        
+                        {selectedStudentForPlacement?.placement?.ctc && (
+                          <div className={`${!selectedStudentForPlacement?.placement?.currentCompany ? 'col-span-2' : ''}`}>
+                            <p className="text-xs font-black text-black opacity-60 uppercase mb-1">CTC / LPA</p>
+                            <p className="text-lg font-black text-[#00AA00]">{selectedStudentForPlacement.placement.ctc}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4 border-t-4 border-black bg-[#f9f9f9] flex justify-between items-center">
+                        <p className="text-xs font-black text-black uppercase">Placement Type</p>
+                        <span className="bg-black text-[#00FF00] px-3 py-1 text-xs font-black uppercase border-2 border-black">
+                          {selectedStudentForPlacement?.placement?.type?.replace(/_/g, ' ')}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                    
+                    <div className="bg-[#f0f0f0] border-4 border-black p-4 text-center">
+                      <p className="font-bold text-sm uppercase">
+                        Placement Changes: <span className="font-black text-lg bg-[#FFEB3B] px-2 border-2 border-black ml-1">{selectedStudentForPlacement?.placementHistory?.length || 1}</span>
+                      </p>
+                    </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="placement-company" className="text-sm font-black uppercase text-black block">
-                      Placement Company
-                    </label>
-                    <input
-                      id="placement-company"
-                      type="text"
-                      value={placementData.company}
-                      onChange={(e) => setPlacementData({ ...placementData, company: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
-                      placeholder="e.g. Google"
-                      style={{ borderRadius: 0 }}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="placement-currentCompany" className="text-sm font-black uppercase text-black block">
-                      Current Company
-                    </label>
-                    <input
-                      id="placement-currentCompany"
-                      type="text"
-                      value={placementData.currentCompany}
-                      onChange={(e) => setPlacementData({ ...placementData, currentCompany: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
-                      placeholder="e.g. Amazon"
-                      style={{ borderRadius: 0 }}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="placement-ctc" className="text-sm font-black uppercase text-black block">
-                      CTC / LPA
-                    </label>
-                    <input
-                      id="placement-ctc"
-                      type="text"
-                      value={placementData.ctc}
-                      onChange={(e) => setPlacementData({ ...placementData, ctc: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
-                      placeholder="e.g. 12 LPA"
-                      style={{ borderRadius: 0 }}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="placement-type" className="text-sm font-black uppercase text-black block">
-                      Placement Type
-                    </label>
-                    <select
-                      id="placement-type"
-                      value={placementData.type}
-                      onChange={(e) => setPlacementData({ ...placementData, type: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
-                      style={{ borderRadius: 0 }}
-                    >
-                      <option value="none">None</option>
-                      <option value="intern">Intern</option>
-                      <option value="full time ppo">Full Time PPO</option>
-                    </select>
-                  </div>
-
-                  <div className="flex gap-4 pt-2">
                     <button 
-                      type="button"
-                      onClick={() => setShowPlacementModal(false)}
-                      className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
+                      onClick={() => setPlacementViewMode(false)}
+                      className="w-full bg-white border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all cursor-pointer"
                       style={{ boxShadow: '4px 4px 0px #000' }}
-                      disabled={placementLoading}
                     >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit"
-                      className="flex-1 bg-[#00FF00] text-black border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      style={{ boxShadow: '4px 4px 0px #000' }}
-                      disabled={placementLoading}
-                    >
-                      {placementLoading ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} /> Saving...
-                        </>
-                      ) : (
-                        'Save'
-                      )}
+                      Log New Company
                     </button>
                   </div>
-                </form>
+                ) : (
+                  <form onSubmit={handlePlacementSubmit} className="p-6 space-y-6">
+                    {placementError && (
+                      <div className="bg-[#FF0000] text-white p-4 border-4 border-black font-black uppercase text-sm flex items-center gap-2">
+                        <AlertCircle size={20} /> {placementError}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label htmlFor="placement-company" className="text-sm font-black uppercase text-black block">
+                        Placement Company
+                      </label>
+                      <input
+                        id="placement-company"
+                        type="text"
+                        value={placementData.company}
+                        onChange={(e) => setPlacementData({ ...placementData, company: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        placeholder="e.g. Google"
+                        style={{ borderRadius: 0 }}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="placement-currentCompany" className="text-sm font-black uppercase text-black block">
+                        Current Company
+                      </label>
+                      <input
+                        id="placement-currentCompany"
+                        type="text"
+                        value={placementData.currentCompany}
+                        onChange={(e) => setPlacementData({ ...placementData, currentCompany: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        placeholder="e.g. Amazon"
+                        style={{ borderRadius: 0 }}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="placement-ctc" className="text-sm font-black uppercase text-black block">
+                        CTC / LPA
+                      </label>
+                      <input
+                        id="placement-ctc"
+                        type="text"
+                        value={placementData.ctc}
+                        onChange={(e) => setPlacementData({ ...placementData, ctc: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        placeholder="e.g. 12 LPA"
+                        style={{ borderRadius: 0 }}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="placement-type" className="text-sm font-black uppercase text-black block">
+                        Placement Type
+                      </label>
+                      <select
+                        id="placement-type"
+                        value={placementData.type}
+                        onChange={(e) => setPlacementData({ ...placementData, type: e.target.value })}
+                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        style={{ borderRadius: 0 }}
+                      >
+                        <option value="none">None</option>
+                        <option value="intern">Intern</option>
+                        <option value="full time ppo">Full Time PPO</option>
+                      </select>
+                    </div>
+
+                    <div className="flex gap-4 pt-2">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (selectedStudentForPlacement?.placement?.company) {
+                            setPlacementViewMode(true);
+                          } else {
+                            setShowPlacementModal(false);
+                          }
+                        }}
+                        className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
+                        style={{ boxShadow: '4px 4px 0px #000' }}
+                        disabled={placementLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit"
+                        className="flex-1 bg-[#00FF00] text-black border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style={{ boxShadow: '4px 4px 0px #000' }}
+                        disabled={placementLoading}
+                      >
+                        {placementLoading ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} /> Saving...
+                          </>
+                        ) : (
+                          'Save'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </motion.div>
             </motion.div>
           )}
