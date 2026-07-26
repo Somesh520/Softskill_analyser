@@ -17,5 +17,15 @@ The platform connects Admins, Teachers, and Students in a unified, secure portal
 ## Why it Matters
 While academic grades are important, soft skills are critical for career success. This platform allows institutions to systematically evaluate non-technical skills, providing actionable feedback to help students become well-rounded professionals.
 
+## Links
+
+- Website: https://softskill-analyser.vercel.app/
+- Login: https://softskill-analyser.vercel.app/login
+- Documentation: https://softskill-analyser.vercel.app/docs
+
 ## Contact & Usage
 If you are an institution interested in implementing the CRPC Soft Skill Analyser Platform to transform how soft skills are assessed and nurtured, please reach out to our team for a demo or integration details.
+
+#made by Somesh Tiwari 
+portfolio-https://somesh.tech/
+instagram- someshxd
