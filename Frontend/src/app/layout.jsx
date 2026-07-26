@@ -3,8 +3,8 @@ import { AuthProvider } from '../context/AuthContext';
 import QueryProvider from '../context/QueryProvider';
 
 export const metadata = {
-  title: 'Soft Skill Analyser – KIET Group of Institutions | Communication & Personality Development Tool',
-  description: 'Soft Skill Analyser is the official smart communication and personality development tool built for KIET Group of Institutions (Deemed to be University), Ghaziabad. Evaluate students on communication, leadership, teamwork, confidence, presentation skills, and professional behaviour through structured semester-wise activities and reports.',
+  title: 'Soft Skill Analyser – KIET Group of Institutions',
+  description: 'Official communication and personality development platform for KIET Group of Institutions. Track and evaluate student soft skills through semester-wise reports.',
   keywords: 'kiet soft skill, kiet soft skill analyser, kiet soft skill analyzer, kiet soft skills portal, kiet soft skill evaluation, soft skill analyser kiet, soft skill kiet, softskill-analyser.vercel.app, kiet college soft skills, soft skill analyser, KIET, KIET Group of Institutions, KIET deemed to university, KIET Ghaziabad, communication skills, soft skills assessment, personality development, student evaluation, leadership training, teamwork assessment, confidence building, presentation skills, professional behaviour, semester report, college soft skill tool, Balah, Ghaziabad, soft skill analyzer, KIET university, communication analyser',
   authors: [{ name: 'KIET Group of Institutions' }],
   alternates: {
@@ -17,8 +17,8 @@ export const metadata = {
   openGraph: {
     type: 'website',
     url: 'https://softskill-analyser.vercel.app/',
-    title: 'Soft Skill Analyser – KIET Group of Institutions | Communication & Personality Development',
-    description: 'The official platform for KIET Group of Institutions (Deemed to be University), Ghaziabad to evaluate student soft skills – communication, leadership, teamwork, confidence, and professional behaviour through structured semester-wise reports.',
+    title: 'Soft Skill Analyser – KIET Group of Institutions',
+    description: 'Official communication and personality development platform for KIET Group of Institutions. Track and evaluate student soft skills through semester-wise reports.',
     images: [
       {
         url: 'https://softskill-analyser.vercel.app/logo.svg',
@@ -30,8 +30,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Soft Skill Analyser – KIET Group of Institutions | Communication & Personality Development',
-    description: 'Evaluate student soft skills at KIET – communication, leadership, teamwork, confidence, and professional behaviour through smart semester-wise reports.',
+    title: 'Soft Skill Analyser – KIET Group of Institutions',
+    description: 'Official communication and personality development platform for KIET Group of Institutions. Track and evaluate student soft skills.',
     images: ['https://softskill-analyser.vercel.app/logo.svg'],
   },
 };
@@ -44,7 +44,7 @@ const jsonLd = {
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "All",
   "browserRequirements": "Requires JavaScript. Requires HTML5.",
-  "description": "Soft Skill Analyser is the official communication and personality development tool of KIET Group of Institutions (Deemed to be University), Ghaziabad. It evaluates students on communication, leadership, teamwork, confidence, presentation skills, and professional behaviour.",
+  "description": "Official communication and personality development platform for KIET Group of Institutions. Track and evaluate student soft skills through semester-wise reports.",
   "publisher": {
     "@type": "EducationalOrganization",
     "name": "KIET Group of Institutions (Deemed to be University)",
