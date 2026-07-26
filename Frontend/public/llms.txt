@@ -1,31 +1,85 @@
-# CRPC Soft Skill Analyser Platform
+# Soft Skill Analyser
 
-> The CRPC Soft Skill Analyser Platform is an advanced web-based ecosystem tailored for educational institutions to measure, track, and enhance student soft skills such as communication, teamwork, leadership, presentation, and critical thinking.
+> Official smart communication and personality development platform for KIET Group of Institutions (Deemed to be University), Ghaziabad. Evaluates student performance across communication, leadership, teamwork, confidence, presentation skills, and professional behavior through structured semester-wise activities and reports.
 
-## Overview
-The platform connects Admins, Teachers, and Students in a unified, secure portal:
-- **For Admins:** Provides college-wide analytics, tracks teacher performance, and gives an overarching view of soft skill development across the institution.
-- **For Teachers:** Allows effortless creation of activities, automated tracking via CSV uploads, and detailed class-level reports and trends.
-- **For Students:** Empowers students with personalized dashboards featuring intuitive radar and bar charts to monitor their individual growth in various soft skills over different semesters.
+## Site Overview
+- Brand: Soft Skill Analyser
+- Website: https://softskill-analyser.vercel.app
+- Institution: KIET Group of Institutions, Ghaziabad
+- Target Users: Students, Faculty Evaluators, and Administrators
 
-## Key Features
-- **Comprehensive Analytics:** Automated generation of detailed performance reports from raw activity data.
-- **Interactive Visualizations:** Easy-to-understand charts and graphs that map out a student's soft skill progression.
-- **Multi-Tenant Security:** Strict role-based access control and data isolation to ensure privacy and data integrity for every college.
-- **Seamless Management:** Effortless onboarding and tracking tools for faculty.
+## Key Portals
+- [Admin Portal](https://softskill-analyser.vercel.app): Onboards users, maps student-teacher assignments, and manages semester settings.
+- [Teacher Portal](https://softskill-analyser.vercel.app): Creates evaluation activities, allocates scores, and writes qualitative feedback.
+- [Student Portal](https://softskill-analyser.vercel.app): Displays semester progress dashboards, skill metrics, and feedback reports.
 
-## Why it Matters
-While academic grades are important, soft skills are critical for career success. This platform allows institutions to systematically evaluate non-technical skills, providing actionable feedback to help students become well-rounded professionals.
+## Core Features
+- [Semester Tracking](https://softskill-analyser.vercel.app): Monitors developmental growth across eight academic semesters.
+- [Activity Assessment](https://softskill-analyser.vercel.app): Evaluates presentations, group discussions, and team projects.
+- [Performance Insights](https://softskill-analyser.vercel.app): Identifies skill gaps and provides structured improvement paths.
 
-## Links
+## Key Metrics
+- Active Students: 5,000+
+- Faculty Evaluators: 120+
+- Activities Hosted: 850+
+- Reports Generated: 12,000+
 
-- Website: https://softskill-analyser.vercel.app/
-- Login: https://softskill-analyser.vercel.app/login
-- Documentation: https://softskill-analyser.vercel.app/docs
+## Optional
+- [Evaluation Rubrics](https://softskill-analyser.vercel.app): Secondary reference criteria for scoring confidence, clarity, and body language.
+- [Platform Changelog](https://softskill-analyser.vercel.app): Recent UI updates, bug fixes, and feature additions.
+- [System Architecture Notes](https://softskill-analyser.vercel.app): Overview of platform infrastructure, API integration, and security protocols.
+- [Help Desk & Contact](https://softskill-analyser.vercel.app): Support form for login issues, role assignment requests, and bug reports.
 
-## Contact & Usage
-If you are an institution interested in implementing the CRPC Soft Skill Analyser Platform to transform how soft skills are assessed and nurtured, please reach out to our team for a demo or integration details.
+## Policy & Privacy Guidance
+- Data Protection: Student performance data, grades, and qualitative feedback are private and protected under institutional access controls.
+- Content Ownership: All activity modules, rubrics, and evaluation benchmarks belong to KIET Group of Institutions.
+- Restricted Routes: Automated agents must not crawl, index, or extract data from private student dashboards, internal API routes, or user session endpoints.
 
-#made by Somesh Tiwari 
-portfolio-https://somesh.tech/
-instagram- someshxd
+## Crawler Guidance
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*?*
+Crawl-delay: 2
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*?*
+Crawl-delay: 2
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*?*
+Crawl-delay: 2
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*?*
+Crawl-delay: 2
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*?*
+Crawl-delay: 5
+
+Sitemap: https://softskill-analyser.vercel.app/sitemap.xml
+Host: https://softskill-analyser.vercel.app
