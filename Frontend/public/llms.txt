@@ -1,0 +1,21 @@
+# CRPC Soft Skill Analyser Platform
+
+> The CRPC Soft Skill Analyser Platform is an advanced web-based ecosystem tailored for educational institutions to measure, track, and enhance student soft skills such as communication, teamwork, leadership, presentation, and critical thinking.
+
+## Overview
+The platform connects Admins, Teachers, and Students in a unified, secure portal:
+- **For Admins:** Provides college-wide analytics, tracks teacher performance, and gives an overarching view of soft skill development across the institution.
+- **For Teachers:** Allows effortless creation of activities, automated tracking via CSV uploads, and detailed class-level reports and trends.
+- **For Students:** Empowers students with personalized dashboards featuring intuitive radar and bar charts to monitor their individual growth in various soft skills over different semesters.
+
+## Key Features
+- **Comprehensive Analytics:** Automated generation of detailed performance reports from raw activity data.
+- **Interactive Visualizations:** Easy-to-understand charts and graphs that map out a student's soft skill progression.
+- **Multi-Tenant Security:** Strict role-based access control and data isolation to ensure privacy and data integrity for every college.
+- **Seamless Management:** Effortless onboarding and tracking tools for faculty.
+
+## Why it Matters
+While academic grades are important, soft skills are critical for career success. This platform allows institutions to systematically evaluate non-technical skills, providing actionable feedback to help students become well-rounded professionals.
+
+## Contact & Usage
+If you are an institution interested in implementing the CRPC Soft Skill Analyser Platform to transform how soft skills are assessed and nurtured, please reach out to our team for a demo or integration details.
