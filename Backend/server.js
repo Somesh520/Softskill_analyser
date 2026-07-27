@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
+import helmet from 'helmet';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -10,12 +11,15 @@ import teacherRoutes from './src/Routes/teacherRoutes.js';
 import studentRoutes from './src/Routes/studentRoutes.js';
 import leaderboardRoutes from './src/Routes/leaderboardRoutes.js';
 import surveyRoutes from './src/Routes/surveyRoutes.js';
+import morgan from 'morgan';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(helmet());
+app.use(morgan("combined"));
 
 // Database connection
 connectDB();
