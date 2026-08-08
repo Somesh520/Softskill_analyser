@@ -1,6 +1,12 @@
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import QueryProvider from '../context/QueryProvider';
+import { ThemeProvider } from '../components/ThemeProvider';
+import ThemeCustomizer from '../components/common/ThemeCustomizer';
+
+import { Outfit } from 'next/font/google';
+
+const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Soft Skill Analyser – KIET Group of Institutions',
@@ -8,12 +14,10 @@ export const metadata = {
   keywords: 'kiet soft skill, kiet soft skill analyser, kiet soft skill analyzer, kiet soft skills portal, kiet soft skill evaluation, soft skill analyser kiet, soft skill kiet, softskill-analyser.vercel.app, kiet college soft skills, soft skill analyser, KIET, KIET Group of Institutions, KIET deemed to university, KIET Ghaziabad, communication skills, soft skills assessment, personality development, student evaluation, leadership training, teamwork assessment, confidence building, presentation skills, professional behaviour, semester report, college soft skill tool, Balah, Ghaziabad, soft skill analyzer, KIET university, communication analyser',
   authors: [{ name: 'KIET Group of Institutions' }],
   alternates: {
-    canonical: 'https://softskill-analyser.vercel.app/',
-  },
+    canonical: 'https://softskill-analyser.vercel.app/' },
   robots: {
     index: true,
-    follow: true,
-  },
+    follow: true },
   openGraph: {
     type: 'website',
     url: 'https://softskill-analyser.vercel.app/',
@@ -22,19 +26,15 @@ export const metadata = {
     images: [
       {
         url: 'https://softskill-analyser.vercel.app/logo.svg',
-        alt: 'Soft Skill Analyser Logo – KIET Communication Assessment Tool',
-      },
+        alt: 'Soft Skill Analyser Logo – KIET Communication Assessment Tool' },
     ],
     siteName: 'Soft Skill Analyser',
-    locale: 'en_IN',
-  },
+    locale: 'en_IN' },
   twitter: {
     card: 'summary_large_image',
     title: 'Soft Skill Analyser – KIET Group of Institutions',
     description: 'Official communication and personality development platform for KIET Group of Institutions. Track and evaluate student soft skills.',
-    images: ['https://softskill-analyser.vercel.app/logo.svg'],
-  },
-};
+    images: ['https://softskill-analyser.vercel.app/logo.svg'] } };
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -65,7 +65,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -86,14 +86,17 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>
-        <AuthProvider>
-          <QueryProvider>
-            <div id="root" className="min-h-screen">
-              {children}
-            </div>
-          </QueryProvider>
-        </AuthProvider>
+      <body className={`${outfit.className} antialiased bg-background text-foreground transition-colors duration-300`} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <AuthProvider>
+            <QueryProvider>
+              <div id="root" className="min-h-screen flex flex-col">
+                {children}
+                <ThemeCustomizer />
+              </div>
+            </QueryProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

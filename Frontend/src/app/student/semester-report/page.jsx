@@ -50,8 +50,8 @@ const SemesterReport = () => {
       <div className="p-6 lg:p-10 space-y-8 min-h-[500px]">
         <Skeleton variant="text" width="40%" height={60} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Skeleton variant="rectangular" height={380} className="border-8 border-black shadow-[10px_10px_0px_#000] bg-white" />
-          <Skeleton variant="rectangular" height={380} className="border-8 border-black shadow-[10px_10px_0px_#000] bg-white" />
+          <Skeleton variant="rectangular" height={380} className="rounded-2xl bg-card" />
+          <Skeleton variant="rectangular" height={380} className="rounded-2xl bg-card" />
         </div>
       </div>
     );
@@ -59,15 +59,15 @@ const SemesterReport = () => {
 
   if (error) {
     return (
-      <div className="p-6 lg:p-10">
-        <div className="bg-[#FF6B6B] border-8 border-black p-8 shadow-[12px_12px_0px_#000]">
-          <p className="text-2xl font-black uppercase text-white mb-4 flex items-center gap-3">
-            <AlertCircle size={32} /> Error Loading Report
-          </p>
-          <p className="text-white font-bold mb-4">{error}</p>
+      <div className="p-6 lg:p-10 flex flex-col flex-1 h-full w-full bg-background">
+        <div className="bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl p-8 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+             <AlertCircle size={24} />
+             <p className="font-semibold">{error}</p>
+          </div>
           <button
             onClick={fetchStudentReport}
-            className="bg-white border-4 border-black p-4 font-black uppercase hover:bg-[#FFEB3B] transition-all cursor-pointer text-black"
+            className="px-4 py-2 bg-background border border-border rounded-lg shadow-sm font-semibold hover:bg-accent transition-colors"
           >
             Retry
           </button>
@@ -79,50 +79,59 @@ const SemesterReport = () => {
   const hasPerformanceData = performance.length > 0;
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl text-black">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="bg-[#00FFFF] p-3 border-4 border-black text-black" style={{ boxShadow: '4px 4px 0px #000' }}>
-              <ChartIcon size={32} strokeWidth={2.5} />
-            </div>
-            <h1 className="text-4xl font-black uppercase tracking-tight text-black">Soft Skill Analytics</h1>
+    <div className="flex flex-col flex-1 h-full w-full bg-background">
+      <main className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {/* Header */}
+          <div className="mb-8 bg-card border border-border rounded-2xl shadow-sm p-8 relative overflow-hidden">
+             <div className="absolute right-0 top-0 w-64 h-64 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+               <div className="flex items-center gap-6">
+                 <div className="bg-primary/10 p-4 border border-primary/20 rounded-xl text-primary flex items-center justify-center shrink-0">
+                   <ChartIcon size={48} strokeWidth={2} />
+                 </div>
+                 <div>
+                   <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2">Soft Skill Analytics</h2>
+                   <p className="text-sm font-semibold text-primary uppercase tracking-widest bg-primary/5 inline-block px-3 py-1 border border-primary/10 rounded-md">
+                     Semester Overview
+                   </p>
+                 </div>
+               </div>
+               <button 
+                 onClick={fetchStudentReport}
+                 className="bg-card hover:bg-accent border border-border rounded-lg shadow-sm px-4 py-2 font-semibold text-foreground flex items-center gap-2 transition-colors"
+               >
+                 <RefreshCw size={18} /> Refresh
+               </button>
+             </div>
           </div>
-          <button 
-            onClick={fetchStudentReport}
-            className="bg-white hover:bg-gray-100 border-4 border-black p-3 font-black text-black flex items-center gap-2 transform active:translate-y-1 transition-all cursor-pointer"
-            style={{ boxShadow: '4px 4px 0px #000' }}
-          >
-            <RefreshCw size={18} /> Refresh
-          </button>
-        </div>
 
-        {/* Analytics Breakdown */}
-        {!hasPerformanceData ? (
-          <div className="bg-white border-8 border-black p-10 text-center" style={{ boxShadow: '12px 12px 0px #000' }}>
-            <p className="text-2xl font-black uppercase text-gray-500">No evaluations graded yet</p>
-            <p className="text-gray-500 font-bold uppercase mt-2">Charts will appear once your teacher uploads marks and feedback for your activities.</p>
-          </div>
-        ) : (
+          {/* Analytics Breakdown */}
+          {!hasPerformanceData ? (
+            <div className="text-center py-16 border border-border border-dashed rounded-2xl bg-card shadow-sm">
+              <ChartIcon size={48} className="mx-auto text-foreground/20 mb-4" />
+              <p className="font-bold text-foreground/50 text-xl">No evaluations graded yet</p>
+              <p className="text-foreground/40 font-semibold mt-2">Charts will appear once your teacher uploads marks and feedback for your activities.</p>
+            </div>
+          ) : (
           <div className="space-y-10">
             {/* Top Score Banner */}
-            <div className="bg-gradient-to-r from-[#FF00FF] to-[#00FFFF] border-8 border-black p-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ boxShadow: '12px 12px 0px #000' }}>
-              <div className="flex items-center gap-4">
-                <div className="bg-white p-3 border-4 border-black text-black">
-                  <Award size={32} />
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl shadow-sm p-8 flex flex-col sm:flex-row items-center justify-between gap-6" >
+              <div className="flex items-center gap-6">
+                <div className="bg-primary/10 text-primary p-4 rounded-xl">
+                  <Award size={40} strokeWidth={2} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black uppercase text-white drop-shadow-md">Your Soft Skill Score</h3>
-                  <p className="text-sm font-black text-white uppercase tracking-widest bg-black inline-block px-2 py-0.5 mt-0.5">Across All Completed Activities</p>
+                  <h3 className="text-2xl font-bold text-foreground tracking-tight">Your Soft Skill Score</h3>
+                  <p className="text-sm font-semibold text-foreground/50 mt-1 uppercase tracking-wider">Across All Completed Activities</p>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-5xl font-black text-white bg-black px-6 py-2 border-4 border-white inline-block">
-                  {stats?.avgScore || 0}%
+                <span className="text-6xl font-extrabold text-primary">
+                  {stats?.avgScore || 0}<span className="text-4xl text-primary/70">%</span>
                 </span>
               </div>
             </div>
@@ -133,33 +142,31 @@ const SemesterReport = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white border-8 border-black p-6 md:p-8"
-                style={{ boxShadow: '12px 12px 0px #000' }}
+                className="bg-card border border-border rounded-2xl shadow-sm p-6 md:p-8"
               >
-                <h3 className="text-2xl font-black uppercase mb-6 text-black border-b-4 border-black pb-2">
-                  🎯 SKILL DISTRIBUTION
+                <h3 className="text-xl font-bold mb-6 text-foreground border-b border-border/50 pb-4 flex items-center gap-2">
+                  <ChartIcon size={20} className="text-primary" /> Skill Distribution
                 </h3>
                 <div className="h-[320px] w-full flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={performance}>
-                      <PolarGrid stroke="#000" strokeWidth={1.5} />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#000', fontWeight: 'bold', fontSize: 12 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#000', fontWeight: 'bold' }} />
+                    <RadarChart cx="50%" cy="50%" outerRadius="75%" data={performance}>
+                      <PolarGrid stroke="hsl(var(--border))" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, opacity: 0.7 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'hsl(var(--foreground))', opacity: 0.5 }} />
                       <Radar
                         name="My Score"
                         dataKey="A"
-                        stroke="#FF00FF"
-                        fill="#FF00FF"
-                        fillOpacity={0.4}
-                        strokeWidth={3}
+                        stroke="hsl(var(--primary))"
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.3}
+                        strokeWidth={2}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#FFEB3B',
-                          border: '3px solid #000',
-                          borderRadius: 0,
-                          fontWeight: 'bold',
-                          color: 'black',
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
                         }}
                       />
                     </RadarChart>
@@ -172,29 +179,28 @@ const SemesterReport = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white border-8 border-black p-6 md:p-8"
-                style={{ boxShadow: '12px 12px 0px #000' }}
+                className="bg-card border border-border rounded-2xl shadow-sm p-6 md:p-8"
               >
-                <h3 className="text-2xl font-black uppercase mb-6 text-black border-b-4 border-black pb-2">
-                  📊 CRITERIA PERFORMANCE
+                <h3 className="text-xl font-bold mb-6 text-foreground border-b border-border/50 pb-4 flex items-center gap-2">
+                  <ChartIcon size={20} className="text-primary" /> Criteria Performance
                 </h3>
                 <div className="h-[320px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={performance} margin={{ top: 20, right: 10, left: -10, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                      <XAxis dataKey="subject" stroke="#000" tick={{ fill: '#000', fontWeight: 'bold' }} />
-                      <YAxis stroke="#000" tick={{ fill: '#000', fontWeight: 'bold' }} domain={[0, 100]} />
+                    <BarChart data={performance} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="subject" stroke="hsl(var(--foreground))" opacity={0.5} tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis stroke="hsl(var(--foreground))" opacity={0.5} tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }} domain={[0, 100]} axisLine={false} tickLine={false} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#FFEB3B',
-                          border: '3px solid #000',
-                          borderRadius: 0,
-                          fontWeight: 'bold',
-                          color: 'black',
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))'
                         }}
+                        cursor={{fill: 'hsl(var(--foreground)/0.05)'}}
                       />
-                      <Legend />
-                      <Bar dataKey="A" fill="#00FF00" name="Score %" stroke="#000" strokeWidth={2} />
+                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      <Bar dataKey="A" fill="hsl(var(--primary))" name="Score %" radius={[4, 4, 0, 0]} maxBarSize={50} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -203,6 +209,7 @@ const SemesterReport = () => {
           </div>
         )}
       </motion.div>
+      </main>
     </div>
   );
 };

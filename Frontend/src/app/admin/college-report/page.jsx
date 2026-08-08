@@ -3,14 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-} from 'recharts';
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import {
   TrendingUp, Users, Award, Activity, BarChart3, Loader, Filter, Scale
 } from 'lucide-react';
 import { getCollegeAnalytics, getClassPerformance, getDepartmentAnalytics, getPerformanceDistribution, getActivityAnalytics, getAnalyticsFilters } from '../../../api/adminApi';
-
-const COLORS = ['#00FFFF', '#FF00FF', '#00FF00', '#FFEB3B', '#FF4500', '#1E90FF'];
 
 const CollegeReport = () => {
   const router = useRouter();
@@ -89,10 +86,10 @@ const CollegeReport = () => {
   };
 
   const overallStats = collegeStats ? [
-    { label: 'Total Students', value: collegeStats.totalStudents?.toLocaleString() || '0', icon: Users, color: '#00FFFF' },
-    { label: 'Avg Performance', value: `${collegeStats.avgPerformance?.toFixed(1) || 0}%`, icon: TrendingUp, color: '#00FF00' },
-    { label: 'Total Activities', value: collegeStats.totalActivities?.toLocaleString() || '0', icon: Activity, color: '#FFEB3B' },
-    { label: 'Submission Rate', value: `${collegeStats.submissionRate || 0}%`, icon: Award, color: '#FF00FF' },
+    { label: 'Total Students', value: collegeStats.totalStudents?.toLocaleString() || '0', icon: Users, colorClass: 'text-blue-500 bg-blue-500/10 border-blue-500/20' },
+    { label: 'Avg Performance', value: `${collegeStats.avgPerformance?.toFixed(1) || 0}%`, icon: TrendingUp, colorClass: 'text-green-500 bg-green-500/10 border-green-500/20' },
+    { label: 'Total Activities', value: collegeStats.totalActivities?.toLocaleString() || '0', icon: Activity, colorClass: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' },
+    { label: 'Submission Rate', value: `${collegeStats.submissionRate || 0}%`, icon: Award, colorClass: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },
   ] : [];
 
   const radarData = performanceDistribution.map((item, index) => {
@@ -115,84 +112,80 @@ const CollegeReport = () => {
     return dataObj;
   });
 
-
   if (loading && !collegeStats) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 lg:p-8 min-h-[500px]">
         <div className="flex flex-col items-center gap-4">
-          <Loader size={64} className="animate-spin text-black" strokeWidth={2} />
-          <p className="text-2xl font-black uppercase text-black">Loading Analytics...</p>
+          <div className="w-12 h-12 border-4 border-border rounded-full border-t-primary animate-spin" />
+          <p className="text-xl font-bold text-foreground/80">Loading Analytics...</p>
         </div>
       </div>
     );
   }
 
-  const FilterDropdown = ({ label, options, value, onChange, color }) => (
-    <div className="flex flex-col gap-1 w-full md:w-auto">
-      <label className="text-xs font-black uppercase tracking-wider">{label}</label>
+  const FilterDropdown = ({ label, options, value, onChange, colorClass }) => (
+    <div className="flex flex-col gap-2 w-full md:w-auto flex-1 min-w-[150px]">
+      <label className="text-xs font-semibold uppercase tracking-wider text-foreground/60">{label}</label>
       <select 
         value={value} 
         onChange={e => onChange(e.target.value)}
-        className={`p-2 border-4 border-black font-bold outline-none cursor-pointer`}
-        style={{ backgroundColor: value ? color : '#fff', boxShadow: '4px 4px 0px #000' }}
+        className={`p-3 border border-border rounded-xl shadow-sm font-medium outline-none cursor-pointer text-foreground bg-background focus:ring-2 focus:ring-primary/50 transition-all`}
       >
-        <option value="">ALL</option>
+        <option value="">All</option>
         {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
       </select>
     </div>
   );
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full">
+    <div className="flex flex-col flex-1 h-full w-full bg-background">
       <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative">
           
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 bg-gradient-to-r from-[#00FFFF] to-[#FF00FF] border-8 border-black p-8 relative overflow-hidden"
-            style={{ boxShadow: '16px 16px 0px rgba(0,0,0,0.4)' }}
+            className="mb-8 bg-card border border-border rounded-2xl shadow-sm p-8 relative overflow-hidden"
           >
-            <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#FFEB3B] opacity-20 border-4 border-black rotate-45"></div>
-            <div className="flex items-center gap-8 relative z-10">
-              <div className="bg-white p-4 border-4 border-black text-black transform rotate-3" style={{ boxShadow: '6px 6px 0px #000' }}>
-                <BarChart3 size={48} strokeWidth={2} />
+            <div className="absolute -right-16 -top-16 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="bg-primary/10 p-4 border border-primary/20 rounded-xl text-primary">
+                <BarChart3 size={40} strokeWidth={2.5} />
               </div>
               <div>
-                <h2 className="text-4xl md:text-5xl font-black uppercase mb-2 leading-tight tracking-tighter text-white drop-shadow-lg">COLLEGE ANALYTICS</h2>
-                <p className="text-sm font-black text-white uppercase tracking-widest bg-black inline-block px-3 py-1 border-2 border-white">Advanced Filter & Comparison Dashboard</p>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2">College Analytics</h2>
+                <p className="text-sm font-semibold text-primary uppercase tracking-widest bg-primary/5 inline-block px-3 py-1 border border-primary/10 rounded-md">Advanced Filter & Comparison Dashboard</p>
               </div>
             </div>
           </motion.div>
 
-          {/* Neo-Brutalist Filter Panel */}
-          <div className="mb-10 bg-white border-8 border-black p-6" style={{ boxShadow: '12px 12px 0px #000' }}>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b-4 border-black pb-6 mb-6">
+          {/* Filter Panel */}
+          <div className="mb-10 bg-card border border-border rounded-2xl shadow-sm p-6" >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border/50 pb-6 mb-6">
               <div className="flex items-center gap-4">
-                <div className="bg-black text-white p-3 border-4 border-black transform -rotate-3">
+                <div className="bg-foreground/5 text-foreground p-3 border border-border rounded-xl">
                   <Filter size={24} />
                 </div>
-                <h3 className="text-2xl font-black uppercase tracking-tight">Data Filters</h3>
+                <h3 className="text-xl font-bold tracking-tight text-foreground">Data Filters</h3>
               </div>
               
               <button 
                 onClick={() => setIsCompareMode(!isCompareMode)}
-                className={`flex items-center gap-2 px-6 py-3 border-4 border-black font-black uppercase tracking-wider transition-all cursor-pointer ${isCompareMode ? 'bg-[#FFEB3B] translate-x-1 translate-y-1' : 'bg-white hover:-translate-y-1 hover:translate-x-1'}`}
-                style={{ boxShadow: isCompareMode ? '0px 0px 0px #000' : '6px 6px 0px #000' }}
+                className={`flex items-center gap-2 px-5 py-2.5 border rounded-xl font-semibold text-sm transition-colors ${isCompareMode ? 'bg-primary text-primary-foreground border-primary/50' : 'bg-background border-border text-foreground hover:bg-foreground/5'}`}
               >
-                <Scale size={20} />
+                <Scale size={18} />
                 Compare Mode {isCompareMode ? 'ON' : 'OFF'}
               </button>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-6">
               {/* Group A Filters */}
-              <div className={`flex-1 p-6 border-4 border-black ${isCompareMode ? 'bg-[#f0f8ff]' : 'bg-transparent'}`}>
-                {isCompareMode && <h4 className="text-lg font-black uppercase mb-4 bg-black text-white inline-block px-3 py-1">GROUP A (Primary)</h4>}
-                <div className="flex flex-wrap gap-6">
-                  <FilterDropdown label="Department" options={filterOptions.branches} value={filtersA.branch} onChange={(v) => setFiltersA({...filtersA, branch: v})} color="#00FFFF" />
-                  <FilterDropdown label="Semester" options={filterOptions.semesters} value={filtersA.semester} onChange={(v) => setFiltersA({...filtersA, semester: v})} color="#00FF00" />
-                  <FilterDropdown label="Section" options={filterOptions.sections} value={filtersA.section} onChange={(v) => setFiltersA({...filtersA, section: v})} color="#FF00FF" />
+              <div className={`flex-1 p-6 border rounded-xl transition-colors ${isCompareMode ? 'bg-background border-border' : 'border-transparent p-0'}`}>
+                {isCompareMode && <h4 className="text-sm font-semibold uppercase mb-4 text-primary bg-primary/10 inline-block px-2 py-1 rounded-md">Group A (Primary)</h4>}
+                <div className="flex flex-wrap gap-4">
+                  <FilterDropdown label="Department" options={filterOptions.branches} value={filtersA.branch} onChange={(v) => setFiltersA({...filtersA, branch: v})} />
+                  <FilterDropdown label="Semester" options={filterOptions.semesters} value={filtersA.semester} onChange={(v) => setFiltersA({...filtersA, semester: v})} />
+                  <FilterDropdown label="Section" options={filterOptions.sections} value={filtersA.section} onChange={(v) => setFiltersA({...filtersA, section: v})} />
                 </div>
               </div>
 
@@ -200,37 +193,37 @@ const CollegeReport = () => {
               <AnimatePresence>
                 {isCompareMode && (
                   <motion.div 
-                    initial={{ opacity: 0, width: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, width: 0, scale: 0.95 }}
                     animate={{ opacity: 1, width: 'auto', scale: 1 }}
-                    exit={{ opacity: 0, width: 0, scale: 0.9 }}
-                    className="flex-1 p-6 border-4 border-black bg-[#fff0f5] overflow-hidden"
+                    exit={{ opacity: 0, width: 0, scale: 0.95 }}
+                    className="flex-1 p-6 border border-border rounded-xl bg-foreground/5 overflow-hidden"
                   >
-                    <h4 className="text-lg font-black uppercase mb-4 bg-black text-[#FF00FF] inline-block px-3 py-1">GROUP B (Compare)</h4>
-                    <div className="flex flex-wrap gap-6 min-w-max">
-                      <FilterDropdown label="Department" options={filterOptions.branches} value={filtersB.branch} onChange={(v) => setFiltersB({...filtersB, branch: v})} color="#00FFFF" />
-                      <FilterDropdown label="Semester" options={filterOptions.semesters} value={filtersB.semester} onChange={(v) => setFiltersB({...filtersB, semester: v})} color="#00FF00" />
-                      <FilterDropdown label="Section" options={filterOptions.sections} value={filtersB.section} onChange={(v) => setFiltersB({...filtersB, section: v})} color="#FF00FF" />
+                    <h4 className="text-sm font-semibold uppercase mb-4 text-foreground/70 bg-background border border-border inline-block px-2 py-1 rounded-md">Group B (Compare)</h4>
+                    <div className="flex flex-wrap gap-4 min-w-max">
+                      <FilterDropdown label="Department" options={filterOptions.branches} value={filtersB.branch} onChange={(v) => setFiltersB({...filtersB, branch: v})} />
+                      <FilterDropdown label="Semester" options={filterOptions.semesters} value={filtersB.semester} onChange={(v) => setFiltersB({...filtersB, semester: v})} />
+                      <FilterDropdown label="Section" options={filterOptions.sections} value={filtersB.section} onChange={(v) => setFiltersB({...filtersB, section: v})} />
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-8 flex justify-end pt-6 border-t border-border/50">
               <button 
                 onClick={handleApplyFilters}
                 disabled={loading}
-                className="bg-[#00FF00] px-10 py-4 border-4 border-black font-black text-xl uppercase tracking-widest hover:-translate-y-2 transition-transform cursor-pointer flex items-center gap-3 disabled:opacity-50"
-                style={{ boxShadow: '8px 8px 0px #000' }}
+                className="bg-primary text-primary-foreground px-8 py-3.5 border border-primary/50 rounded-xl shadow-md font-bold text-sm tracking-wider hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50"
               >
-                {loading ? <Loader className="animate-spin" /> : 'APPLY FILTERS & FETCH'}
+                {loading ? <Loader className="animate-spin" size={18}/> : <Filter size={18}/>}
+                APPLY FILTERS & FETCH
               </button>
             </div>
           </div>
 
           {error && (
-            <div className="bg-[#FF6B6B] border-8 border-black p-6 mb-10 text-white font-black text-lg uppercase flex items-center gap-4">
-              <span>⚠️</span> {error}
+            <div className="bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl p-6 mb-10 font-semibold flex items-center gap-3">
+              <span className="bg-red-500/20 p-1.5 rounded-md">⚠️</span> {error}
             </div>
           )}
 
@@ -244,27 +237,26 @@ const CollegeReport = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-white border-6 border-black p-6 group hover:shadow-2xl transition-all relative overflow-hidden"
-                  style={{ boxShadow: '8px 8px 0px #000' }}
+                  className="bg-card border border-border rounded-2xl shadow-sm p-6 group hover:border-primary/50 transition-colors relative overflow-hidden"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className="bg-white p-3 border-4 border-black" style={{ backgroundColor: stat.color }}>
-                      <Icon size={32} className="text-black" strokeWidth={2} />
+                    <div className={`p-3 border rounded-xl ${stat.colorClass}`}>
+                      <Icon size={24} strokeWidth={2.5} />
                     </div>
                     {isCompareMode && compareData && (
-                      <span className="text-xs font-black px-2 py-1 border-2 border-black bg-black text-[#FF00FF]">
+                      <span className="text-xs font-semibold px-2 py-1 border border-border rounded-md bg-foreground/5 text-foreground/70">
                         Vs B
                       </span>
                     )}
                   </div>
-                  <p className="text-sm font-bold text-gray-700 uppercase">{stat.label}</p>
+                  <p className="text-sm font-semibold text-foreground/60 mb-1">{stat.label}</p>
                   
                   <div className="flex items-end gap-4 mt-2">
-                    <p className="text-4xl font-black text-black">{stat.value}</p>
+                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                     {isCompareMode && compareData && (
-                      <div className="flex flex-col">
-                        <p className="text-sm font-black text-gray-500 uppercase line-through">Group A</p>
-                        <p className="text-xl font-black text-[#FF00FF]">{
+                      <div className="flex flex-col items-end">
+                        <p className="text-xs font-semibold text-foreground/40 line-through">Group A</p>
+                        <p className="text-lg font-bold text-foreground/70">{
                           idx === 0 ? compareData.stats.totalStudents :
                           idx === 1 ? `${compareData.stats.avgPerformance || 0}%` :
                           idx === 2 ? compareData.stats.totalActivities :
@@ -285,25 +277,25 @@ const CollegeReport = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="lg:col-span-2 bg-white border-8 border-black p-8"
-              style={{ boxShadow: '12px 12px 0px #000' }}
+              className="lg:col-span-2 bg-card border border-border rounded-2xl shadow-sm p-8"
             >
-              <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3 text-black">
-                📊 PERFORMANCE COMPARISON
+              <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-foreground">
+                Performance Comparison
               </h3>
               <div className="w-full h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={comparisonClassData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#000" />
-                    <XAxis dataKey="name" stroke="#000" tick={{fontWeight: 'bold'}} />
-                    <YAxis stroke="#000" tick={{fontWeight: 'bold'}} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis dataKey="name" stroke="var(--foreground)" tick={{fill: 'var(--foreground)', opacity: 0.7}} axisLine={false} tickLine={false} />
+                    <YAxis stroke="var(--foreground)" tick={{fill: 'var(--foreground)', opacity: 0.7}} axisLine={false} tickLine={false} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#FFEB3B', border: '4px solid #000', borderRadius: 0, fontWeight: 'black', color: 'black' }}
+                      contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '12px', color: 'var(--foreground)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      itemStyle={{ color: 'var(--foreground)' }}
                     />
-                    <Legend wrapperStyle={{ fontWeight: 'black' }} />
-                    <Bar dataKey="GroupA_Avg" fill="#00FFFF" stroke="#000" strokeWidth={3} name={isCompareMode ? "Group A Avg %" : "Average %"} />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                    <Bar dataKey="GroupA_Avg" fill="var(--primary)" radius={[4, 4, 0, 0]} name={isCompareMode ? "Group A Avg %" : "Average %"} />
                     {isCompareMode && (
-                       <Bar dataKey="GroupB_Avg" fill="#FF00FF" stroke="#000" strokeWidth={3} name="Group B Avg %" />
+                       <Bar dataKey="GroupB_Avg" fill="#94a3b8" radius={[4, 4, 0, 0]} name="Group B Avg %" />
                     )}
                   </BarChart>
                 </ResponsiveContainer>
@@ -314,25 +306,24 @@ const CollegeReport = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white border-8 border-black p-8"
-              style={{ boxShadow: '12px 12px 0px #000' }}
+              transition={{ delay: 0.4 }}
+              className="bg-card border border-border rounded-2xl shadow-sm p-8"
             >
-              <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3 text-black">
-                🎯 SCORE DISTRIBUTION
+              <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-foreground">
+                Score Distribution
               </h3>
               <div className="w-full h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                    <PolarGrid stroke="#000" />
-                    <PolarAngleAxis dataKey="subject" stroke="#000" fontStyle={{ fontWeight: 'black' }} />
-                    <PolarRadiusAxis stroke="#000" />
-                    <Radar name={isCompareMode ? "Group A" : "Student Count"} dataKey="GroupA" stroke="#00FFFF" fill="#00FFFF" fillOpacity={0.6} strokeWidth={3} />
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                    <PolarGrid stroke="var(--border)" />
+                    <PolarAngleAxis dataKey="subject" tick={{fill: 'var(--foreground)', fontSize: 12, opacity: 0.8}} />
+                    <PolarRadiusAxis stroke="transparent" />
+                    <Radar name={isCompareMode ? "Group A" : "Student Count"} dataKey="GroupA" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.5} strokeWidth={2} />
                     {isCompareMode && (
-                      <Radar name="Group B" dataKey="GroupB" stroke="#FF00FF" fill="#FF00FF" fillOpacity={0.6} strokeWidth={3} />
+                      <Radar name="Group B" dataKey="GroupB" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.5} strokeWidth={2} />
                     )}
-                    <Tooltip contentStyle={{ backgroundColor: '#fff', border: '4px solid #000', borderRadius: 0, fontWeight: 'black', color: 'black' }} />
-                    <Legend wrapperStyle={{ fontWeight: 'black' }} />
+                    <Tooltip contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '12px', color: 'var(--foreground)' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>

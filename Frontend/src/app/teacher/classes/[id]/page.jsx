@@ -206,42 +206,24 @@ const ClassDetails = () => {
   if (!teacherData) return null;
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full">
-      <main className="flex-1 overflow-y-auto p-6 lg:p-10 relative text-black">
+    <div className="flex flex-col flex-1 h-full w-full bg-background">
+      <main className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
         
         <button 
           onClick={() => router.push('/teacher/classes')}
-          className="mb-6 flex items-center gap-2 font-black uppercase text-xl hover:-translate-y-1 transition-transform bg-white border-4 border-black px-4 py-2 cursor-pointer text-black"
-          style={{ boxShadow: '4px 4px 0px #000' }}
+          className="mb-6 flex items-center gap-2 font-medium text-sm hover:text-primary transition-colors text-foreground/60 w-fit"
         >
-          <ArrowLeft strokeWidth={3} size={20} /> Back to Classes
+          <ArrowLeft size={16} /> Back to Classes
         </button>
 
         {loading ? (
-          <div className="w-full space-y-8 animate-pulse">
-            {/* Header Skeleton */}
-            <div className="h-40 bg-gray-300 border-8 border-black shadow-[16px_16px_0px_#000] w-full rounded-none"></div>
-            
-            {/* Action Buttons Skeleton */}
-            <div className="flex gap-4">
-              <div className="h-14 w-64 bg-gray-300 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
-              <div className="h-14 w-48 bg-gray-300 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
-              <div className="h-14 w-60 bg-gray-300 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
-            </div>
-
-            {/* Table Header Skeleton */}
-            <div className="h-16 bg-gray-300 border-4 border-black mt-8"></div>
-            
-            {/* Table Rows Skeleton */}
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-20 bg-gray-200 border-4 border-black shadow-[4px_4px_0px_#000]"></div>
-              ))}
-            </div>
+          <div className="w-full space-y-6 flex flex-col items-center justify-center py-20">
+             <div className="w-10 h-10 border-4 border-border rounded-full border-t-primary animate-spin mb-4" />
+             <p className="font-semibold text-foreground/70">Loading Class Details...</p>
           </div>
         ) : error ? (
-           <div className="bg-[#FF0000] text-white p-6 border-8 border-black font-black uppercase text-xl" style={{ boxShadow: '8px 8px 0px #000' }}>
-             Error: {error}
+           <div className="bg-red-500/10 text-red-500 p-6 border border-red-500/20 rounded-2xl shadow-sm font-semibold flex items-center gap-3">
+             <AlertCircle size={24} /> {error}
            </div>
         ) : classData && (
           <>
@@ -249,37 +231,36 @@ const ClassDetails = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-10 bg-[#FF00FF] border-8 border-black p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
-              style={{ boxShadow: '16px 16px 0px #000' }}
+              className="mb-8 bg-card border border-border rounded-2xl shadow-sm p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
             >
               <div className="flex items-center gap-6">
-                <div className="bg-white p-4 border-4 border-black text-black" style={{ boxShadow: '4px 4px 0px #000' }}>
-                  <BookOpen size={48} strokeWidth={2.5} />
+                <div className="bg-primary/10 p-4 border border-primary/20 rounded-xl text-primary" >
+                  <BookOpen size={40} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h2 className="text-4xl md:text-5xl font-black uppercase mb-1 leading-none tracking-tight text-white">{classData.name}</h2>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="font-bold text-black uppercase tracking-widest text-sm bg-[#00FFFF] px-2 py-1 border-2 border-black">
+                  <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">{classData.name}</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="font-semibold text-foreground/80 text-xs bg-foreground/5 px-2.5 py-1 rounded-md">
                       {classData.program} - {classData.branch}
                     </span>
-                    <span className="font-bold text-black uppercase tracking-widest text-sm bg-[#FFEB3B] px-2 py-1 border-2 border-black">
+                    <span className="font-semibold text-foreground/80 text-xs bg-foreground/5 px-2.5 py-1 rounded-md">
                       Sem {classData.semester}
                     </span>
-                    <span className="font-bold text-black uppercase tracking-widest text-sm bg-[#00FF00] px-2 py-1 border-2 border-black">
+                    <span className="font-semibold text-foreground/80 text-xs bg-foreground/5 px-2.5 py-1 rounded-md">
                       Sec {classData.section}
                     </span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-black text-white p-4 border-4 border-white flex flex-col items-center min-w-[120px]">
-                <span className="text-4xl font-black">{students.length}</span>
-                <span className="text-sm font-bold uppercase tracking-widest text-white">Students</span>
+              <div className="bg-primary text-primary-foreground p-4 rounded-xl shadow-sm flex flex-col items-center min-w-[120px]">
+                <span className="text-3xl font-bold">{students.length}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider opacity-90">Students</span>
               </div>
             </motion.div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 mb-8">
+            <div className="flex flex-wrap gap-3 mb-8">
               <input 
                 type="file" 
                 accept=".csv" 
@@ -288,36 +269,32 @@ const ClassDetails = () => {
                 onChange={handleFileUpload} 
               />
               <button 
-                className={`bg-[#00FF00] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 transition-transform text-black ${uploading ? 'opacity-50 cursor-wait' : 'hover:-translate-y-1 cursor-pointer'}`}
-                style={{ boxShadow: uploading ? '0px 0px 0px #000' : '4px 4px 0px #000' }}
+                className={`bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground rounded-xl shadow-sm px-5 py-2.5 font-semibold text-sm flex items-center gap-2 transition-colors ${uploading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
                 onClick={() => !uploading && fileInputRef.current?.click()}
                 disabled={uploading}
               >
-                <Upload size={20} strokeWidth={3} /> {uploading ? 'Processing CSV...' : 'Upload Student CSV'}
+                <Upload size={18} /> {uploading ? 'Processing CSV...' : 'Upload Student CSV'}
               </button>
               <button 
-                className="bg-[#00FFFF] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 hover:-translate-y-1 transition-transform text-black cursor-pointer"
-                style={{ boxShadow: '4px 4px 0px #000' }}
+                className="bg-card border border-border rounded-xl shadow-sm px-5 py-2.5 font-semibold text-sm flex items-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
                 onClick={() => alert("Evaluation functionality coming next!")}
               >
-                <FileText size={20} strokeWidth={3} /> Evaluate Class
+                <FileText size={18} /> Evaluate Class
               </button>
               <button 
-                className="bg-[#FFEB3B] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 hover:-translate-y-1 transition-transform text-black cursor-pointer"
-                style={{ boxShadow: '4px 4px 0px #000' }}
+                className="bg-card border border-border rounded-xl shadow-sm px-5 py-2.5 font-semibold text-sm flex items-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
                 onClick={() => {
                   setAddError('');
                   setShowAddModal(true);
                 }}
               >
-                <Users size={20} strokeWidth={3} /> Add Student Manually
+                <Users size={18} /> Add Student Manually
               </button>
               <button 
-                className="bg-[#00AAFF] border-4 border-black px-6 py-3 font-black uppercase flex items-center gap-2 hover:-translate-y-1 transition-transform text-white cursor-pointer"
-                style={{ boxShadow: '4px 4px 0px #000' }}
+                className="bg-card border border-border rounded-xl shadow-sm px-5 py-2.5 font-semibold text-sm flex items-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground ml-auto"
                 onClick={handleDownloadCSV}
               >
-                <Download size={20} strokeWidth={3} /> Download Placements CSV
+                <Download size={18} /> Placements CSV
               </button>
             </div>
 
@@ -328,63 +305,55 @@ const ClassDetails = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-md p-6"
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-6"
                 >
                   <motion.div 
-                    initial={{ scale: 0.8, y: 20 }}
+                    initial={{ scale: 0.95, y: 10 }}
                     animate={{ scale: 1, y: 0 }}
-                    className="bg-white border-8 border-black p-10 max-w-md w-full text-center relative text-black"
-                    style={{ boxShadow: '20px 20px 0px #00FF00' }}
+                    className="bg-card border border-border rounded-2xl shadow-xl p-8 max-w-sm w-full text-center"
                   >
                     <div className="flex justify-center mb-6">
                       {uploadStatus === 'processing' && (
                         <div className="relative">
-                          <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            className="w-24 h-24 border-8 border-black border-t-[#00FF00] rounded-full"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Upload size={32} className="animate-bounce" />
-                          </div>
+                          <Loader2 size={48} className="animate-spin text-primary" />
                         </div>
                       )}
                       {uploadStatus === 'success' && (
                         <motion.div 
                           initial={{ scale: 0 }} 
-                          animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
-                          className="bg-[#00FF00] p-6 border-4 border-black rounded-full"
+                          animate={{ scale: 1 }}
+                          className="text-green-500 bg-green-500/10 p-4 rounded-full"
                         >
-                          <CheckCircle2 size={64} color="black" />
+                          <CheckCircle2 size={48} />
                         </motion.div>
                       )}
                       {uploadStatus === 'error' && (
                         <motion.div 
                           initial={{ scale: 0 }} 
                           animate={{ scale: 1 }}
-                          className="bg-[#FF0000] p-6 border-4 border-black rounded-full"
+                          className="text-red-500 bg-red-500/10 p-4 rounded-full"
                         >
-                          <AlertCircle size={64} color="white" />
+                          <AlertCircle size={48} />
                         </motion.div>
                       )}
                     </div>
 
-                    <h2 className="text-3xl font-black uppercase mb-4 tracking-tight">
+                    <h2 className="text-xl font-bold tracking-tight text-foreground mb-2">
                       {uploadStatus === 'processing' ? 'Syncing Students' : 
                        uploadStatus === 'success' ? 'Records Secured' : 'Upload Failed'}
                     </h2>
                     
-                    <p className="font-bold text-lg uppercase bg-black text-white px-4 py-2 inline-block">
+                    <p className="text-sm font-medium text-foreground/70">
                       {uploadMessage}
                     </p>
 
                     {uploadStatus === 'processing' && (
-                      <div className="mt-8 h-4 w-full bg-gray-200 border-2 border-black overflow-hidden">
+                      <div className="mt-6 h-1.5 w-full bg-foreground/10 rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ x: '-100%' }}
                           animate={{ x: '100%' }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                          className="h-full w-1/3 bg-[#00FF00]"
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                          className="h-full w-1/3 bg-primary rounded-full"
                         />
                       </div>
                     )}
@@ -394,59 +363,59 @@ const ClassDetails = () => {
             </AnimatePresence>
 
             {/* Student List */}
-            <div className="bg-white border-8 border-black p-6" style={{ boxShadow: '8px 8px 0px #000' }}>
-              <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-                <Users size={28} /> Enrolled Students
+            <div className="bg-card border border-border rounded-2xl shadow-sm p-6" >
+              <h3 className="text-xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-2">
+                <Users size={24} className="text-primary"/> Enrolled Students
               </h3>
               
               {students.length === 0 ? (
-                <div className="text-center py-10 bg-[#f8f8f8] border-4 border-black border-dashed">
-                  <p className="font-bold text-lg uppercase text-gray-500">No students assigned to this class yet.</p>
+                <div className="text-center py-12 bg-background border border-border rounded-xl border-dashed">
+                  <p className="font-semibold text-foreground/50">No students assigned to this class yet.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="bg-black text-white uppercase text-sm tracking-wider">
-                        <th className="p-4 border-b-4 border-black">Roll No</th>
-                        <th className="p-4 border-b-4 border-black">Name</th>
-                        <th className="p-4 border-b-4 border-black">Email</th>
-                        <th className="p-4 border-b-4 border-black">Action</th>
+                      <tr className="bg-foreground/5 text-foreground/70 font-semibold uppercase tracking-wider text-xs">
+                        <th className="p-4 border-b border-border/50 rounded-tl-xl">Roll No</th>
+                        <th className="p-4 border-b border-border/50">Name</th>
+                        <th className="p-4 border-b border-border/50">Email</th>
+                        <th className="p-4 border-b border-border/50 text-right rounded-tr-xl">Action</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-border/50">
                       {students.map((student, idx) => (
                         <motion.tr 
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.05 }}
+                          transition={{ delay: Math.min(idx * 0.05, 0.5) }}
                           key={student._id} 
-                          className="border-b-4 border-black hover:bg-[#00FFFF] hover:bg-opacity-20 transition-colors"
+                          className="hover:bg-foreground/5 transition-colors"
                         >
-                          <td className="p-4 font-bold">{student.rollNo || 'N/A'}</td>
-                          <td className="p-4 font-bold uppercase">{student.name}</td>
-                          <td className="p-4 font-bold">{student.email}</td>
+                          <td className="p-4 font-medium text-foreground/80">{student.rollNo || 'N/A'}</td>
+                          <td className="p-4 font-bold text-foreground">{student.name}</td>
+                          <td className="p-4 font-medium text-foreground/70">{student.email}</td>
                           <td className="p-4">
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 justify-end">
                               <button 
                                 onClick={() => router.push(`/teacher/classes/${id}/students/${student._id}`)}
-                                className="bg-white border-2 border-black px-3 py-1 font-black text-sm uppercase hover:bg-black hover:text-white transition-colors cursor-pointer"
+                                className="bg-background border border-border rounded-md px-3 py-1 font-semibold text-xs hover:bg-foreground/10 transition-colors cursor-pointer text-foreground"
                               >
                                 View
                               </button>
                               <button 
                                 onClick={() => handlePlacementClick(student)}
-                                className="bg-[#FFEB3B] border-2 border-black p-1 text-black hover:bg-black hover:text-white transition-colors cursor-pointer"
+                                className="bg-primary/10 text-primary border border-primary/20 rounded-md p-1.5 hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
                                 title="Update Placement"
                               >
-                                <Briefcase size={18} />
+                                <Briefcase size={16} />
                               </button>
                               <button 
                                 onClick={() => handleDeleteStudentClick(student)}
-                                className="bg-[#FF0000] border-2 border-black p-1 text-white hover:bg-black transition-colors cursor-pointer"
+                                className="bg-red-500/10 text-red-500 border border-red-500/20 rounded-md p-1.5 hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
                                 title="Delete Student"
                               >
-                                <Trash2 size={18} />
+                                <Trash2 size={16} />
                               </button>
                             </div>
                           </td>
@@ -467,49 +436,45 @@ const ClassDetails = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
               onClick={() => setStudentToDelete(null)}
             >
               <motion.div 
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 50, opacity: 0 }}
-                className="bg-white border-8 border-black w-full max-w-md text-black"
-                style={{ boxShadow: '16px 16px 0px #000' }}
+                initial={{ y: 20, scale: 0.95, opacity: 0 }}
+                animate={{ y: 0, scale: 1, opacity: 1 }}
+                exit={{ y: 20, scale: 0.95, opacity: 0 }}
+                className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm"
                 onClick={e => e.stopPropagation()}
               >
-                <div className="flex justify-between items-center p-6 border-b-4 border-black bg-[#FF0000]">
-                  <h2 className="text-2xl font-black uppercase text-white flex items-center gap-3">
-                    <Trash2 size={28} /> Delete Student
+                <div className="flex justify-between items-center p-6 border-b border-border bg-red-500/10 text-red-500">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <Trash2 size={20} /> Delete Student
                   </h2>
                   <button 
                     onClick={() => setStudentToDelete(null)}
-                    className="bg-white border-4 border-black p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
-                    style={{ boxShadow: '4px 4px 0px #000' }}
+                    className="hover:bg-red-500/20 p-2 rounded-lg transition-colors cursor-pointer"
                   >
-                    <X size={24} strokeWidth={3} />
+                    <X size={20} />
                   </button>
                 </div>
 
                 <div className="p-6">
-                  <p className="text-lg font-bold uppercase mb-6">
-                    Are you sure you want to delete <span className="text-[#FF0000] font-black bg-[#FFEB3B] px-2 border-2 border-black inline-block">{studentToDelete.name}</span>? 
+                  <p className="text-sm font-medium text-foreground/80 mb-6 leading-relaxed">
+                    Are you sure you want to delete <span className="font-bold text-foreground bg-foreground/10 px-1.5 rounded">{studentToDelete.name}</span>? 
                     <br /><br />
                     This action cannot be undone.
                   </p>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-3">
                     <button 
                       onClick={() => setStudentToDelete(null)}
-                      className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
-                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      className="flex-1 bg-background border border-border rounded-xl py-2.5 font-semibold text-sm hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
                     >
                       Cancel
                     </button>
                     <button 
                       onClick={confirmDeleteStudent}
-                      className="flex-1 bg-[#FF0000] text-white border-4 border-black py-3 font-black uppercase hover:bg-black transition-colors cursor-pointer"
-                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      className="flex-1 bg-red-500 text-white rounded-xl py-2.5 font-semibold text-sm hover:bg-red-600 transition-colors cursor-pointer"
                     >
                       Delete
                     </button>
@@ -527,39 +492,37 @@ const ClassDetails = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
               onClick={() => setShowAddModal(false)}
             >
               <motion.div 
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 50, opacity: 0 }}
-                className="bg-white border-8 border-black w-full max-w-md text-black"
-                style={{ boxShadow: '16px 16px 0px #000' }}
+                initial={{ y: 20, scale: 0.95, opacity: 0 }}
+                animate={{ y: 0, scale: 1, opacity: 1 }}
+                exit={{ y: 20, scale: 0.95, opacity: 0 }}
+                className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md"
                 onClick={e => e.stopPropagation()}
               >
-                <div className="flex justify-between items-center p-6 border-b-4 border-black bg-[#FFEB3B]">
-                  <h2 className="text-2xl font-black uppercase text-black flex items-center gap-3">
-                    <Users size={28} /> Add Student
+                <div className="flex justify-between items-center p-6 border-b border-border bg-primary/5 text-foreground">
+                  <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                    <Users size={20} className="text-primary"/> Add Student
                   </h2>
                   <button 
                     onClick={() => setShowAddModal(false)}
-                    className="bg-white border-4 border-black p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
-                    style={{ boxShadow: '4px 4px 0px #000' }}
+                    className="hover:bg-foreground/5 p-2 rounded-lg transition-colors cursor-pointer text-foreground/50 hover:text-foreground"
                   >
-                    <X size={24} strokeWidth={3} />
+                    <X size={20} />
                   </button>
                 </div>
 
-                <form onSubmit={handleAddStudentSubmit} className="p-6 space-y-6">
+                <form onSubmit={handleAddStudentSubmit} className="p-6 space-y-4">
                   {addError && (
-                    <div className="bg-[#FF0000] text-white p-4 border-4 border-black font-black uppercase text-sm flex items-center gap-2">
-                      <AlertCircle size={20} /> {addError}
+                    <div className="bg-red-500/10 text-red-500 p-3 rounded-lg border border-red-500/20 text-sm font-medium flex items-center gap-2">
+                      <AlertCircle size={18} /> {addError}
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <label htmlFor="student-name" className="text-sm font-black uppercase text-black block">
+                  <div className="space-y-1.5">
+                    <label htmlFor="student-name" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                       Full Name
                     </label>
                     <input
@@ -568,14 +531,13 @@ const ClassDetails = () => {
                       required
                       value={newStudent.name}
                       onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                       placeholder="John Doe"
-                      style={{ borderRadius: 0 }}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="student-email" className="text-sm font-black uppercase text-black block">
+                  <div className="space-y-1.5">
+                    <label htmlFor="student-email" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                       Email Address
                     </label>
                     <input
@@ -584,14 +546,13 @@ const ClassDetails = () => {
                       required
                       value={newStudent.email}
                       onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                       placeholder="student@kiet.edu"
-                      style={{ borderRadius: 0 }}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="student-roll" className="text-sm font-black uppercase text-black block">
+                  <div className="space-y-1.5">
+                    <label htmlFor="student-roll" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                       Roll Number
                     </label>
                     <input
@@ -600,31 +561,28 @@ const ClassDetails = () => {
                       required
                       value={newStudent.rollNo}
                       onChange={(e) => setNewStudent({ ...newStudent, rollNo: e.target.value })}
-                      className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                      className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                       placeholder="CSE2021001"
-                      style={{ borderRadius: 0 }}
                     />
                   </div>
 
-                  <div className="flex gap-4 pt-2">
+                  <div className="flex gap-3 pt-4">
                     <button 
                       type="button"
                       onClick={() => setShowAddModal(false)}
-                      className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
-                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      className="flex-1 bg-background border border-border rounded-xl py-3 font-semibold text-sm hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
                       disabled={addLoading}
                     >
                       Cancel
                     </button>
                     <button 
                       type="submit"
-                      className="flex-1 bg-[#00FF00] text-black border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      className="flex-1 bg-primary text-primary-foreground rounded-xl py-3 font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer"
                       disabled={addLoading}
                     >
                       {addLoading ? (
                         <>
-                          <Loader2 className="animate-spin" size={18} /> Adding...
+                          <Loader2 className="animate-spin" size={16} /> Adding...
                         </>
                       ) : (
                         'Add Student'
@@ -644,91 +602,88 @@ const ClassDetails = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
               onClick={() => setShowPlacementModal(false)}
             >
               <motion.div 
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 50, opacity: 0 }}
-                className="bg-white border-8 border-black w-full max-w-md text-black"
-                style={{ boxShadow: '16px 16px 0px #000' }}
+                initial={{ y: 20, scale: 0.95, opacity: 0 }}
+                animate={{ y: 0, scale: 1, opacity: 1 }}
+                exit={{ y: 20, scale: 0.95, opacity: 0 }}
+                className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md"
                 onClick={e => e.stopPropagation()}
               >
-                <div className="flex justify-between items-center p-6 border-b-4 border-black bg-[#FFEB3B]">
-                  <h2 className="text-2xl font-black uppercase text-black flex items-center gap-3">
-                    <Briefcase size={28} /> {placementViewMode ? 'Current Placement' : 'Update Placement'}
+                <div className="flex justify-between items-center p-6 border-b border-border bg-primary/5 text-foreground">
+                  <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                    <Briefcase size={20} className="text-primary"/> {placementViewMode ? 'Current Placement' : 'Update Placement'}
                   </h2>
                   <button 
                     onClick={() => setShowPlacementModal(false)}
-                    className="bg-white border-4 border-black p-1 hover:bg-black hover:text-white transition-colors cursor-pointer"
-                    style={{ boxShadow: '4px 4px 0px #000' }}
+                    className="hover:bg-foreground/5 p-2 rounded-lg transition-colors cursor-pointer text-foreground/50 hover:text-foreground"
                   >
-                    <X size={24} strokeWidth={3} />
+                    <X size={20} />
                   </button>
                 </div>
 
                 {placementViewMode ? (
                   <div className="p-6 space-y-6">
-                    <div className="bg-white border-4 border-black p-0 shadow-[8px_8px_0px_#000] overflow-hidden">
-                      <div className="bg-[#00FFFF] p-4 border-b-4 border-black flex justify-between items-center">
+                    <div className="bg-background border border-border rounded-xl overflow-hidden">
+                      <div className="bg-primary/10 p-4 border-b border-border flex justify-between items-center">
                         <div>
-                          <p className="text-xs font-black text-black opacity-60 uppercase mb-1 tracking-wider">Placed At</p>
-                          <p className="text-2xl font-black uppercase text-black">{selectedStudentForPlacement?.placement?.company}</p>
+                          <p className="text-xs font-semibold text-foreground/50 uppercase mb-1 tracking-wider">Placed At</p>
+                          <p className="text-xl font-bold text-foreground">{selectedStudentForPlacement?.placement?.company}</p>
                         </div>
-                        <div className="bg-white border-4 border-black p-2">
-                          <Briefcase size={28} className="text-black" />
+                        <div className="bg-card border border-border rounded-lg p-2 text-primary">
+                          <Briefcase size={24} />
                         </div>
                       </div>
                       
-                      <div className="p-4 grid grid-cols-2 gap-4 bg-white">
+                      <div className="p-4 grid grid-cols-2 gap-4">
                         {selectedStudentForPlacement?.placement?.currentCompany && (
-                          <div className="border-r-4 border-black pr-4">
-                            <p className="text-xs font-black text-black opacity-60 uppercase mb-1">Current Company</p>
-                            <p className="text-lg font-black text-black">{selectedStudentForPlacement.placement.currentCompany}</p>
+                          <div className="border-r border-border pr-4">
+                            <p className="text-xs font-semibold text-foreground/50 uppercase mb-1">Current Company</p>
+                            <p className="text-sm font-bold text-foreground">{selectedStudentForPlacement.placement.currentCompany}</p>
                           </div>
                         )}
                         
                         {selectedStudentForPlacement?.placement?.ctc && (
                           <div className={`${!selectedStudentForPlacement?.placement?.currentCompany ? 'col-span-2' : ''}`}>
-                            <p className="text-xs font-black text-black opacity-60 uppercase mb-1">CTC / LPA</p>
-                            <p className="text-lg font-black text-[#00AA00]">{selectedStudentForPlacement.placement.ctc}</p>
+                            <p className="text-xs font-semibold text-foreground/50 uppercase mb-1">CTC / LPA</p>
+                            <p className="text-sm font-bold text-green-500">{selectedStudentForPlacement.placement.ctc}</p>
                           </div>
                         )}
                       </div>
 
-                      <div className="p-4 border-t-4 border-black bg-[#f9f9f9] flex justify-between items-center">
-                        <p className="text-xs font-black text-black uppercase">Placement Type</p>
-                        <span className="bg-black text-[#00FF00] px-3 py-1 text-xs font-black uppercase border-2 border-black">
+                      <div className="p-4 border-t border-border bg-foreground/5 flex justify-between items-center">
+                        <p className="text-xs font-semibold text-foreground/70 uppercase">Placement Type</p>
+                        <span className="bg-primary/10 text-primary px-2.5 py-1 text-xs font-bold uppercase rounded-md">
                           {selectedStudentForPlacement?.placement?.type?.replace(/_/g, ' ')}
                         </span>
                       </div>
                     </div>
                     
-                    <div className="bg-[#f0f0f0] border-4 border-black p-4 text-center">
-                      <p className="font-bold text-sm uppercase">
-                        Placement Changes: <span className="font-black text-lg bg-[#FFEB3B] px-2 border-2 border-black ml-1">{selectedStudentForPlacement?.placementHistory?.length || 1}</span>
+                    <div className="bg-background border border-border border-dashed rounded-xl p-4 text-center">
+                      <p className="font-semibold text-sm text-foreground/70">
+                        Placement Changes: <span className="font-bold text-foreground bg-foreground/10 px-2 py-0.5 rounded ml-1">{selectedStudentForPlacement?.placementHistory?.length || 1}</span>
                       </p>
                     </div>
 
                     <button 
                       onClick={() => setPlacementViewMode(false)}
-                      className="w-full bg-white border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all cursor-pointer"
-                      style={{ boxShadow: '4px 4px 0px #000' }}
+                      className="w-full bg-primary text-primary-foreground rounded-xl py-3 font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer"
                     >
                       Log New Company
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handlePlacementSubmit} className="p-6 space-y-6">
+                  <form onSubmit={handlePlacementSubmit} className="p-6 space-y-4">
                     {placementError && (
-                      <div className="bg-[#FF0000] text-white p-4 border-4 border-black font-black uppercase text-sm flex items-center gap-2">
-                        <AlertCircle size={20} /> {placementError}
+                      <div className="bg-red-500/10 text-red-500 p-3 rounded-lg border border-red-500/20 text-sm font-medium flex items-center gap-2">
+                        <AlertCircle size={18} /> {placementError}
                       </div>
                     )}
 
-                    <div className="space-y-2">
-                      <label htmlFor="placement-company" className="text-sm font-black uppercase text-black block">
+                    <div className="space-y-1.5">
+                      <label htmlFor="placement-company" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                         Placement Company
                       </label>
                       <input
@@ -736,14 +691,13 @@ const ClassDetails = () => {
                         type="text"
                         value={placementData.company}
                         onChange={(e) => setPlacementData({ ...placementData, company: e.target.value })}
-                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                         placeholder="e.g. Google"
-                        style={{ borderRadius: 0 }}
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="placement-currentCompany" className="text-sm font-black uppercase text-black block">
+                    <div className="space-y-1.5">
+                      <label htmlFor="placement-currentCompany" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                         Current Company
                       </label>
                       <input
@@ -751,14 +705,13 @@ const ClassDetails = () => {
                         type="text"
                         value={placementData.currentCompany}
                         onChange={(e) => setPlacementData({ ...placementData, currentCompany: e.target.value })}
-                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                         placeholder="e.g. Amazon"
-                        style={{ borderRadius: 0 }}
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="placement-ctc" className="text-sm font-black uppercase text-black block">
+                    <div className="space-y-1.5">
+                      <label htmlFor="placement-ctc" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                         CTC / LPA
                       </label>
                       <input
@@ -766,22 +719,20 @@ const ClassDetails = () => {
                         type="text"
                         value={placementData.ctc}
                         onChange={(e) => setPlacementData({ ...placementData, ctc: e.target.value })}
-                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                         placeholder="e.g. 12 LPA"
-                        style={{ borderRadius: 0 }}
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="placement-type" className="text-sm font-black uppercase text-black block">
+                    <div className="space-y-1.5">
+                      <label htmlFor="placement-type" className="text-xs font-semibold uppercase tracking-wider text-foreground/70 block">
                         Placement Type
                       </label>
                       <select
                         id="placement-type"
                         value={placementData.type}
                         onChange={(e) => setPlacementData({ ...placementData, type: e.target.value })}
-                        className="w-full border-4 border-black p-3 font-bold text-black focus:outline-none focus:bg-[#00FFFF]"
-                        style={{ borderRadius: 0 }}
+                        className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
                       >
                         <option value="none">None</option>
                         <option value="intern">Intern</option>
@@ -789,7 +740,7 @@ const ClassDetails = () => {
                       </select>
                     </div>
 
-                    <div className="flex gap-4 pt-2">
+                    <div className="flex gap-3 pt-4">
                       <button 
                         type="button"
                         onClick={() => {
@@ -799,24 +750,22 @@ const ClassDetails = () => {
                             setShowPlacementModal(false);
                           }
                         }}
-                        className="flex-1 bg-white border-4 border-black py-3 font-black uppercase hover:bg-[#f0f0f0] transition-colors cursor-pointer"
-                        style={{ boxShadow: '4px 4px 0px #000' }}
+                        className="flex-1 bg-background border border-border rounded-xl py-3 font-semibold text-sm hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
                         disabled={placementLoading}
                       >
                         Cancel
                       </button>
                       <button 
                         type="submit"
-                        className="flex-1 bg-[#00FF00] text-black border-4 border-black py-3 font-black uppercase hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
-                        style={{ boxShadow: '4px 4px 0px #000' }}
+                        className="flex-1 bg-primary text-primary-foreground rounded-xl py-3 font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer"
                         disabled={placementLoading}
                       >
                         {placementLoading ? (
                           <>
-                            <Loader2 className="animate-spin" size={18} /> Saving...
+                            <Loader2 className="animate-spin" size={16} /> Updating...
                           </>
                         ) : (
-                          'Save'
+                          'Update'
                         )}
                       </button>
                     </div>

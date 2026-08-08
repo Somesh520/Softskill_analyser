@@ -184,241 +184,254 @@ const UploadMarks = () => {
   const selectedActivityData = activities.find(a => a._id === selectedActivity);
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full text-black">
-      <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative">
+    <div className="flex flex-col flex-1 h-full w-full bg-background">
+      <main className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
         
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10 bg-gradient-to-r from-[#FF00FF] to-[#00FFFF] border-8 border-black p-8 relative overflow-hidden text-black"
-          style={{ boxShadow: '16px 16px 0px rgba(0,0,0,0.4)' }}
+          className="mb-10 bg-card border border-border rounded-2xl shadow-sm p-8 relative overflow-hidden"
         >
-          <div className="absolute -left-8 -top-8 w-40 h-40 bg-[#FFEB3B] opacity-20 border-4 border-black rotate-45"></div>
-          <div className="flex items-center gap-8 relative z-10">
-            <div className="bg-white p-4 border-4 border-black text-black transform rotate-3" style={{ boxShadow: '6px 6px 0px #000' }}>
-              <FileSpreadsheet size={48} strokeWidth={2} />
+          <div className="absolute right-0 top-0 w-64 h-64 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="bg-primary/10 p-4 border border-primary/20 rounded-xl text-primary" >
+              <FileSpreadsheet size={40} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-4xl md:text-5xl font-black uppercase mb-2 leading-tight tracking-tighter text-white drop-shadow-lg">UPLOAD MARKS</h2>
-              <p className="text-sm font-black text-white uppercase tracking-widest bg-black inline-block px-3 py-1 border-2 border-white">Bulk Import Student Marks via CSV</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2">Upload Marks</h2>
+              <p className="text-sm font-semibold text-primary uppercase tracking-widest bg-primary/5 inline-block px-3 py-1 border border-primary/10 rounded-md">
+                Bulk Import Student Marks via CSV
+              </p>
             </div>
           </div>
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-8">
           
           {/* Step 1: Select Activity */}
           <div className="w-full lg:w-1/3 space-y-6">
-            <h3 className="text-3xl font-black uppercase flex items-center gap-3 mb-6 bg-[#00FFFF] border-6 border-black p-4 inline-block text-black" style={{ boxShadow: '6px 6px 0px #000' }}>
-              <span className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-sm font-black">1</span> SELECT ACTIVITY
-            </h3>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+                <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3 mb-6">
+                <span className="bg-primary text-primary-foreground w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm">1</span> Select Activity
+                </h3>
 
-            <div className="space-y-3">
-              {loading ? (
-                <div className="flex flex-col items-center py-12 bg-white border-6 border-black" style={{ boxShadow: '8px 8px 0px #000' }}>
-                  <Loader2 className="animate-spin mb-4 text-[#FF00FF]" size={48} />
-                  <p className="font-black uppercase text-black">Loading...</p>
-                </div>
-              ) : activities.length === 0 ? (
-                <div className="bg-white border-6 border-black p-8 text-center text-black" style={{ boxShadow: '8px 8px 0px #000' }}>
-                  <p className="font-bold text-gray-600 uppercase">📭 No activities available</p>
-                </div>
-              ) : (
-                activities.map((activity, idx) => (
-                  <motion.button
-                    key={activity._id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    onClick={() => handleActivitySelect(activity._id)}
-                    className={`w-full p-6 border-6 text-left transition-all text-black cursor-pointer ${
-                      selectedActivity === activity._id
-                        ? 'bg-[#00FF00] border-black'
-                        : 'bg-white border-black hover:bg-[#FFFACD]'
-                    }`}
-                    style={{ 
-                      boxShadow: selectedActivity === activity._id ? '8px 8px 0px #000' : '4px 4px 0px #000'
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <h4 className="text-xl font-black uppercase text-black">{activity.title}</h4>
-                        <p className="text-sm font-bold text-gray-700 mt-1">{activity.description}</p>
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          <span className="bg-black text-white px-2 py-1 text-xs font-black">
-                            📅 {new Date(activity.dueDate).toLocaleDateString()}
-                          </span>
-                          <span className="bg-[#FFEB3B] border-2 border-black px-2 py-1 text-xs font-black text-black">
-                            ⭐ {activity.maxPoints} pts
-                          </span>
-                        </div>
-                      </div>
-                      {selectedActivity === activity._id && (
-                        <CheckCircle2 size={32} className="text-[#00FF00] shrink-0 mt-1" strokeWidth={3} />
-                      )}
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                {loading ? (
+                    <div className="flex flex-col items-center py-12" >
+                    <div className="w-10 h-10 border-4 border-border rounded-full border-t-primary animate-spin mb-4" />
+                    <p className="font-semibold text-foreground/70">Loading Activities...</p>
                     </div>
-                  </motion.button>
-                ))
-              )}
-            </div>
+                ) : activities.length === 0 ? (
+                    <div className="text-center py-10 bg-background border border-border rounded-xl border-dashed">
+                    <p className="font-semibold text-foreground/50">No activities available</p>
+                    </div>
+                ) : (
+                    activities.map((activity, idx) => (
+                    <motion.button
+                        key={activity._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: Math.min(idx * 0.05, 0.5) }}
+                        onClick={() => handleActivitySelect(activity._id)}
+                        className={`w-full p-4 border rounded-xl text-left transition-all cursor-pointer ${
+                        selectedActivity === activity._id
+                            ? 'bg-primary/5 border-primary shadow-sm'
+                            : 'bg-background border-border hover:border-primary/50'
+                        }`}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                            <h4 className="text-lg font-bold text-foreground leading-tight">{activity.title}</h4>
+                            <p className="text-sm font-medium text-foreground/60 mt-1 line-clamp-1">{activity.description}</p>
+                            <div className="flex flex-wrap gap-2 mt-3">
+                            <span className="bg-foreground/5 text-foreground/80 px-2.5 py-1 text-xs font-semibold rounded-md">
+                                📅 {new Date(activity.dueDate).toLocaleDateString()}
+                            </span>
+                            <span className="bg-primary/10 text-primary px-2.5 py-1 text-xs font-semibold rounded-md">
+                                ⭐ {activity.maxPoints} pts
+                            </span>
+                            </div>
+                        </div>
+                        {selectedActivity === activity._id && (
+                            <CheckCircle2 size={24} className="text-primary shrink-0 mt-1" />
+                        )}
+                        </div>
+                    </motion.button>
+                    ))
+                )}
+                </div>
 
-            {selectedActivity && (
-              <button
-                onClick={handleDownloadTemplate}
-                className="w-full bg-[#FFEB3B] border-6 border-black p-4 font-black uppercase text-lg flex items-center justify-center gap-3 hover:bg-[#FF00FF] active:scale-95 transition-all cursor-pointer text-black"
-                style={{ boxShadow: '6px 6px 0px #000' }}
-              >
-                <Download size={24} /> DOWNLOAD TEMPLATE
-              </button>
-            )}
+                {selectedActivity && (
+                <button
+                    onClick={handleDownloadTemplate}
+                    className="w-full mt-6 bg-background border border-border rounded-xl p-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
+                >
+                    <Download size={20} /> Download Template
+                </button>
+                )}
+            </div>
           </div>
 
           {/* Step 2: Upload File */}
           <div className="w-full lg:w-1/3 space-y-6">
-            <h3 className="text-3xl font-black uppercase flex items-center gap-3 mb-6 bg-[#FF00FF] border-6 border-black p-4 inline-block text-white" style={{ boxShadow: '6px 6px 0px #000' }}>
-              <span className="bg-white text-[#FF00FF] w-10 h-10 flex items-center justify-center rounded-sm font-black">2</span> UPLOAD CSV
-            </h3>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm h-full flex flex-col">
+                <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3 mb-6">
+                <span className="bg-primary text-primary-foreground w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm">2</span> Upload CSV
+                </h3>
 
-            <div className="bg-white border-6 border-black p-8 text-center space-y-6 text-black" style={{ boxShadow: '8px 8px 0px #000' }}>
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  disabled={!selectedActivity}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                />
-                <div className={`border-6 border-dashed ${selectedActivity ? 'border-black' : 'border-gray-400'} p-12 transition-all ${selectedActivity ? 'hover:bg-[#FFFACD] cursor-pointer' : 'opacity-50'}`}>
-                  <Upload className={`mx-auto mb-4 ${selectedActivity ? 'text-black' : 'text-gray-400'}`} size={56} />
-                  <p className="font-black uppercase text-lg text-black mb-2">📁 Drop CSV File Here</p>
-                  <p className={`text-sm font-bold ${selectedActivity ? 'text-gray-700' : 'text-gray-500'}`}>or click to select</p>
+                <div className="flex-1 flex flex-col items-center justify-center space-y-6">
+                    <div className="relative w-full">
+                        <input
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileUpload}
+                        disabled={!selectedActivity}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                        />
+                        <div className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
+                            selectedActivity 
+                            ? 'border-primary/50 hover:bg-primary/5 cursor-pointer bg-background' 
+                            : 'border-border opacity-50 bg-background'
+                        }`}>
+                        <Upload className={`mx-auto mb-4 ${selectedActivity ? 'text-primary' : 'text-foreground/40'}`} size={40} strokeWidth={2} />
+                        <p className="font-bold text-lg text-foreground mb-1">Drop CSV File Here</p>
+                        <p className="text-sm font-medium text-foreground/60">or click to browse</p>
+                        </div>
+                    </div>
+
+                    {!selectedActivity && (
+                        <p className="text-sm font-semibold text-red-500 bg-red-500/10 p-3 rounded-lg w-full text-center">
+                        Select an activity first
+                        </p>
+                    )}
+
+                    {csvFile && (
+                        <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full bg-primary/10 border border-primary/20 rounded-xl p-4 text-center"
+                        >
+                        <p className="font-bold text-primary flex items-center justify-center gap-2 mb-1">
+                            <CheckCircle2 size={20} /> {csvFile.name}
+                        </p>
+                        <p className="text-sm font-medium text-foreground/70">
+                            {csvData?.rows.length} records ready to upload
+                        </p>
+                        </motion.div>
+                    )}
+
+                    {csvFile && (
+                        <div className="w-full space-y-3 mt-auto pt-6">
+                        <button
+                            onClick={() => setPreviewMode(!previewMode)}
+                            className="w-full bg-background border border-border rounded-xl p-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
+                        >
+                            <Eye size={20} /> {previewMode ? 'Hide Preview' : 'Preview Data'}
+                        </button>
+                        <button
+                            onClick={handleClearFile}
+                            className="w-full bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl p-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors cursor-pointer"
+                        >
+                            <Trash2 size={20} /> Clear File
+                        </button>
+                        </div>
+                    )}
                 </div>
-              </div>
-
-              {!selectedActivity && (
-                <p className="text-sm font-black text-red-600 bg-red-100 p-3 border-2 border-red-600 uppercase">
-                  ⚠️ Select an activity first
-                </p>
-              )}
-
-              {csvFile && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#00FF00] border-4 border-black p-4 text-black"
-                >
-                  <p className="font-black text-lg flex items-center gap-2 justify-center">
-                    <CheckCircle2 size={24} /> {csvFile.name}
-                  </p>
-                  <p className="text-sm font-bold text-gray-700 mt-2">
-                    {csvData?.rows.length} records ready to upload
-                  </p>
-                </motion.div>
-              )}
             </div>
-
-            {csvFile && (
-              <div className="space-y-3">
-                <button
-                  onClick={() => setPreviewMode(!previewMode)}
-                  className="w-full bg-[#00FFFF] border-6 border-black p-4 font-black uppercase text-lg flex items-center justify-center gap-3 hover:bg-[#FFEB3B] active:scale-95 transition-all cursor-pointer text-black"
-                  style={{ boxShadow: '6px 6px 0px #000' }}
-                >
-                  <Eye size={24} /> {previewMode ? 'HIDE' : 'PREVIEW'} DATA
-                </button>
-                <button
-                  onClick={handleClearFile}
-                  className="w-full bg-white border-6 border-black p-4 font-black uppercase text-lg flex items-center justify-center gap-3 hover:bg-red-100 active:scale-95 transition-all cursor-pointer text-black"
-                  style={{ boxShadow: '6px 6px 0px #000' }}
-                >
-                  <Trash2 size={24} /> CLEAR FILE
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Step 3: Review & Submit */}
           <div className="w-full lg:w-1/3 space-y-6">
-            <h3 className="text-3xl font-black uppercase flex items-center gap-3 mb-6 bg-[#FFEB3B] border-6 border-black p-4 inline-block text-black" style={{ boxShadow: '6px 6px 0px #000' }}>
-              <span className="bg-black text-white w-10 h-10 flex items-center justify-center rounded-sm font-black">3</span> REVIEW & SUBMIT
-            </h3>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm h-full flex flex-col">
+                <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3 mb-6">
+                <span className="bg-primary text-primary-foreground w-8 h-8 flex items-center justify-center rounded-lg font-bold text-sm">3</span> Review & Submit
+                </h3>
 
-            <div className="space-y-4 text-black">
-              {selectedActivityData && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-gradient-to-br from-[#00FFFF] to-[#00FF00] border-6 border-black p-6 text-black"
-                  style={{ boxShadow: '8px 8px 0px #000' }}
-                >
-                  <h4 className="font-black text-lg uppercase mb-3 flex items-center gap-2">
-                    📋 ACTIVITY DETAILS
-                  </h4>
-                  <div className="space-y-2 bg-white p-3 border-3 border-black text-black">
-                    <p className="text-sm"><span className="font-black">Title:</span> {selectedActivityData.title}</p>
-                    <p className="text-sm"><span className="font-black">Max Points:</span> {selectedActivityData.maxPoints}</p>
-                    <p className="text-sm"><span className="font-black">Classes:</span> {selectedActivityData.classIds?.map(c => c.name).join(', ') || 'N/A'}</p>
-                    <p className="text-sm"><span className="font-black">Due Date:</span> {new Date(selectedActivityData.dueDate).toLocaleDateString()}</p>
-                  </div>
-                </motion.div>
-              )}
-
-              {csvData && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white border-6 border-black p-6 text-black"
-                  style={{ boxShadow: '8px 8px 0px #000' }}
-                >
-                  <h4 className="font-black text-lg uppercase mb-3 flex items-center gap-2">
-                    📊 CSV SUMMARY
-                  </h4>
-                  <div className="space-y-2 bg-[#F8F9FA] p-3 border-3 border-black text-black">
-                    <p className="text-sm"><span className="font-black">File Name:</span> {csvFile.name}</p>
-                    <p className="text-sm"><span className="font-black">Columns:</span> {csvData.headers.join(', ')}</p>
-                    <p className="text-sm"><span className="font-black">Records:</span> <span className="bg-[#FFEB3B] px-2 py-1 font-black text-black">{csvData.rows.length}</span></p>
-                  </div>
-                </motion.div>
-              )}
-
-              {status === 'error' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-100 border-6 border-red-600 p-6 text-black"
-                >
-                  <h4 className="font-black text-lg uppercase mb-2 flex items-center gap-2 text-red-600">
-                    <AlertCircle size={24} /> ERROR
-                  </h4>
-                  <p className="text-sm font-bold text-red-700">{error}</p>
-                </motion.div>
-              )}
-
-              <button
-                onClick={handleSubmitMarks}
-                disabled={!selectedActivity || !csvFile || uploading}
-                className="w-full bg-black text-white border-6 border-black p-6 font-black uppercase text-xl flex items-center justify-center gap-3 hover:bg-[#00FF00] hover:text-black active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
-                style={{ boxShadow: '8px 8px 0px #00FFFF' }}
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={28} /> UPLOADING...
-                  </>
+                <div className="space-y-6 flex-1">
+                {selectedActivityData ? (
+                    <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-background border border-border rounded-xl p-5"
+                    >
+                    <h4 className="font-semibold text-sm text-foreground/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        Activity Details
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-start gap-4">
+                            <span className="text-foreground/60 font-medium">Title</span>
+                            <span className="font-semibold text-foreground text-right">{selectedActivityData.title}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-4">
+                            <span className="text-foreground/60 font-medium">Max Points</span>
+                            <span className="font-semibold text-foreground">{selectedActivityData.maxPoints}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-4">
+                            <span className="text-foreground/60 font-medium">Due Date</span>
+                            <span className="font-semibold text-foreground">{new Date(selectedActivityData.dueDate).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    </motion.div>
                 ) : (
-                  <>
-                    🚀 SUBMIT MARKS <ArrowRight size={28} />
-                  </>
+                    <div className="bg-background border border-border border-dashed rounded-xl p-5 text-center text-foreground/50 text-sm font-medium">
+                        Waiting for activity selection...
+                    </div>
                 )}
-              </button>
 
-              <button
-                onClick={() => router.push('/teacher/create-activity')}
-                className="w-full bg-white border-6 border-black p-4 font-black uppercase text-lg flex items-center justify-center gap-3 hover:bg-[#FFEB3B] active:scale-95 transition-all cursor-pointer text-black"
-                style={{ boxShadow: '4px 4px 0px #000' }}
-              >
-                <Home size={24} /> BACK TO ACTIVITIES
-              </button>
+                {csvData && (
+                    <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-primary/5 border border-primary/20 rounded-xl p-5"
+                    >
+                    <h4 className="font-semibold text-sm text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+                        Data Summary
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-center gap-4">
+                            <span className="text-foreground/70 font-medium">Records</span>
+                            <span className="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{csvData.rows.length}</span>
+                        </div>
+                        <div className="flex justify-between items-center gap-4">
+                            <span className="text-foreground/70 font-medium">Columns Detected</span>
+                            <span className="font-semibold text-foreground">{csvData.headers.length}</span>
+                        </div>
+                    </div>
+                    </motion.div>
+                )}
+
+                {status === 'error' && (
+                    <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3 text-red-500"
+                    >
+                    <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                    <p className="text-sm font-medium">{error}</p>
+                    </motion.div>
+                )}
+
+                <div className="mt-auto pt-6 space-y-3">
+                    <button
+                        onClick={handleSubmitMarks}
+                        disabled={!selectedActivity || !csvFile || uploading}
+                        className={`w-full text-white font-bold text-lg rounded-xl shadow-md py-4 flex justify-center items-center gap-2 transition-all ${
+                            !selectedActivity || !csvFile || uploading ? 'bg-foreground/20 cursor-not-allowed' : 'bg-primary hover:opacity-90 cursor-pointer'
+                        }`}
+                    >
+                        {uploading ? (
+                        <>
+                            <Loader2 className="animate-spin" size={24} /> Uploading...
+                        </>
+                        ) : (
+                        <>
+                            Submit Marks <ArrowRight size={20} />
+                        </>
+                        )}
+                    </button>
+                </div>
+                </div>
             </div>
           </div>
         </div>
@@ -430,49 +443,48 @@ const UploadMarks = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+              className="fixed inset-0 bg-background/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
               onClick={() => setPreviewMode(false)}
             >
               <motion.div
-                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                className="bg-white border-8 border-black max-w-6xl w-full max-h-[85vh] overflow-auto text-black"
-                style={{ boxShadow: '20px 20px 0px rgba(0,0,0,0.5)' }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="bg-card border border-border rounded-2xl shadow-xl max-w-6xl w-full max-h-[85vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="sticky top-0 bg-gradient-to-r from-[#FFEB3B] to-[#FF00FF] border-b-8 border-black p-6 flex justify-between items-center text-black z-10">
-                  <h3 className="text-3xl font-black uppercase flex items-center gap-2">
-                    <Table size={32} /> CSV PREVIEW
+                <div className="flex justify-between items-center p-6 border-b border-border">
+                  <h3 className="text-xl font-bold flex items-center gap-2 text-foreground">
+                    <Table size={24} className="text-primary" /> Data Preview
                   </h3>
                   <button
                     onClick={() => setPreviewMode(false)}
-                    className="bg-black text-white p-3 hover:bg-red-600 border-2 border-white font-black transition-all cursor-pointer"
+                    className="text-foreground/50 hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-colors cursor-pointer"
                   >
-                    <X size={28} />
+                    <X size={24} />
                   </button>
                 </div>
 
-                <div className="p-8 overflow-x-auto text-black">
-                  <div className="border-6 border-black bg-white overflow-hidden text-black">
-                    <div className="bg-black text-white border-b-4 border-black flex font-black uppercase text-sm sticky top-0">
+                <div className="p-6 overflow-x-auto flex-1 bg-background rounded-b-2xl">
+                  <div className="border border-border rounded-xl bg-card overflow-hidden w-fit min-w-full">
+                    <div className="bg-foreground/5 border-b border-border flex font-semibold text-xs uppercase tracking-wider text-foreground/70">
                       {csvData.headers.map((header) => (
                         <div
                           key={header}
-                          className="flex-1 min-w-32 p-4 border-r-2 border-white last:border-r-0"
+                          className="flex-1 min-w-[150px] p-4 border-r border-border/50 last:border-r-0"
                         >
                           {header}
                         </div>
                       ))}
                     </div>
 
-                    <div className="divide-y-2 divide-black">
+                    <div className="divide-y divide-border/50">
                       {csvData.rows.map((row, idx) => (
-                        <div key={idx} className="flex hover:bg-[#FFFACD] transition-all bg-white">
+                        <div key={idx} className="flex hover:bg-foreground/5 transition-colors">
                           {csvData.headers.map((header) => (
                             <div
                               key={header}
-                              className="flex-1 min-w-32 p-4 border-r-2 border-gray-300 last:border-r-0 font-bold text-sm"
+                              className="flex-1 min-w-[150px] p-4 border-r border-border/50 last:border-r-0 font-medium text-sm text-foreground"
                             >
                               {row[header] || '-'}
                             </div>
@@ -491,27 +503,26 @@ const UploadMarks = () => {
         <AnimatePresence>
           {status !== 'idle' && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.7, y: 50 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.7, y: 50 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="fixed bottom-8 right-8 z-[100]"
             >
               <div
                 className={`${
-                  status === 'success' ? 'bg-[#00FF00]' : 'bg-[#FF0000]'
-                } border-6 border-black p-6 flex items-center gap-4 text-black font-black`}
-                style={{ boxShadow: '10px 10px 0px rgba(0,0,0,0.4)' }}
+                  status === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                } border rounded-xl shadow-lg p-5 flex items-center gap-4`}
               >
                 {status === 'success' ? (
-                  <CheckCircle2 size={36} />
+                  <CheckCircle2 size={32} />
                 ) : (
-                  <AlertCircle size={36} className="text-white" />
+                  <AlertCircle size={32} />
                 )}
-                <div className={status === 'success' ? 'text-black' : 'text-white'}>
-                  <h4 className="font-black uppercase text-base">
-                    {status === 'success' ? '✓ Success!' : '✗ Error'}
+                <div>
+                  <h4 className="font-bold text-sm">
+                    {status === 'success' ? 'Success!' : 'Error'}
                   </h4>
-                  <p className="text-xs font-bold">
+                  <p className="text-xs font-medium opacity-90">
                     {status === 'success'
                       ? 'File processed successfully'
                       : error || 'Something went wrong'}

@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
   async rewrites() {
     const apiURL = process.env.VITE_API_URL || 'http://localhost:5001';
     return [

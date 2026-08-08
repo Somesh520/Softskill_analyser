@@ -5,29 +5,27 @@ const NeoBrutalismButton = ({
   children, 
   variant = 'primary', 
   onClick, 
-  className = '',
-  shadowColor = '#000'
+  className = ''
 }) => {
-  const colors = {
-    primary: '#FFEB3B',   // Yellow
-    secondary: '#00FFFF', // Cyan
-    accent: '#FF00FF',    // Magenta
-    white: '#FFFFFF',
-    black: '#000000',
+  const getVariantClasses = () => {
+    switch(variant) {
+      case 'primary':
+        return 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm';
+      case 'secondary':
+        return 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-foreground border border-border shadow-sm';
+      case 'white':
+        return 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 shadow-sm';
+      default:
+        return 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm';
+    }
   };
-
-  const bgColor = colors[variant] || variant;
 
   return (
     <motion.button
-      whileHover={{ x: -2, y: -2, boxShadow: `6px 6px 0px ${shadowColor}` }}
-      whileTap={{ x: 2, y: 2, boxShadow: `0px 0px 0px ${shadowColor}` }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`px-8 py-4 text-black font-black text-lg uppercase border-4 border-black transition-all ${className}`}
-      style={{ 
-        backgroundColor: bgColor,
-        boxShadow: `4px 4px 0px ${shadowColor}`,
-      }}
+      className={`px-6 py-3 font-semibold text-sm rounded-md transition-all ${getVariantClasses()} ${className}`}
     >
       {children}
     </motion.button>

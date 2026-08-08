@@ -5,32 +5,30 @@ const NeoBrutalismCard = ({
   children, 
   title, 
   icon, 
-  color = '#FFFFFF', 
-  className = '',
-  shadowColor = '#000'
+  color = '#3b82f6', 
+  className = ''
 }) => {
   return (
     <motion.div
-      whileHover={{ x: -4, y: -4, boxShadow: `12px 12px 0px ${shadowColor}` }}
-      className={`bg-white border-4 border-black p-8 transition-all flex flex-col h-full ${className}`}
-      style={{ boxShadow: `8px 8px 0px ${shadowColor}` }}
+      whileHover={{ y: -2 }}
+      className={`bg-card text-card-foreground border border-border p-6 rounded-xl shadow-sm transition-all flex flex-col h-full ${className}`}
     >
       {icon && (
         <div
-          className="w-16 h-16 flex items-center justify-center border-4 border-black mb-6"
-          style={{ backgroundColor: color, boxShadow: `4px 4px 0px ${shadowColor}` }}
+          className="w-12 h-12 flex items-center justify-center rounded-lg mb-4 text-white"
+          style={{ backgroundColor: color }}
         >
           {icon}
         </div>
       )}
 
       {title && (
-        <h3 className="text-2xl font-black uppercase mb-4 border-b-4 border-black pb-2">
+        <h3 className="text-lg font-bold mb-3">
           {title}
         </h3>
       )}
 
-      <div className="text-base font-bold leading-relaxed flex-grow">
+      <div className="text-sm leading-relaxed flex-grow text-foreground/80">
         {children}
       </div>
     </motion.div>

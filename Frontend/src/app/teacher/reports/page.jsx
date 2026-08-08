@@ -18,8 +18,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-} from 'recharts';
+  ResponsiveContainer } from 'recharts';
 import {
   BarChart3,
   TrendingUp,
@@ -28,8 +27,7 @@ import {
   Activity,
   CheckCircle2,
   AlertCircle,
-  Loader,
-} from 'lucide-react';
+  Loader } from 'lucide-react';
 import { getTeacherReportsSummary, getClasses } from '../../../api/teacherApi';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -42,15 +40,13 @@ const TeacherReports = () => {
   const { data: classList = [], isLoading: classesLoading } = useQuery({
     queryKey: ['teacherClasses'],
     queryFn: getClasses,
-    enabled: !!teacherData,
-  });
+    enabled: !!teacherData });
 
   // Fetch reports summary based on selected class
   const { data: summary = {}, isLoading: summaryLoading, error: queryError } = useQuery({
     queryKey: ['teacherReportsSummary', selectedClass],
     queryFn: () => getTeacherReportsSummary(selectedClass),
-    enabled: !!teacherData,
-  });
+    enabled: !!teacherData });
 
   const loading = classesLoading || summaryLoading;
   const error = queryError ? queryError.message : null;
@@ -67,123 +63,72 @@ const TeacherReports = () => {
 
   // Default stats if data not loaded
   const teacherStats = stats ? [
-    { label: 'Total Activities', value: stats.totalActivities.toString(), change: `+${stats.totalActivities}`, icon: Activity, color: '#FFEB3B' },
-    { label: 'Total Classes', value: stats.totalClasses.toString(), change: 'Assigned', icon: Users, color: '#00FFFF' },
-    { label: 'Avg Student Score', value: `${stats.avgScore}%`, change: '+8%', icon: TrendingUp, color: '#00FF00' },
-    { label: 'Activities Graded', value: stats.totalSubmissions.toString(), change: `+${stats.totalSubmissions}`, icon: Award, color: '#FF00FF' },
+    { label: 'Total Activities', value: stats.totalActivities.toString(), change: `+${stats.totalActivities}` },
+    { label: 'Total Classes', value: stats.totalClasses.toString(), change: 'Assigned' },
+    { label: 'Avg Student Score', value: `${stats.avgScore}%`, change: '+8%' },
+    { label: 'Activities Graded', value: stats.totalSubmissions.toString(), change: `+${stats.totalSubmissions}` },
   ] : [
-    { label: 'Total Activities', value: '0', change: '0', icon: Activity, color: '#FFEB3B' },
-    { label: 'Total Classes', value: '0', change: 'Pending', icon: Users, color: '#00FFFF' },
-    { label: 'Avg Student Score', value: '0%', change: '0%', icon: TrendingUp, color: '#00FF00' },
-    { label: 'Activities Graded', value: '0', change: '0', icon: Award, color: '#FF00FF' },
+    { label: 'Total Activities', value: '0', change: '0' },
+    { label: 'Total Classes', value: '0', change: 'Pending' },
+    { label: 'Avg Student Score', value: '0%', change: '0%' },
+    { label: 'Activities Graded', value: '0', change: '0' },
   ];
 
-  const COLORS = ['#FF00FF', '#00FFFF', '#FFEB3B', '#00FF00', '#FF6B6B'];
+  // Theme-aware colors
+  const chartColors = {
+    primary: 'var(--primary)',
+    secondary: 'hsl(var(--secondary))',
+    accent: 'hsl(var(--accent))',
+    muted: 'hsl(var(--muted))',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444'
+  };
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']; // Fallback colors, better to use CSS vars if possible, Recharts prefers hex.
+
+  const customTooltipStyle = {
+    backgroundColor: 'hsl(var(--card))',
+    border: '1px solid hsl(var(--border))',
+    borderRadius: '8px',
+    color: 'hsl(var(--foreground))',
+    fontSize: '12px',
+    fontWeight: '500',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+  };
 
   if (!teacherData) return null;
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 lg:p-8 space-y-8">
-        {/* Banner */}
-        <div className="border-[8px] border-black p-6 bg-white shadow-[12px_12px_0px_#999]">
+      <div className="flex-1 p-6 lg:p-8 space-y-8 bg-background">
+        {/* Banner Skeleton */}
+        <div className="rounded-2xl p-6 bg-card border border-border shadow-sm">
           <div className="flex items-center gap-6">
-            <Skeleton
-              variant="rectangular"
-              width={100}
-              height={100}
-              sx={{
-                bgcolor: "#d1d5db",
-                border: "4px solid black",
-              }}
-            />
+            <Skeleton variant="rounded" width={80} height={80} sx={{ bgcolor: "var(--border)" }} />
             <div className="flex-1 space-y-4">
-              <Skeleton
-                variant="text"
-                width="50%"
-                height={70}
-                sx={{ bgcolor: "#d1d5db" }}
-              />
-              <Skeleton
-                variant="rectangular"
-                width="60%"
-                height={40}
-                sx={{
-                  bgcolor: "#d1d5db",
-                  border: "3px solid black",
-                }}
-              />
+              <Skeleton variant="text" width="40%" height={40} sx={{ bgcolor: "var(--border)" }} />
+              <Skeleton variant="rounded" width="30%" height={30} sx={{ bgcolor: "var(--border)" }} />
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((item) => (
-            <div
-              key={item}
-              className="border-[8px] border-black p-6 bg-white shadow-[10px_10px_0px_black]"
-            >
-              <div className="flex items-start justify-between mb-6">
-                <Skeleton
-                  variant="rectangular"
-                  width={70}
-                  height={70}
-                  sx={{
-                    bgcolor: "#d1d5db",
-                    border: "4px solid black",
-                  }}
-                />
-                <Skeleton
-                  variant="rectangular"
-                  width={50}
-                  height={35}
-                  sx={{
-                    bgcolor: "#d1d5db",
-                    border: "3px solid black",
-                  }}
-                />
-              </div>
-              <Stack spacing={2}>
-                <Skeleton
-                  variant="text"
-                  width="80%"
-                  height={35}
-                  sx={{ bgcolor: "#d1d5db" }}
-                />
-                <Skeleton
-                  variant="text"
-                  width="40%"
-                  height={60}
-                  sx={{ bgcolor: "#d1d5db" }}
-                />
-              </Stack>
+            <div key={item} className="rounded-2xl p-6 bg-card border border-border shadow-sm">
+              <Skeleton variant="text" width="60%" height={24} sx={{ bgcolor: "var(--border)", mb: 2 }} />
+              <Skeleton variant="text" width="40%" height={48} sx={{ bgcolor: "var(--border)" }} />
             </div>
           ))}
         </div>
 
-        {/* Charts */}
+        {/* Charts Skeleton */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {[1, 2].map((item) => (
-            <div
-              key={item}
-              className="border-[8px] border-black p-8 bg-white shadow-[10px_10px_0px_black]"
-            >
-              <Skeleton
-                variant="text"
-                width="50%"
-                height={50}
-                sx={{ bgcolor: "#d1d5db", mb: 4 }}
-              />
-              <Skeleton
-                variant="rectangular"
-                width="100%"
-                height={320}
-                sx={{
-                  bgcolor: "#d1d5db",
-                  border: "3px dashed black",
-                }}
-              />
+            <div key={item} className="rounded-2xl p-8 bg-card border border-border shadow-sm">
+              <Skeleton variant="text" width="40%" height={32} sx={{ bgcolor: "var(--border)", mb: 6 }} />
+              <Skeleton variant="rounded" width="100%" height={300} sx={{ bgcolor: "var(--border)" }} />
             </div>
           ))}
         </div>
@@ -193,13 +138,14 @@ const TeacherReports = () => {
 
   if (error) {
     return (
-      <div className="flex-1 p-6 lg:p-8">
-        <div className="bg-[#FF6B6B] border-8 border-black p-8">
-          <p className="text-2xl font-black uppercase text-white mb-4">❌ Error Loading Reports</p>
-          <p className="text-white font-bold mb-4">{error}</p>
+      <div className="flex-1 p-6 lg:p-8 bg-background">
+        <div className="bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl shadow-sm p-8 flex flex-col items-center justify-center text-center">
+          <AlertCircle size={48} className="mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Error Loading Reports</h2>
+          <p className="font-medium mb-6">{error}</p>
           <button
             onClick={() => router.refresh()}
-            className="bg-white border-4 border-black p-4 font-black uppercase hover:bg-[#FFEB3B] transition-all cursor-pointer text-black"
+            className="bg-red-500 text-white rounded-xl px-6 py-3 font-semibold hover:bg-red-600 transition-colors"
           >
             Retry
           </button>
@@ -209,34 +155,35 @@ const TeacherReports = () => {
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full">
-      <main className="flex-1 p-6 lg:p-8 relative text-black">
+    <div className="flex flex-col flex-1 h-full w-full bg-background">
+      <main className="flex-1 p-6 lg:p-10 relative">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10 bg-gradient-to-r from-[#FF00FF] to-[#00FFFF] border-8 border-black p-8 relative overflow-hidden"
-          style={{ boxShadow: '16px 16px 0px rgba(0,0,0,0.4)' }}
+          className="mb-8 bg-card border border-border rounded-2xl shadow-sm p-8 relative overflow-hidden"
         >
-          <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-[#FFEB3B] opacity-20 border-4 border-black rotate-45"></div>
-          <div className="flex items-center gap-8 relative z-10">
-            <div className="bg-white p-4 border-4 border-black text-black transform -rotate-3" style={{ boxShadow: '6px 6px 0px #000' }}>
-              <BarChart3 size={48} strokeWidth={2} />
+          <div className="absolute right-0 top-0 w-64 h-64 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="bg-primary/10 p-4 border border-primary/20 rounded-xl text-primary" >
+              <BarChart3 size={40} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-4xl md:text-5xl font-black uppercase mb-2 leading-tight tracking-tighter text-white drop-shadow-lg">ACTIVITY REPORTS</h2>
-              <p className="text-sm font-black text-white uppercase tracking-widest bg-black inline-block px-3 py-1 border-2 border-white">Track Your Activities & Student Performance</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2">Activity Reports</h2>
+              <p className="text-sm font-semibold text-primary uppercase tracking-widest bg-primary/5 inline-block px-3 py-1 border border-primary/10 rounded-md">
+                Track Your Activities & Student Performance
+              </p>
             </div>
           </div>
         </motion.div>
 
         {/* Class Filter Dropdown Selector */}
-        <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border-8 border-black p-6" style={{ boxShadow: '12px 12px 0px #000' }}>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-card border border-border rounded-2xl shadow-sm p-6" >
           <div>
-            <label htmlFor="class-selector" className="text-lg font-black uppercase text-black block mb-1">
+            <label htmlFor="class-selector" className="text-sm font-semibold text-foreground/80 block mb-1">
               Filter by Class
             </label>
-            <p className="text-sm font-bold text-gray-500 uppercase">
+            <p className="text-xs font-medium text-foreground/50">
               Choose a specific class or view overall combined reports
             </p>
           </div>
@@ -245,8 +192,7 @@ const TeacherReports = () => {
               id="class-selector"
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full sm:w-72 bg-white border-4 border-black p-3 pr-10 font-black uppercase text-black appearance-none focus:outline-none focus:bg-[#FFEB3B] cursor-pointer"
-              style={{ borderRadius: 0 }}
+              className="w-full sm:w-72 bg-background border border-border rounded-xl shadow-sm p-3 pr-10 font-medium text-sm text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
             >
               <option value="all">Mix / All Classes</option>
               {classList.map((cls) => (
@@ -255,7 +201,7 @@ const TeacherReports = () => {
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-black font-black text-lg">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-foreground/50 text-xs">
               ▼
             </div>
           </div>
@@ -264,61 +210,50 @@ const TeacherReports = () => {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {teacherStats.map((stat, idx) => {
-            const Icon = stat.icon;
+            const isPositive = stat.change.includes('+');
+            const isNegative = stat.change.includes('-');
+            const changeColor = isPositive ? 'text-green-500 bg-green-500/10' : isNegative ? 'text-red-500 bg-red-500/10' : 'text-foreground/50 bg-foreground/5';
+            
             return (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-white border-6 border-black p-6 hover:shadow-2xl transition-all"
-                style={{ boxShadow: '8px 8px 0px #000' }}
+                className="bg-card border border-border rounded-2xl p-6 shadow-sm hover:border-primary/30 transition-colors"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="bg-white p-3 border-4 border-black" style={{ backgroundColor: stat.color }}>
-                    <Icon size={32} className="text-black" strokeWidth={2} />
-                  </div>
-                  <span className={`text-xs font-black px-2 py-1 border-2 border-black ${
-                    stat.change.includes('+') ? 'bg-[#00FF00]' : stat.change.includes('-') ? 'bg-[#FF6B6B]' : 'bg-[#FFEB3B]'
-                  }`}>
+                <div className="flex items-start justify-between mb-2">
+                  <p className="text-sm font-medium text-foreground/60">{stat.label}</p>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${changeColor}`}>
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-sm font-bold text-gray-700 uppercase">{stat.label}</p>
-                <p className="text-4xl font-black mt-2">{stat.value}</p>
+                <p className="text-3xl font-extrabold text-foreground">{stat.value}</p>
               </motion.div>
             );
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Activity Performance */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
+            className="bg-card border border-border rounded-2xl shadow-sm p-6"
           >
-            <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-              📊 ACTIVITY PERFORMANCE
+            <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+              <Activity size={20} className="text-primary"/> Activity Performance
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={activities} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#000" />
-                <XAxis dataKey="name" stroke="#000" />
-                <YAxis stroke="#000" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#FFEB3B',
-                    border: '3px solid #000',
-                    borderRadius: 0,
-                    fontWeight: 'bold',
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="avg" fill="#FF00FF" stroke="#000" strokeWidth={2} name="Avg Score %" />
-                <Bar dataKey="submitted" fill="#00FFFF" stroke="#000" strokeWidth={2} name="Submitted" />
+              <BarChart data={activities} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" stroke="currentColor" className="text-foreground/50 text-xs" axisLine={false} tickLine={false} />
+                <YAxis stroke="currentColor" className="text-foreground/50 text-xs" axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={customTooltipStyle} cursor={{fill: 'var(--muted)'}} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                <Bar dataKey="avg" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Avg Score %" />
+                <Bar dataKey="submitted" fill="#10b981" radius={[4, 4, 0, 0]} name="Submitted" />
               </BarChart>
             </ResponsiveContainer>
           </motion.div>
@@ -328,83 +263,46 @@ const TeacherReports = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
+            className="bg-card border border-border rounded-2xl shadow-sm p-6"
           >
-            <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-              {selectedClass === 'all' ? '👥 CLASS PERFORMANCE' : '👥 STUDENT PERFORMANCE (TOP 12)'}
+            <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+              <Users size={20} className="text-primary"/> {selectedClass === 'all' ? 'Class Performance' : 'Student Performance (Top 12)'}
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={classPerformance} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#000" />
-                <XAxis dataKey="name" stroke="#000" />
-                <YAxis stroke="#000" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#FFEB3B',
-                    border: '3px solid #000',
-                    borderRadius: 0,
-                    fontWeight: 'bold',
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="avg" fill="#00FF00" stroke="#000" strokeWidth={2} name={selectedClass === 'all' ? 'Average %' : 'Avg Score %'} />
-                <Bar dataKey="students" fill="#00FFFF" stroke="#000" strokeWidth={2} name={selectedClass === 'all' ? 'Total Students' : 'Evaluations'} />
+              <BarChart data={classPerformance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" stroke="currentColor" className="text-foreground/50 text-xs" axisLine={false} tickLine={false} />
+                <YAxis stroke="currentColor" className="text-foreground/50 text-xs" axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={customTooltipStyle} cursor={{fill: 'var(--muted)'}} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                <Bar dataKey="avg" fill="#8b5cf6" radius={[4, 4, 0, 0]} name={selectedClass === 'all' ? 'Average %' : 'Avg Score %'} />
+                <Bar dataKey="students" fill="#f59e0b" radius={[4, 4, 0, 0]} name={selectedClass === 'all' ? 'Total Students' : 'Evaluations'} />
               </BarChart>
             </ResponsiveContainer>
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Scoring Trend */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="lg:col-span-2 bg-white border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
+            className="lg:col-span-2 bg-card border border-border rounded-2xl shadow-sm p-6"
           >
-            <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-              📈 SCORING TREND
+            <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+              <TrendingUp size={20} className="text-primary"/> Scoring Trend
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={scoringTrend} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#000" />
-                <XAxis dataKey="week" stroke="#000" />
-                <YAxis stroke="#000" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#FFEB3B',
-                    border: '3px solid #000',
-                    borderRadius: 0,
-                    fontWeight: 'bold',
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="avg"
-                  stroke="#FF00FF"
-                  strokeWidth={3}
-                  dot={{ fill: '#000', r: 5 }}
-                  name="Average Score %"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="high"
-                  stroke="#00FF00"
-                  strokeWidth={2}
-                  dot={{ fill: '#000', r: 4 }}
-                  name="Highest"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="low"
-                  stroke="#FF6B6B"
-                  strokeWidth={2}
-                  dot={{ fill: '#000', r: 4 }}
-                  name="Lowest"
-                />
+              <LineChart data={scoringTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="week" stroke="currentColor" className="text-foreground/50 text-xs" axisLine={false} tickLine={false} />
+                <YAxis stroke="currentColor" className="text-foreground/50 text-xs" axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={customTooltipStyle} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                <Line type="monotone" dataKey="avg" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} name="Average Score %" />
+                <Line type="monotone" dataKey="high" stroke="#10b981" strokeWidth={2} dot={false} name="Highest" />
+                <Line type="monotone" dataKey="low" stroke="#ef4444" strokeWidth={2} dot={false} name="Lowest" />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
@@ -414,11 +312,10 @@ const TeacherReports = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-white border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
+            className="bg-card border border-border rounded-2xl shadow-sm p-6"
           >
-            <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-              🎯 CRITERIA BREAKDOWN
+            <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+              <Award size={20} className="text-primary"/> Criteria Breakdown
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -427,25 +324,19 @@ const TeacherReports = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percentage }) => `${name} ${percentage}%`}
-                  outerRadius={90}
+                  label={({ name, percentage }) => `${name.substring(0, 5)}.. ${percentage}%`}
+                  outerRadius={100}
+                  innerRadius={60}
                   fill="#8884d8"
                   dataKey="value"
-                  stroke="#000"
+                  stroke="var(--card)"
                   strokeWidth={2}
                 >
                   {criteriaBreakdown.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#FFEB3B',
-                    border: '3px solid #000',
-                    borderRadius: 0,
-                    fontWeight: 'bold',
-                  }}
-                />
+                <Tooltip contentStyle={customTooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           </motion.div>
@@ -456,107 +347,58 @@ const TeacherReports = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white border-8 border-black p-8 mb-10"
-          style={{ boxShadow: '12px 12px 0px #000' }}
+          className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden mb-8"
         >
-          <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-            📋 ACTIVITY DETAILS
-          </h3>
+          <div className="p-6 border-b border-border bg-card/50">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                Activity Details
+            </h3>
+          </div>
           
-          <div className="overflow-x-auto border-6 border-black">
-            <div className="bg-black text-white border-b-4 border-black flex font-black uppercase text-sm">
-              <div className="flex-1 min-w-40 p-4 border-r-4 border-white">ACTIVITY</div>
-              <div className="w-24 min-w-24 p-4 border-r-4 border-white text-center">AVG %</div>
-              <div className="w-28 min-w-28 p-4 border-r-4 border-white text-center">HIGHEST</div>
-              <div className="w-28 min-w-28 p-4 border-r-4 border-white text-center">LOWEST</div>
-              <div className="w-32 min-w-32 p-4 text-center">SUBMITTED</div>
-            </div>
-            {activities.length === 0 ? (
-              <div className="p-8 text-center font-bold text-gray-500 bg-gray-50 uppercase border-b-2 border-black last:border-b-0">
-                No activities found. Create an activity and upload marks to see reports.
-              </div>
-            ) : (
-              activities.map((act, idx) => (
-                <div 
-                  key={act.id || idx} 
-                  className={`flex font-bold text-sm border-b-2 border-black last:border-b-0 hover:bg-gray-100 transition-colors ${
-                    idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                  }`}
-                >
-                  <div className="flex-1 min-w-40 p-4 border-r-2 border-black flex flex-col justify-center">
-                    <span className="font-black text-base uppercase text-black">{act.name}</span>
-                    <span className="text-xs text-gray-500 font-bold uppercase">{act.type} • Due {new Date(act.dueDate).toLocaleDateString()}</span>
-                  </div>
-                  <div className="w-24 min-w-24 p-4 border-r-2 border-black text-center flex items-center justify-center font-black text-lg text-[#FF00FF]">
-                    {act.avg}%
-                  </div>
-                  <div className="w-28 min-w-28 p-4 border-r-2 border-black text-center flex items-center justify-center text-[#00FF00] font-black">
-                    {act.highest}%
-                  </div>
-                  <div className="w-28 min-w-28 p-4 border-r-2 border-black text-center flex items-center justify-center text-[#FF6B6B] font-black">
-                    {act.lowest}%
-                  </div>
-                  <div className="w-32 min-w-32 p-4 text-center flex items-center justify-center font-black text-black">
-                    {act.submitted}
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="bg-foreground/5 text-foreground/70 uppercase tracking-wider text-xs">
+                  <th className="p-4 font-semibold">Activity</th>
+                  <th className="p-4 font-semibold text-center">Avg %</th>
+                  <th className="p-4 font-semibold text-center">Highest</th>
+                  <th className="p-4 font-semibold text-center">Lowest</th>
+                  <th className="p-4 font-semibold text-center">Submitted</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {activities.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-foreground/50 font-medium">
+                      No activities found. Create an activity and upload marks to see reports.
+                    </td>
+                  </tr>
+                ) : (
+                  activities.map((act, idx) => (
+                    <tr key={act.id || idx} className="hover:bg-foreground/5 transition-colors">
+                      <td className="p-4">
+                        <div className="font-semibold text-foreground">{act.name}</div>
+                        <div className="text-xs text-foreground/50 mt-1">{act.type} • Due {new Date(act.dueDate).toLocaleDateString()}</div>
+                      </td>
+                      <td className="p-4 text-center font-bold text-blue-500">
+                        {act.avg}%
+                      </td>
+                      <td className="p-4 text-center font-semibold text-green-500">
+                        {act.highest}%
+                      </td>
+                      <td className="p-4 text-center font-semibold text-red-500">
+                        {act.lowest}%
+                      </td>
+                      <td className="p-4 text-center font-medium text-foreground">
+                        {act.submitted}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </motion.div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-gradient-to-br from-[#00FF00] to-[#00FFFF] border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
-          >
-            <h4 className="text-lg font-black uppercase mb-2 flex items-center gap-2">
-              <CheckCircle2 size={24} /> COMPLETION RATE
-            </h4>
-            <p className="text-5xl font-black">{completionRate ? `${completionRate.rate}%` : '0%'}</p>
-            <p className="text-sm font-bold mt-2">
-              {completionRate ? `${completionRate.submitted} of ${completionRate.expected} students` : '0 of 0 students'}
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-gradient-to-br from-[#FF00FF] to-[#FFEB3B] border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
-          >
-            <h4 className="text-lg font-black uppercase mb-2 flex items-center gap-2">
-              <TrendingUp size={24} /> IMPROVEMENT
-            </h4>
-            <p className="text-4xl font-black">
-              {improvement ? `${improvement.value >= 0 ? '+' : ''}${improvement.value}%` : '0%'}
-            </p>
-            <p className="text-sm font-bold mt-2">
-              {improvement ? improvement.label : 'No trend data yet'}
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
-            className="bg-gradient-to-br from-[#FFEB3B] to-[#FF00FF] border-8 border-black p-8"
-            style={{ boxShadow: '12px 12px 0px #000' }}
-          >
-            <h4 className="text-lg font-black uppercase mb-2 flex items-center gap-2">
-              <Award size={24} /> TOP CRITERIA
-            </h4>
-            <p className="text-3xl font-black">{topCriterion && topCriterion.name !== 'None' ? topCriterion.name : 'N/A'}</p>
-            <p className="text-sm font-bold mt-2">
-              {topCriterion && topCriterion.name !== 'None' ? `${topCriterion.count} evaluations ⭐` : 'No evaluations yet'}
-            </p>
-          </motion.div>
-        </div>
       </main>
     </div>
   );

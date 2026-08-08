@@ -45,31 +45,31 @@ const LeaderboardPage = () => {
     return (
       <div className="flex-1 flex items-center justify-center p-6 min-h-[500px]">
         <div className="flex flex-col items-center gap-4">
-          <Loader size={64} className="animate-spin text-black" strokeWidth={2} />
-          <p className="text-2xl font-black uppercase text-black">Loading Rankings...</p>
+          <div className="w-12 h-12 border-4 border-border rounded-full border-t-primary animate-spin" />
+          <p className="text-xl font-bold text-foreground/80">Loading Rankings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full w-full">
+    <div className="flex flex-col flex-1 h-full w-full bg-background">
       <main className="flex-1 overflow-y-auto p-6 lg:p-8 relative">
         
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 bg-[#FFD700] border-8 border-black p-8 relative overflow-hidden"
-          style={{ boxShadow: '16px 16px 0px rgba(0,0,0,0.4)' }}
+          className="mb-8 bg-card border border-border rounded-2xl shadow-sm p-8 relative overflow-hidden"
         >
-          <div className="flex items-center gap-8 relative z-10">
-            <div className="bg-white p-4 border-4 border-black text-black transform -rotate-6" style={{ boxShadow: '6px 6px 0px #000' }}>
-              <Trophy size={48} strokeWidth={2} className="text-[#FFD700]" />
+          <div className="absolute -right-16 -top-16 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="bg-primary/10 p-4 border border-primary/20 rounded-xl text-primary">
+              <Trophy size={40} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 className="text-4xl md:text-5xl font-black uppercase mb-2 leading-tight tracking-tighter text-black drop-shadow-lg">COLLEGE LEADERBOARD</h2>
-              <p className="text-sm font-black text-white uppercase tracking-widest bg-black inline-block px-3 py-1 border-2 border-white">Top 20 Soft-Skill Performers</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-2">College Leaderboard</h2>
+              <p className="text-sm font-semibold text-primary uppercase tracking-widest bg-primary/5 inline-block px-3 py-1 border border-primary/10 rounded-md">Top 20 Soft-Skill Performers</p>
             </div>
           </div>
         </motion.div>
@@ -79,22 +79,21 @@ const LeaderboardPage = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="mb-10 bg-white border-8 border-black p-6 relative"
-          style={{ boxShadow: '12px 12px 0px #000' }}
+          className="mb-10 bg-primary/5 border border-primary/20 rounded-2xl shadow-sm p-8 relative flex items-start gap-6"
         >
-          <div className="absolute -top-6 -left-6 bg-black text-[#00FFFF] p-3 border-4 border-[#00FFFF] flex items-center justify-center" style={{ boxShadow: '4px 4px 0px #000' }}>
-            <BrainCircuit size={32} />
+          <div className="bg-primary/20 text-primary p-4 rounded-xl border border-primary/30 shrink-0" >
+            <BrainCircuit size={28} />
           </div>
-          <div className="ml-8">
-            <h3 className="text-xl font-black uppercase tracking-widest mb-3 text-[#FF00FF] flex items-center gap-2">
-              <Bot size={20} /> Groq AI Insight
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest mb-2 text-primary flex items-center gap-2">
+              <Bot size={16} /> AI Insight
             </h3>
             {insightLoading ? (
-              <div className="flex items-center gap-3 text-gray-500 font-bold uppercase animate-pulse">
-                <Loader size={20} className="animate-spin" /> Generating AI Analysis...
+              <div className="flex items-center gap-3 text-foreground/50 font-medium text-sm animate-pulse">
+                <Loader size={16} className="animate-spin" /> Generating AI Analysis...
               </div>
             ) : (
-              <p className="text-lg font-bold text-black leading-relaxed italic border-l-8 border-[#00FFFF] pl-4">
+              <p className="text-base font-medium text-foreground/80 leading-relaxed italic border-l-2 border-primary/50 pl-4">
                 "{aiInsight}"
               </p>
             )}
@@ -106,11 +105,10 @@ const LeaderboardPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white border-8 border-black p-8"
-          style={{ boxShadow: '12px 12px 0px #000' }}
+          className="bg-card border border-border rounded-2xl shadow-sm p-8"
         >
-          <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3 text-black border-b-4 border-black pb-4">
-            <Medal size={28} /> CURRENT RANKINGS
+          <h3 className="text-xl font-bold mb-6 flex items-center gap-2 text-foreground border-b border-border/50 pb-4">
+            <Medal size={24} className="text-primary" /> Current Rankings
           </h3>
           
           <div className="flex flex-col gap-4">
@@ -119,40 +117,48 @@ const LeaderboardPage = () => {
               const isSilver = index === 1;
               const isBronze = index === 2;
               
-              let rowBg = "bg-[#f8f8f8]";
-              let rankColor = "bg-black text-white";
+              let rowStyle = "bg-background border-border text-foreground hover:border-primary/50";
+              let rankStyle = "bg-card border-border text-foreground";
               
-              if (isGold) { rowBg = "bg-[#FFFACD]"; rankColor = "bg-[#FFD700] text-black"; }
-              else if (isSilver) { rowBg = "bg-[#F0F0F0]"; rankColor = "bg-[#C0C0C0] text-black"; }
-              else if (isBronze) { rowBg = "bg-[#FFF0F5]"; rankColor = "bg-[#CD7F32] text-white"; }
+              if (isGold) { 
+                rowStyle = "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"; 
+                rankStyle = "bg-amber-500 text-white border-amber-600"; 
+              }
+              else if (isSilver) { 
+                rowStyle = "bg-slate-500/10 border-slate-500/30 text-slate-600 dark:text-slate-300"; 
+                rankStyle = "bg-slate-400 text-white border-slate-500"; 
+              }
+              else if (isBronze) { 
+                rowStyle = "bg-orange-500/10 border-orange-500/30 text-orange-600 dark:text-orange-400"; 
+                rankStyle = "bg-orange-500 text-white border-orange-600"; 
+              }
 
               return (
                 <div 
                   key={student._id} 
-                  className={`flex items-center justify-between p-4 border-4 border-black transition-transform hover:-translate-y-1 ${rowBg}`}
-                  style={{ boxShadow: '4px 4px 0px #000' }}
+                  className={`flex items-center justify-between p-5 border rounded-xl transition-all ${rowStyle}`}
                 >
-                  <div className="flex items-center gap-6">
-                    <div className={`w-12 h-12 flex items-center justify-center font-black text-xl border-4 border-black transform ${isGold ? 'scale-110 -rotate-6' : ''} ${rankColor}`} style={{ boxShadow: '2px 2px 0px #000' }}>
+                  <div className="flex items-center gap-5">
+                    <div className={`w-12 h-12 flex items-center justify-center font-bold text-lg border rounded-xl shadow-sm ${rankStyle}`} >
                       #{index + 1}
                     </div>
                     <div>
-                      <h4 className="text-xl font-black uppercase text-black flex items-center gap-2">
+                      <h4 className={`text-lg font-bold flex items-center gap-2 ${isGold ? '' : 'text-foreground'}`}>
                         {student.name}
-                        {isGold && <Award size={20} className="text-[#FFD700] fill-current" />}
+                        {isGold && <Award size={18} className="text-amber-500 fill-current" />}
                       </h4>
-                      <p className="text-sm font-bold text-gray-600 uppercase">{student.rollNo}</p>
+                      <p className="text-xs font-semibold uppercase opacity-70">{student.rollNo}</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-8">
                     <div className="text-right hidden md:block">
-                      <p className="text-xs font-black uppercase text-gray-500 tracking-wider">Activities</p>
-                      <p className="text-lg font-black">{student.totalActivities}</p>
+                      <p className="text-xs font-semibold uppercase opacity-60 tracking-wider">Activities</p>
+                      <p className={`text-base font-bold ${isGold ? '' : 'text-foreground'}`}>{student.totalActivities}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-black uppercase text-gray-500 tracking-wider">Average</p>
-                      <p className={`text-2xl font-black px-3 py-1 border-4 border-black inline-block ${isGold ? 'bg-[#00FFFF] text-black' : 'bg-black text-white'}`} style={{ boxShadow: '3px 3px 0px #000' }}>
+                      <p className="text-xs font-semibold uppercase opacity-60 tracking-wider">Average</p>
+                      <p className={`text-xl font-bold px-3 py-1 rounded-lg ${isGold ? 'bg-amber-500/20' : 'bg-primary/10 text-primary'}`} >
                         {student.avgScore}%
                       </p>
                     </div>

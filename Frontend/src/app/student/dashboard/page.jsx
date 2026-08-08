@@ -35,16 +35,12 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="p-6 lg:p-10 space-y-8 min-h-[500px]">
-        <Skeleton variant="rectangular" height={150} className="border-8 border-black shadow-[12px_12px_0px_#999] bg-white" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="space-y-6">
+        <Skeleton variant="rectangular" height={150} className="rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((item) => (
-            <Skeleton key={item} variant="rectangular" height={140} className="border-[6px] border-black shadow-[8px_8px_0px_#000] bg-white" />
+            <Skeleton key={item} variant="rectangular" height={140} className="rounded-xl" />
           ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Skeleton variant="rectangular" height={200} className="border-8 border-black shadow-[12px_12px_0px_#000] bg-white" />
-          <Skeleton variant="rectangular" height={200} className="border-8 border-black shadow-[12px_12px_0px_#000] bg-white" />
         </div>
       </div>
     );
@@ -52,165 +48,161 @@ const StudentDashboard = () => {
 
   if (error) {
     return (
-      <div className="p-6 lg:p-10">
-        <div className="bg-[#FF6B6B] border-8 border-black p-8 shadow-[12px_12px_0px_#000]">
-          <p className="text-2xl font-black uppercase text-white mb-4 flex items-center gap-3">
-            <AlertCircle size={32} /> Error Loading Dashboard
-          </p>
-          <p className="text-white font-bold mb-4">{error}</p>
-          <button
-            onClick={fetchDashboardSummary}
-            className="bg-white border-4 border-black p-4 font-black uppercase hover:bg-[#FFEB3B] transition-all cursor-pointer text-black"
-          >
-            Retry
-          </button>
-        </div>
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6 rounded-xl">
+        <p className="text-xl font-bold text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+          <AlertCircle size={24} /> Error Loading Dashboard
+        </p>
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          onClick={fetchDashboardSummary}
+          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   const statsCards = [
-    { label: 'Total Activities', value: summary?.stats.totalActivities.toString() || '0', color: '#FFEB3B', icon: BookOpen },
-    { label: 'Completed Tasks', value: summary?.stats.submittedActivities.toString() || '0', color: '#00FF00', icon: Award },
-    { label: 'Pending Tasks', value: summary?.stats.pendingActivities.toString() || '0', color: '#FF6B6B', icon: Clock },
-    { label: 'Avg Skill Score', value: `${summary?.stats.avgScore || 0}%`, color: '#FF00FF', icon: BarChart },
+    { label: 'Total Activities', value: summary?.stats.totalActivities.toString() || '0', color: '#3b82f6', icon: BookOpen },
+    { label: 'Completed Tasks', value: summary?.stats.submittedActivities.toString() || '0', color: '#10b981', icon: Award },
+    { label: 'Pending Tasks', value: summary?.stats.pendingActivities.toString() || '0', color: '#ef4444', icon: Clock },
+    { label: 'Avg Skill Score', value: `${summary?.stats.avgScore || 0}%`, color: '#8b5cf6', icon: BarChart },
   ];
 
   return (
-    <div className="p-6 lg:p-10 space-y-10">
-      {/* Welcome Banner */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-[#00FF00] border-8 border-black p-8 relative overflow-hidden text-black"
-        style={{ boxShadow: '12px 12px 0px #000' }}
-      >
-        <div className="relative z-10">
-          <h2 className="text-4xl md:text-5xl font-black uppercase mb-4 leading-none">
+    <div className="space-y-6">
+      
+      {/* Actual Dashboard Content Below */}
+      <div className="space-y-6 pt-4">
+        {/* Welcome Banner */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-8 rounded-xl"
+        >
+          <h2 className="text-3xl font-bold mb-3 text-blue-900 dark:text-blue-100">
             Hello, {summary?.student.name || (studentData && studentData.name) || 'Student'}!
           </h2>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-black uppercase bg-black text-white px-4 py-2 border-2 border-white inline-block mt-2">
+          <div className="flex flex-wrap gap-4 text-sm font-medium text-blue-700 dark:text-blue-300">
             <span>Roll No: {summary?.student.rollNo || 'N/A'}</span>
             <span>•</span>
             <span>Class: {summary?.student.className || 'N/A'}</span>
             <span>•</span>
             <span>Semester: {summary?.student.semester || 'N/A'}</span>
           </div>
+        </motion.div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statsCards.map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-card border border-border p-5 rounded-xl shadow-sm flex flex-col justify-between"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg text-white" style={{ backgroundColor: card.color }}>
+                    <Icon size={20} strokeWidth={2} />
+                  </div>
+                  <p className="text-sm font-semibold text-gray-500">{card.label}</p>
+                </div>
+                <p className="text-3xl font-bold mt-2">{card.value}</p>
+              </motion.div>
+            );
+          })}
         </div>
-      </motion.div>
 
-      {/* Class & Teacher Details Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-black">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white border-8 border-black p-8" 
-          style={{ boxShadow: '12px 12px 0px #000' }}
-        >
-          <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-            <User size={28} /> Assigned Teacher
-          </h3>
-          {summary?.teacher ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">TEACHER NAME</p>
-                <p className="text-xl font-black uppercase text-black">{summary.teacher.name}</p>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">EMAIL ADDRESS</p>
-                <p className="text-lg font-bold text-black">{summary.teacher.email}</p>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">DEPARTMENT</p>
-                <span className="inline-block bg-[#00FFFF] border-2 border-black font-black uppercase text-xs px-3 py-1 mt-1 text-black">
-                  {Array.isArray(summary.teacher.deptName) ? summary.teacher.deptName.join(', ') : summary.teacher.deptName}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="font-bold text-gray-500 uppercase">No teacher assigned to your class yet.</p>
-          )}
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white border-8 border-black p-8" 
-          style={{ boxShadow: '12px 12px 0px #000' }}
-        >
-          <h3 className="text-2xl font-black uppercase mb-6 flex items-center gap-3">
-            <Book size={28} /> My Enrolled Class
-          </h3>
-          {summary?.student.className !== 'Not Assigned' ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">CLASS SECTION</p>
-                <p className="text-xl font-black uppercase text-black">{summary.student.className}</p>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">CURRENT SEMESTER</p>
-                <p className="text-lg font-black text-black">Semester {summary.student.semester}</p>
-              </div>
-              <div className="pt-2">
-                <span className="inline-block bg-[#FFEB3B] border-2 border-black font-black uppercase text-xs px-3 py-1 text-black">
-                  Active Academic Year
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="font-bold text-gray-500 uppercase">You are not enrolled in any class yet.</p>
-          )}
-        </motion.div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-black">
-        {statsCards.map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 + 0.3 }}
-              className="bg-white border-6 border-black p-6 hover:shadow-xl transition-all"
-              style={{ boxShadow: '8px 8px 0px #000' }}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="bg-white p-3 border-4 border-black" style={{ backgroundColor: card.color }}>
-                  <Icon size={28} className="text-black" strokeWidth={2} />
+        {/* Class & Teacher Details Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-card border border-border p-6 rounded-xl shadow-sm" 
+          >
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <User size={20} className="text-blue-500" /> Assigned Teacher
+            </h3>
+            {summary?.teacher ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Teacher Name</p>
+                  <p className="text-md font-semibold">{summary.teacher.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Email Address</p>
+                  <p className="text-md">{summary.teacher.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Department</p>
+                  <span className="inline-block bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 rounded px-2 py-1 text-xs font-semibold mt-1">
+                    {Array.isArray(summary.teacher.deptName) ? summary.teacher.deptName.join(', ') : summary.teacher.deptName}
+                  </span>
                 </div>
               </div>
-              <p className="text-sm font-bold text-gray-600 uppercase">{card.label}</p>
-              <p className="text-4xl font-black mt-1">{card.value}</p>
-            </motion.div>
-          );
-        })}
-      </div>
+            ) : (
+              <p className="font-medium text-gray-500 text-sm">No teacher assigned to your class yet.</p>
+            )}
+          </motion.div>
 
-      {/* Dashboard Shortcuts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-black">
-        <motion.div whileHover={{ y: -5 }} onClick={() => router.push('/student/my-reports')} className="cursor-pointer">
-          <NeoBrutalismCard 
-            title="My Reports" 
-            icon={<FileText className="w-8 h-8 text-black" />} 
-            color="#FF00FF"
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card border border-border p-6 rounded-xl shadow-sm" 
           >
-            View your semester-wise soft skill performance reports with detailed activity grades and feedback.
-          </NeoBrutalismCard>
-        </motion.div>
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Book size={20} className="text-green-500" /> My Enrolled Class
+            </h3>
+            {summary?.student.className !== 'Not Assigned' ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Class Section</p>
+                  <p className="text-md font-semibold">{summary.student.className}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Current Semester</p>
+                  <p className="text-md">Semester {summary.student.semester}</p>
+                </div>
+                <div className="pt-2">
+                  <span className="inline-block bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 rounded px-2 py-1 text-xs font-semibold">
+                    Active Academic Year
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="font-medium text-gray-500 text-sm">You are not enrolled in any class yet.</p>
+            )}
+          </motion.div>
+        </div>
 
-        <motion.div whileHover={{ y: -5 }} onClick={() => router.push('/student/semester-report')} className="cursor-pointer">
-          <NeoBrutalismCard 
-            title="Semester Report" 
-            icon={<BarChart className="w-8 h-8 text-black" />} 
-            color="#00FFFF"
-          >
-            Analyze your skill breakdown with interactive radar charts & bar graphs.
-          </NeoBrutalismCard>
-        </motion.div>
+        {/* Dashboard Shortcuts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
+          <motion.div onClick={() => router.push('/student/my-reports')} className="cursor-pointer">
+            <NeoBrutalismCard 
+              title="My Reports" 
+              icon={<FileText className="w-6 h-6" />} 
+              color="#8b5cf6"
+            >
+              View your semester-wise soft skill performance reports with detailed activity grades and feedback.
+            </NeoBrutalismCard>
+          </motion.div>
+
+          <motion.div onClick={() => router.push('/student/semester-report')} className="cursor-pointer">
+            <NeoBrutalismCard 
+              title="Semester Report" 
+              icon={<BarChart className="w-6 h-6" />} 
+              color="#06b6d4"
+            >
+              Analyze your skill breakdown with interactive radar charts & bar graphs.
+            </NeoBrutalismCard>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

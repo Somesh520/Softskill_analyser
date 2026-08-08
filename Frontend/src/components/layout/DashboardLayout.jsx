@@ -33,7 +33,7 @@ const DashboardLayout = ({ role }) => {
 
   return (
     <SidebarProvider defaultCollapsed={false}>
-      <div className="flex h-screen bg-[#F0F0F0] overflow-hidden">
+      <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar role={role} userName={userData.name || ''} />
         <main className="flex-1 overflow-y-auto">
           <Outlet context={{ userData }} />

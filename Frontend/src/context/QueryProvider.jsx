@@ -8,10 +8,7 @@ export default function QueryProvider({ children }) {
       queries: {
         staleTime: 5 * 60 * 1000, // 5 minutes (data remains fresh and won't re-request)
         refetchOnWindowFocus: false, // Prevents duplicate API hits when switching browser tabs
-        retry: 1,
-      },
-    },
-  }));
+        retry: 1 } } }));
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -2,9 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Lock, ExternalLink, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, Lock, ExternalLink, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
-import NeoBrutalismButton from '../../components/ui/NeoBrutalismButton';
 import { loginUser } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -99,255 +98,180 @@ const Login = () => {
   // If already authenticated and redirecting, show nothing or a loading state to prevent flash
   if (!authLoading && user && !isSuccessRedirect) {
     return (
-      <div className="min-h-screen bg-[#F0F0F0] flex items-center justify-center">
-        <div className="w-16 h-16 border-8 border-black border-t-[#00FFFF] animate-spin"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-border rounded-full border-t-primary animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <section className="min-h-screen bg-[#F0F0F0] flex flex-col justify-center items-center p-6 relative overflow-hidden">
+    <section className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-6 relative overflow-hidden">
+      
+      {/* Background Glows */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px] opacity-70" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] opacity-70" />
+      </div>
+
       {/* Success Redirect Overlay */}
       {isSuccessRedirect && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center p-6"
         >
           <motion.div 
-            initial={{ scale: 0.85, rotate: -3 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="bg-[#00FF00] border-8 border-black p-8 md:p-12 text-center max-w-sm w-full relative"
-            style={{ boxShadow: '12px 12px 0px #FF00FF' }}
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="bg-card border border-border rounded-2xl shadow-2xl p-10 text-center max-w-sm w-full relative"
           >
-            {/* Bouncing Access Icon */}
-            <div className="w-20 h-20 bg-black text-white border-4 border-black rounded-full flex items-center justify-center mx-auto mb-6 shadow-[4px_4px_0px_#00FFFF] animate-bounce">
-              <ShieldCheck className="w-10 h-10 text-[#00FF00]" strokeWidth={3} />
+            <div className="w-20 h-20 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShieldCheck className="w-10 h-10 text-green-500" />
             </div>
 
-            <h2 className="text-3xl font-black uppercase mb-1 leading-none text-black">
-              ACCESS GRANTED!
-            </h2>
-            <p className="text-xs font-bold text-black uppercase tracking-wider bg-white border-2 border-black inline-block px-3 py-1 mt-2">
-              Syncing credentials
-            </p>
+            <h2 className="text-2xl font-bold mb-2">Access Granted!</h2>
+            <p className="text-sm text-foreground/60 mb-6">Syncing credentials securely...</p>
 
-            {/* Custom Loading Bar */}
-            <div className="h-6 bg-white border-4 border-black my-6 relative overflow-hidden">
+            <div className="h-2 bg-border rounded-full overflow-hidden mb-4">
               <motion.div 
-                className="h-full bg-[#FF00FF]"
+                className="h-full bg-primary"
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 1.8, ease: "easeInOut" }}
               />
             </div>
-
-            <p className="font-mono text-xs font-black text-black uppercase tracking-wider">
-              Redirecting to {redirectRole} portal...
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Redirecting to {redirectRole} portal
             </p>
           </motion.div>
         </motion.div>
       )}
-      {/* Dynamic Background Decor */}
-      <motion.div 
-        className="absolute top-[-100px] left-[-100px] w-96 h-96 bg-[#FFEB3B] border-[12px] border-black rounded-full" 
-        style={{ boxShadow: '20px 20px 0px #000' }}
-        animate={{ 
-          rotate: 360,
-          scale: [1, 1.05, 1] 
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.div 
-        className="absolute bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-[#00FFFF] border-[12px] border-black" 
-        style={{ boxShadow: '-20px -20px 0px #000' }}
-        animate={{ 
-          y: [0, -30, 0],
-          rotate: [0, -5, 0]
-        }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div 
-        className="absolute top-[20%] right-[10%] w-32 h-32 bg-[#FF00FF] border-8 border-black z-0 hidden lg:block hover:bg-black" 
-        style={{ boxShadow: '12px 12px 0px #000' }}
-        animate={{ 
-          x: [0, 40, 0],
-          y: [0, -20, 0]
-        }}
-        transition={{ duration: 6, repeat: Infinity, ease: "backInOut" }}
-      />
-      <motion.div 
-        className="absolute bottom-[20%] left-[10%] w-24 h-24 bg-[#00FF00] border-8 border-black z-0 rounded-full hidden lg:block" 
-        style={{ boxShadow: '8px 8px 0px #000' }}
-        animate={{ 
-          scale: [1, 1.2, 1]
-        }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      />
 
       <motion.div 
-        initial={{ y: 50, opacity: 0, rotate: -2 }}
-        animate={{ y: 0, opacity: 1, rotate: 0 }}
-        transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
         className="w-full max-w-md relative z-10"
       >
         <button 
           onClick={() => router.push('/')}
-          className="mb-6 flex items-center gap-2 font-black uppercase text-base hover:-translate-x-2 transition-transform bg-white border-4 border-black px-4 py-2 cursor-pointer shadow-[4px_4px_0px_#000]"
+          className="mb-8 flex items-center gap-2 text-sm font-medium text-foreground/60 hover:text-foreground transition-colors group"
         >
-          <ArrowLeft strokeWidth={3} size={18} /> Back to Home
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Home
         </button>
 
-        <div className="bg-white border-8 border-black p-6 md:p-8 transition-all duration-300 shadow-[16px_16px_0px_#000]">
-          <motion.div
-             initial={{ opacity: 0, x: -20 }}
-             animate={{ opacity: 1, x: 0 }}
-             transition={{ delay: 0.2 }}
-             className="mb-8"
-          >
-            <h1 className="text-4xl font-black uppercase leading-none tracking-tight text-black">
-              Welcome <br/> Back
-            </h1>
-            <p className="text-sm font-bold text-black uppercase tracking-wider bg-[#FFEB3B] inline-block px-3 py-1 border-2 border-black mt-3">
-              Login to your account
-            </p>
-          </motion.div>
+        <div className="bg-card border border-border rounded-2xl shadow-xl p-8 backdrop-blur-lg">
+          <div className="mb-10 text-center">
+            <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-7 h-7 text-primary" />
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2">Welcome Back</h1>
+            <p className="text-foreground/60 text-sm">Please enter your credentials to continue</p>
+          </div>
 
           {error && (
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-[#FF3B30] text-white font-black uppercase p-3 border-4 border-black mb-6 text-sm flex items-center gap-2"
-              style={{ boxShadow: '4px 4px 0px #000' }}
+              className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg mb-6 text-sm flex items-center gap-2 font-medium"
             >
               <Lock size={16} /> {error}
             </motion.div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email Input */}
-            <motion.div
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.3 }}
-            >
-              <label className="block text-sm font-black uppercase mb-2 text-black tracking-wider">Email</label>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold mb-2">Email Address</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-black z-10">
-                  <User strokeWidth={3} size={20} className="group-focus-within:text-[#FF00FF] transition-colors" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40 group-focus-within:text-primary transition-colors z-10">
+                  <User size={18} />
                 </div>
                 <input 
                   type="email" 
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-[#F5F5F5] border-4 border-black pl-12 pr-4 py-3 text-base font-bold focus:outline-none focus:bg-white focus:shadow-[6px_6px_0px_#00FFFF] transition-all text-black"
-                  placeholder="somesh@kiet.edu"
+                  className="w-full bg-background border border-border rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  placeholder="name@kiet.edu"
                   required
                 />
               </div>
-            </motion.div>
+            </div>
 
-            {/* Password Input */}
-            <motion.div
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.4 }}
-            >
-              <label className="block text-sm font-black uppercase mb-2 text-black tracking-wider">Password</label>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Password</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-black z-10">
-                  <Lock strokeWidth={3} size={20} className="group-focus-within:text-[#00FFFF] transition-colors" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40 group-focus-within:text-primary transition-colors z-10">
+                  <Lock size={18} />
                 </div>
                 <input 
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-[#F5F5F5] border-4 border-black pl-12 pr-12 py-3 text-base font-bold focus:outline-none focus:bg-white focus:shadow-[6px_6px_0px_#FF00FF] transition-all text-black"
+                  className="w-full bg-background border border-border rounded-xl pl-11 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   placeholder="••••••••••••"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-black text-white p-1.5 hover:bg-[#00FFFF] hover:text-black hover:scale-105 transition-all border-2 border-black cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors p-1"
                 >
-                  {showPassword ? <EyeOff strokeWidth={3} size={16} /> : <Eye strokeWidth={3} size={16} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Remember Me Checkbox */}
-            <motion.div 
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.5 }}
-               className="flex items-center justify-between pt-4 border-t-4 border-black border-dashed mt-2"
-            >
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between py-2">
+              <label className="flex items-center gap-2 cursor-pointer group">
                 <div className="relative flex items-center">
                   <input 
                     type="checkbox" 
-                    id="rememberMe"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="peer appearance-none w-5 h-5 border-4 border-black bg-white checked:bg-[#00FFFF] cursor-pointer transition-all hover:shadow-[2px_2px_0px_#000]"
+                    className="peer appearance-none w-4 h-4 border border-border rounded bg-background checked:bg-primary checked:border-primary transition-all cursor-pointer"
                   />
-                  <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black pointer-events-none opacity-0 peer-checked:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="square" strokeLinejoin="miter">
+                  <svg className="absolute inset-0 w-4 h-4 text-primary-foreground pointer-events-none opacity-0 peer-checked:opacity-100 p-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
-                <label htmlFor="rememberMe" className="text-black font-black cursor-pointer text-xs uppercase tracking-wide">
-                  Remember Me
-                </label>
-              </div>
+                <span className="text-sm text-foreground/70 group-hover:text-foreground transition-colors font-medium">Remember me</span>
+              </label>
               <button 
                 type="button"
                 onClick={() => router.push('/forgot-password')}
-                className="text-black font-black hover:text-white hover:bg-black px-2 py-1 transition-colors text-xs uppercase border-2 border-transparent hover:border-black cursor-pointer"
+                className="text-sm font-semibold text-primary hover:underline"
               >
-                Forgot?
+                Forgot password?
               </button>
-            </motion.div>
+            </div>
 
-            {/* Cloudflare Turnstile Wrapper */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="bg-[#FFEEAD] border-4 border-black p-4 flex flex-col items-center justify-center text-center relative mt-4"
-              style={{ boxShadow: '4px 4px 0px #000' }}
-            >
-              <div className="absolute top-[-12px] bg-black text-[#FFEEAD] px-3 py-0.5 border-2 border-black text-2xs font-black uppercase tracking-wider">
-                Security Check
-              </div>
-              <div className="mt-1">
-                <Turnstile 
-                  ref={turnstileRef}
-                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
-                  onSuccess={(token) => setTurnstileToken(token)}
-                  onExpire={() => setTurnstileToken(null)}
-                  onError={() => setError('Security check failed. Please refresh.')}
-                />
-              </div>
-            </motion.div>
+            {/* Cloudflare Turnstile */}
+            <div className="bg-background/50 border border-border rounded-xl p-3 flex flex-col items-center justify-center relative">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/50 mb-2">Security Check</span>
+              <Turnstile 
+                ref={turnstileRef}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
+                onSuccess={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setError('Security check failed. Please refresh.')}
+              />
+            </div>
 
-            {/* Submit Button */}
-            <motion.button 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              whileHover={!loading ? { scale: 1.01, x: -2, y: -2, boxShadow: '6px 6px 0px #000' } : {}}
-              whileTap={!loading ? { scale: 0.99, x: 0, y: 0, boxShadow: '0px 0px 0px #000' } : {}}
-              className={`w-full bg-[#00FF00] text-black font-black text-lg uppercase border-4 border-black py-4 mt-2 flex justify-center items-center gap-3 transition-all ${loading ? 'opacity-50 cursor-not-allowed bg-gray-300' : 'cursor-pointer hover:bg-[#FFEB3B]'}`}
-              style={{ boxShadow: loading ? '0px 0px 0px #000' : '4px 4px 0px #000' }}
+            <button 
               type="submit"
               disabled={loading}
+              className={`w-full bg-primary text-primary-foreground font-bold rounded-xl py-3.5 mt-2 flex justify-center items-center gap-2 transition-all shadow-md ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90 hover:shadow-lg'}`}
             >
-              {loading ? 'Authenticating...' : (
-                <>Sign In Let's Go <ExternalLink strokeWidth={4} size={22} className="animate-pulse" /></>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Authenticating...
+                </span>
+              ) : (
+                <>Sign In <ArrowRight size={18} /></>
               )}
-            </motion.button>
+            </button>
           </form>
         </div>
       </motion.div>
