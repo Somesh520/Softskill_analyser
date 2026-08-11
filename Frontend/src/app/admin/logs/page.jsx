@@ -154,11 +154,11 @@ const AdminLogs = () => {
                     </span>
                     <span className="flex items-center gap-1.5 bg-background px-2.5 py-1.5 border border-border rounded-lg">
                       <Calendar size={14} className="text-primary" />
-                      {new Date(log.createdAt).toLocaleDateString()}
+                      {new Date(log.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                     <span className="flex items-center gap-1.5 bg-background px-2.5 py-1.5 border border-border rounded-lg">
                       <Clock size={14} className="text-primary" />
-                      {new Date(log.createdAt).toLocaleTimeString()}
+                      {new Date(log.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
                     </span>
                   </div>
                 </div>
