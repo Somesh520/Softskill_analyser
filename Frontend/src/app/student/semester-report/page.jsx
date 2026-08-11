@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart as ChartIcon, AlertCircle, RefreshCw, Award } from 'lucide-react';
+import { BarChart as ChartIcon, AlertCircle, RefreshCw, Award, TrendingUp, TrendingDown, Info, MessageSquare } from 'lucide-react';
 import Skeleton from '@mui/material/Skeleton';
 import {
   Radar,
@@ -18,11 +18,12 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { getStudentDashboardSummary } from '../../../api/studentApi';
+import { getStudentDashboardSummary, getStudentDriftInsights } from '../../../api/studentApi';
 
 const SemesterReport = () => {
   const [performance, setPerformance] = useState([]);
   const [stats, setStats] = useState(null);
+  const [driftInsights, setDriftInsights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,9 +35,13 @@ const SemesterReport = () => {
     try {
       setLoading(true);
       setError(null);
-      const summary = await getStudentDashboardSummary();
+      const [summary, drift] = await Promise.all([
+        getStudentDashboardSummary(),
+        getStudentDriftInsights()
+      ]);
       setPerformance(summary.performance || []);
       setStats(summary.stats);
+      setDriftInsights(drift || []);
     } catch (err) {
       console.error('Failed to load student report:', err);
       setError(err.message);
@@ -205,6 +210,62 @@ const SemesterReport = () => {
                   </ResponsiveContainer>
                 </div>
               </motion.div>
+            </div>
+          </div>
+        )}
+
+        {/* Growth Insights Section */}
+        {driftInsights.length > 0 && (
+          <div className="mt-12 space-y-6">
+            <h3 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3 border-b border-border/50 pb-4">
+              <span className="bg-primary/10 text-primary p-2 rounded-xl"><TrendingUp size={24} /></span>
+              Adaptive Growth Insights
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {driftInsights.map((insight, idx) => (
+                <motion.div
+                  key={insight._id || idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`border rounded-2xl p-6 shadow-sm flex flex-col gap-4 relative overflow-hidden ${insight.driftDirection === 'positive' ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}
+                >
+                  <div className={`absolute top-0 left-0 w-2 h-full ${insight.driftDirection === 'positive' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  
+                  <div className="flex justify-between items-start pl-4">
+                    <div>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${insight.driftDirection === 'positive' ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}`}>
+                        {insight.driftDirection === 'positive' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                        {insight.driftDirection === 'positive' ? 'Breakthrough' : 'Attention Needed'}
+                      </span>
+                      <h4 className="text-xl font-bold capitalize text-foreground">{insight.skillType}</h4>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-foreground/50 font-semibold mb-1">Shift</p>
+                      <p className={`text-2xl font-extrabold ${insight.driftDirection === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
+                        {insight.driftMagnitude > 0 ? '+' : ''}{insight.driftMagnitude.toFixed(1)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pl-4">
+                    <p className="text-sm text-foreground/70 flex items-center gap-2 mb-4 font-medium">
+                      <Info size={16} className="text-primary" />
+                      Triggered by: <span className="font-bold text-foreground">{insight.activityTitle}</span>
+                    </p>
+                    
+                    {insight.linkedFeedback && (
+                      <div className="bg-background border border-border/50 rounded-xl p-4 flex gap-3 shadow-sm">
+                        <MessageSquare size={20} className="text-primary/70 shrink-0 mt-0.5" />
+                        <p className="text-sm italic text-foreground/80 leading-relaxed font-medium">
+                          "{insight.linkedFeedback}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         )}

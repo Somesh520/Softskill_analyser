@@ -14,6 +14,7 @@ import cloudinary from '../Config/cloudinary.js';
 import { generateActivityCSV } from '../utils/csvGenerator.js';
 import { createLogService } from './logService.js';
 import groq from '../Config/groq.js'
+import { processNewGrade } from './driftService.js';
 
 const reportsSummaryCache = new Map();
 const CACHE_TTL = 15000; // 15 seconds TTL
@@ -492,6 +493,15 @@ export const editActivityMarksService = async (teacherId, activityId, submission
 
     await submission.save();
 
+    // Trigger drift detection asynchronously
+    if (criteriaMarks) {
+        setImmediate(() => {
+            for (const [criterion, newValue] of Object.entries(criteriaMarks)) {
+                processNewGrade(submission.studentId, activity._id, criterion, newValue, feedback).catch(console.error);
+            }
+        });
+    }
+
     clearReportsSummaryCache();
     await createLogService(teacherId, 'EDITED_MARKS', `Edited marks for student ${submission.studentName} in activity ${activity.title}`);
     return {
@@ -662,6 +672,27 @@ export const uploadActivityMarksService = async (teacherId, activityId, fileBuff
                             written += chunk.length;
                         }
                     }
+
+                    // Trigger drift detection for all updated rows asynchronously
+                    setImmediate(() => {
+                        for (const row of uploadedRows) {
+                            const rollNo = String(getRowValue(row, ['roll no', 'rollno', 'roll']) || '').trim().toLowerCase();
+                            const email = String(getRowValue(row, ['email', 'mail']) || '').trim().toLowerCase();
+                            const student = studentsByRollNo.get(rollNo) || studentsByEmail.get(email);
+                            if (!student) continue;
+
+                            const feedback = String(getRowValue(row, ['overall feedback', 'feedback']) || '').trim();
+
+                            for (const criterion of rubricCriteria) {
+                                const criterionKey = normalizeHeader(criterion);
+                                const rawMark = row[criterionKey];
+                                const numericMark = Number(rawMark);
+                                const safeMark = Number.isFinite(numericMark) ? numericMark : 0;
+                                
+                                processNewGrade(student._id, activity._id, criterion, safeMark, feedback).catch(console.error);
+                            }
+                        }
+                    });
 
                     clearReportsSummaryCache();
                     await createLogService(teacherId, 'UPLOADED_MARKS_CSV', `Uploaded marks CSV for activity ${activity.title}, processed ${written} students`);

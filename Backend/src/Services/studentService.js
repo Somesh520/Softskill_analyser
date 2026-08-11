@@ -2,6 +2,7 @@ import User from '../Models/Usermodel.js';
 import Class from '../Models/Classmodel.js';
 import Activity from '../Models/Activitymodel.js';
 import ActivitySubmission from '../Models/ActivitySubmissionmodel.js';
+import DriftEvent from '../Models/DriftEventModel.js';
 
 export const getStudentDashboardSummaryService = async (studentId) => {
     // 1. Fetch student
@@ -115,4 +116,26 @@ export const getStudentDashboardSummaryService = async (studentId) => {
         activities: activitiesList,
         performance: criteriaPerformance
     };
+};
+
+export const getStudentDriftInsightsService = async (studentId) => {
+    const driftEvents = await DriftEvent.find({ studentId })
+        .populate('activityId', 'title type')
+        .sort({ createdAt: -1 })
+        .lean();
+
+    return driftEvents.map(event => ({
+        _id: event._id,
+        activityTitle: event.activityId?.title || 'Unknown Activity',
+        activityType: event.activityId?.type || 'Unknown Type',
+        skillType: event.skillType,
+        baselineAtDetection: event.baselineAtDetection,
+        observedValue: event.observedValue,
+        driftMagnitude: event.driftMagnitude,
+        driftDirection: event.driftDirection,
+        isSignificant: event.isSignificant,
+        linkedFeedback: event.linkedFeedback,
+        correlatedSkills: event.correlatedSkills,
+        createdAt: event.createdAt
+    }));
 };

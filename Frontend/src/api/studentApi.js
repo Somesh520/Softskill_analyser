@@ -9,6 +9,15 @@ export const getStudentDashboardSummary = async () => {
   }
 };
 
+export const getStudentDriftInsights = async () => {
+  try {
+    const response = await axiosInstance.get('/student/drift-insights');
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch drift insights');
+  }
+};
+
 // Survey APIs
 export const getStudentSurveys = async () => {
   try {
