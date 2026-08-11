@@ -79,12 +79,13 @@ const StudentDashboard = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-8 rounded-xl"
+          className="bg-primary/10 border border-primary/20 p-8 rounded-xl relative overflow-hidden"
         >
-          <h2 className="text-3xl font-bold mb-3 text-blue-900 dark:text-blue-100">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent pointer-events-none" />
+          <h2 className="text-3xl font-bold mb-3 text-foreground relative z-10">
             Hello, {summary?.student.name || (studentData && studentData.name) || 'Student'}!
           </h2>
-          <div className="flex flex-wrap gap-4 text-sm font-medium text-blue-700 dark:text-blue-300">
+          <div className="flex flex-wrap gap-4 text-sm font-medium text-foreground/70 relative z-10">
             <span>Roll No: {summary?.student.rollNo || 'N/A'}</span>
             <span>•</span>
             <span>Class: {summary?.student.className || 'N/A'}</span>

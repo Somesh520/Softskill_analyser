@@ -18,9 +18,9 @@ export const forgotPassword = async (email, turnstileToken) => {
   }
 };
 
-export const resetPassword = async (email, otp, newPassword, turnstileToken) => {
+export const resetPassword = async (email, token, newPassword, turnstileToken) => {
   try {
-    const response = await axiosInstance.post('/auth/reset-password', { email, otp, newPassword, turnstileToken });
+    const response = await axiosInstance.post('/auth/reset-password', { email, token, newPassword, turnstileToken });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Network Error' };

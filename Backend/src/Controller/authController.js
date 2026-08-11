@@ -155,7 +155,7 @@ export const forgotPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
     try {
-        const { email, otp, newPassword, turnstileToken } = resetPasswordSchema.parse(req.body);
+        const { email, token, newPassword, turnstileToken } = resetPasswordSchema.parse(req.body);
 
         // Verify Turnstile Token
         if (process.env.NODE_ENV !== 'test' && process.env.BYPASS_TURNSTILE !== 'true') {
@@ -182,7 +182,7 @@ export const resetPassword = async (req, res) => {
             }
         }
 
-        const result = await resetPasswordService(email, otp, newPassword);
+        const result = await resetPasswordService(email, token, newPassword);
         res.status(200).json(result);
     } catch (error) {
         if (error.name === 'ZodError') {

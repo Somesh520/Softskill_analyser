@@ -23,17 +23,21 @@ export const teacherWelcomeTemplate = (name, email, password) => {
     `;
 };
 
-export const otpTemplate = (name, otp) => {
+export const resetLinkTemplate = (name, token, email) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/forgot-password?token=${token}&email=${encodeURIComponent(email)}`;
+
     return `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
             <h2 style="color: #000; text-transform: uppercase;">Password Reset Request</h2>
             <p style="font-size: 16px;">Hello ${name},</p>
             <p style="font-size: 16px;">We received a request to reset your password for the <strong>Soft Skill Analyser</strong>.</p>
-            <div style="background-color: #f8f8f8; padding: 15px; border-left: 4px solid #FF00FF; margin: 20px 0; text-align: center;">
-                <p style="margin: 0 0 10px 0; font-size: 14px;">Your One-Time Password (OTP) is:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #000;">${otp}</div>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" style="background-color: #FF00FF; color: #fff; padding: 12px 24px; text-decoration: none; font-weight: bold; font-size: 16px; border-radius: 5px; display: inline-block; text-transform: uppercase;">
+                    Reset Password
+                </a>
             </div>
-            <p style="color: #d9534f; font-size: 14px;"><em>*This OTP is valid for 10 minutes. If you did not request a password reset, please ignore this email.</em></p>
+            <p style="color: #d9534f; font-size: 14px;"><em>*This link is valid for 10 minutes. If you did not request a password reset, please ignore this email.</em></p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
             <p style="font-size: 12px; color: #777;">Soft Skill Analyser automated system.</p>
         </div>

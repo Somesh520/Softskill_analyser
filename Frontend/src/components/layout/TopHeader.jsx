@@ -60,7 +60,7 @@ const TopHeader = () => {
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-10 transition-colors duration-300">
+    <header className="h-16 bg-white dark:bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-[9999] transition-colors duration-300">
       <div className="flex items-center gap-4">
         {/* Mobile menu toggle (if needed) */}
         <button 
@@ -90,7 +90,7 @@ const TopHeader = () => {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl py-2 z-50">
+            <div className="absolute right-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl py-2 z-[99999]">
               <div className="px-4 py-3 border-b border-border mb-2">
                 <p className="text-sm font-bold truncate">{userName}</p>
                 <p className="text-xs text-foreground/50 truncate">{user?.email || batchInfo}</p>
@@ -100,12 +100,12 @@ const TopHeader = () => {
                 <button 
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    router.push(`/${user?.role || 'student'}/settings`);
+                    router.push('/forgot-password');
                   }}
                   className="flex items-center gap-3 px-4 py-2 text-sm text-foreground/80 hover:bg-accent hover:text-foreground transition-colors w-full text-left"
                 >
                   <Settings size={16} />
-                  Change Password
+                  Forgot Password
                 </button>
                 <button 
                   onClick={handleLogout}

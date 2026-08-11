@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../Models/Usermodel.js';
 import { sendEmail } from '../utils/emailService.js';
-import { otpTemplate } from '../utils/emailTemplates.js';
+import { resetLinkTemplate } from '../utils/emailTemplates.js';
 
 export const loginUserService = async (email, password) => {
     // 1. Check for user email (ensuring case-insensitivity)
@@ -89,17 +89,18 @@ export const forgotPasswordService = async (email) => {
         throw new Error('User not found with this email');
     }
 
-    // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate a secure crypto token
+    const token = crypto.randomBytes(32).toString('hex');
 
-    // Hash the OTP (so even db-admins don't see the raw OTP) - Optional but good for security. Let's just store raw for simplicity/learning here, or hash it. We'll store it raw but hashed is better.
-    // For this context, standard string match is fine:
-    user.resetPasswordOTP = otp;
+    // Hash the token before saving to database
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    user.resetPasswordToken = tokenHash;
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
     // Send the email
-    const emailHtml = otpTemplate(user.name, otp);
+    const emailHtml = resetLinkTemplate(user.name, token, user.email);
     const emailSent = await sendEmail({
         to: user.email,
         subject: 'Soft Skill Analyser - Password Reset OTP',
@@ -108,25 +109,29 @@ export const forgotPasswordService = async (email) => {
 
     if (!emailSent) {
         // Rollback if email fails
-        user.resetPasswordOTP = undefined;
+        user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
         throw new Error('Could not send email. Please try again later.');
     }
 
-    return { message: 'OTP sent to your email successfully.' };
+    return { message: 'Reset link sent to your email successfully.' };
 };
 
-export const resetPasswordService = async (email, otp, newPassword) => {
+export const resetPasswordService = async (email, token, newPassword) => {
     const normalizedEmail = email?.trim().toLowerCase();
+    
+    // Hash the incoming token to compare with the database hash
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
     const user = await User.findOne({
         email: normalizedEmail,
-        resetPasswordOTP: otp,
+        resetPasswordToken: tokenHash,
         resetPasswordExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-        throw new Error('Invalid or expired OTP');
+        throw new Error('Invalid or expired reset token');
     }
 
     // Hash new password
@@ -134,7 +139,7 @@ export const resetPasswordService = async (email, otp, newPassword) => {
     user.password = await bcrypt.hash(newPassword, salt);
 
     // Clear reset token fields
-    user.resetPasswordOTP = undefined;
+    user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
     await user.save();

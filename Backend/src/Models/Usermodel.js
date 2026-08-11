@@ -69,7 +69,7 @@ const userSchema = new mongoose.Schema({
     }],
 
     // --- Password Reset Fields ---
-    resetPasswordOTP: {
+    resetPasswordToken: {
         type: String
     },
     resetPasswordExpires: {
