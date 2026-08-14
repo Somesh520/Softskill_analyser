@@ -20,15 +20,27 @@ jobs:
             set -e
 
             REPO_DIR=""
-            for candidate in "$HOME/soft-skill-analyser" "$HOME/soft-skill"; do
-              if [ -d "$candidate/.git" ]; then
-                REPO_DIR="$candidate"
-                break
+            for base in "$HOME" /home/* /opt /srv /var/www; do
+              if [ -z "$base" ] || [ ! -d "$base" ]; then
+                continue
               fi
+
+              for name in soft-skill-analyser soft-skill Softskill_analyser Softskill Soft-skill; do
+                candidate="$base/$name"
+                if [ -d "$candidate/.git" ]; then
+                  REPO_DIR="$candidate"
+                  break 2
+                fi
+              done
             done
 
             if [ -z "$REPO_DIR" ]; then
-              echo "No repository found in $HOME. Expected soft-skill or soft-skill-analyser."
+              echo "Repo not found. Searching common deployment locations..."
+              REPO_DIR="$(find /home /opt /srv /var/www -maxdepth 4 -type d -name .git 2>/dev/null | sed 's#/.git$##' | grep -Ei 'soft-skill|softskill|softskill_analyser' | head -n 1 || true)"
+            fi
+
+            if [ -z "$REPO_DIR" ]; then
+              echo "No repository found in common deployment locations."
               exit 1
             fi
 
