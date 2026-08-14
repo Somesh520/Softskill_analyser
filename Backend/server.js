@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import helmet from 'helmet';
 import express from 'express';
+import os from "os";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import connectDB from './src/Config/db.js';
@@ -79,8 +80,22 @@ app.get('/', (req, res) => {
 });
 // health check endpoint to check if the server is running fine or not
 
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+app.get("/api/health", (req, res) => {
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+
+  res.json({
+    status: "UP",
+    uptimeSeconds: Math.floor(process.uptime()),
+    system: {
+      cpuCount: os.cpus().length,
+      loadAvg1m: os.loadavg()[0],
+      totalRamMB: (totalMem / 1024 / 1024).toFixed(0),
+      usedRamMB: (usedMem / 1024 / 1024).toFixed(0),
+      ramUsagePercent: `${((usedMem / totalMem) * 100).toFixed(1)}%`,
+    },
+  });
 });
 
 
