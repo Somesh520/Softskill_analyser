@@ -17,8 +17,31 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/soft-skill-analyser
-            git pull origin main
+            set -e
+
+            REPO_DIR=""
+            for candidate in "$HOME/soft-skill-analyser" "$HOME/soft-skill"; do
+              if [ -d "$candidate/.git" ]; then
+                REPO_DIR="$candidate"
+                break
+              fi
+            done
+
+            if [ -z "$REPO_DIR" ]; then
+              echo "No repository found in $HOME. Expected soft-skill or soft-skill-analyser."
+              exit 1
+            fi
+
+            cd "$REPO_DIR"
+            git fetch --all --prune
+            git checkout main
+            git reset --hard origin/main
+
             cd Backend
-            npm install
-            pm2 restart Backend
+            npm install --include=dev
+
+            if pm2 show Backend >/dev/null 2>&1; then
+              pm2 restart Backend
+            else
+              pm2 start server.js --name Backend
+            fi
