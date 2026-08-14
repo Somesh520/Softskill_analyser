@@ -34,6 +34,10 @@ jobs:
             cd Backend
             npm install --include=dev
 
+            if pm2 show server >/dev/null 2>&1; then
+              pm2 delete server
+            fi
+
             if pm2 show Backend >/dev/null 2>&1; then
               pm2 restart Backend
             else

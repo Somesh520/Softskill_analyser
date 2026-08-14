@@ -45,6 +45,14 @@ app.use(cors({
   credentials: true
 }));
 
+// Middleware to normalize duplicate slashes in request URLs
+app.use((req, res, next) => {
+  if (req.url.includes('//')) {
+    // Replace multiple consecutive slashes with a single slash
+    req.url = req.url.replace(/\/+/g, '/');
+  }
+  next();
+});
 
 // app.use('/api/auth',authRoutes);
 
