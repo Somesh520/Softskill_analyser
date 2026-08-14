@@ -25,7 +25,7 @@ jobs:
                 continue
               fi
 
-              for name in soft-skill-analyser soft-skill Softskill_analyser Softskill Soft-skill; do
+              for name in "Soft-skill" "soft-skill" "Softskill_analyser" "soft-skill-analyser" "Softskill"; do
                 candidate="$base/$name"
                 if [ -d "$candidate/.git" ]; then
                   REPO_DIR="$candidate"
@@ -36,7 +36,7 @@ jobs:
 
             if [ -z "$REPO_DIR" ]; then
               echo "Repo not found. Searching common deployment locations..."
-              REPO_DIR="$(find /home /opt /srv /var/www -maxdepth 4 -type d -name .git 2>/dev/null | sed 's#/.git$##' | grep -Ei 'soft-skill|softskill|softskill_analyser' | head -n 1 || true)"
+              REPO_DIR="$(find /home /opt /srv /var/www -maxdepth 4 -type d -name .git 2>/dev/null | sed 's#/.git$##' | grep -Ei '(^|/)(Soft-skill|soft-skill|Softskill_analyser|soft-skill-analyser|Softskill)$' | head -n 1 || true)"
             fi
 
             if [ -z "$REPO_DIR" ]; then
