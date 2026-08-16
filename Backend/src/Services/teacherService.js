@@ -4,7 +4,7 @@ import Activity from '../Models/Activitymodel.js';
 import ActivitySubmission from '../Models/ActivitySubmissionmodel.js';
 import Survey from '../Models/SurveyModel.js';
 import SurveyResponse from '../Models/SurveyResponseModel.js';
-import { sendWelcomeEmailsInBackground } from '../utils/emailService.js';
+import { queueWelcomeEmails } from './queueService.js';
 import Groq from 'groq-sdk';
 import csv from 'csv-parser';
 import { getStudentDashboardSummaryService } from './studentService.js';
@@ -224,9 +224,9 @@ export const uploadStudentCsvService = async (teacherId, classId, fileBuffer) =>
 
     const result = await User.bulkWrite(bulkOps);
 
-    // 6. Trigger background email sending (DO NOT AWAIT)
+    // 6. Trigger background email sending / SQS queueing (DO NOT AWAIT)
     if (newStudentsToEmail.length > 0) {
-        sendWelcomeEmailsInBackground(newStudentsToEmail);
+        queueWelcomeEmails(newStudentsToEmail);
     }
 
     await createLogService(teacherId, 'UPLOADED_STUDENTS_CSV', `Uploaded CSV adding/updating ${result.upsertedCount + result.modifiedCount} students in class ${classObj.name}`);
@@ -1044,8 +1044,8 @@ export const addStudentManuallyService = async (teacherId, classId, studentData)
         isActive: true
     });
 
-    // 5. Send welcome email (DO NOT AWAIT)
-    sendWelcomeEmailsInBackground([{
+    // 5. Send welcome email / SQS queueing (DO NOT AWAIT)
+    queueWelcomeEmails([{
         name: newStudent.name,
         email: newStudent.email,
         plainPassword

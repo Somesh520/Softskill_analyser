@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FolderOpen, Users, ArrowRight, Plus, X, BookOpen, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getClasses, createClass, deleteClass } from '../../../api/teacherApi';
+import { useToast } from '../../../context/ToastContext';
 
 const MyClasses = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { showToast, showConfirm } = useToast();
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,7 +49,7 @@ const MyClasses = () => {
       queryClient.invalidateQueries({ queryKey: ['teacherClasses'] });
     },
     onError: (err) => {
-      alert(err.message || 'Failed to delete class');
+      showToast(err.message || 'Failed to delete class', 'error');
     }
   });
 
@@ -57,9 +59,10 @@ const MyClasses = () => {
     createClassMutation.mutate(formData);
   };
 
-  const handleDeleteClass = (e, classId) => {
+  const handleDeleteClass = async (e, classId) => {
     e.stopPropagation(); // Prevent navigating to class details
-    if (window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
+    const confirmed = await showConfirm('This will permanently delete this class. This action cannot be undone.');
+    if (confirmed) {
       deleteClassMutation.mutate(classId);
     }
   };

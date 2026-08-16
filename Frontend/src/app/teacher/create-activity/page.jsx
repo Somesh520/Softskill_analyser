@@ -39,6 +39,7 @@ import {
   getTeachersList
 } from '../../../api/teacherApi';
 import { useAuth } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
 
 const CustomDatePicker = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -173,6 +174,7 @@ const CreateActivity = () => {
   const router = useRouter();
   const { user: teacherData } = useAuth();
   const queryClient = useQueryClient();
+  const { showConfirm } = useToast();
 
   const [evaluatingId, setEvaluatingId] = useState(null);
   const [submissionLoading, setSubmissionLoading] = useState(false);
@@ -394,8 +396,9 @@ const CreateActivity = () => {
     });
   };
 
-  const handleDeleteActivity = (activityId) => {
-    if (!window.confirm('Delete this activity and all submissions?')) return;
+  const handleDeleteActivity = async (activityId) => {
+    const confirmed = await showConfirm('Delete this activity and all its submissions?');
+    if (!confirmed) return;
     deleteActivityMutation.mutate(activityId);
   };
 

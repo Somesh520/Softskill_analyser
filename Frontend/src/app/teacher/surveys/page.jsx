@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, List, Loader2, Sparkles, User, Activity, Trash2, X, Eye, Download, MessageSquare, AlertCircle, RefreshCw } from 'lucide-react';
 import { getTeacherSurveys, createSurvey, toggleSurveyStatus, getClasses, generateSurveyQuestions, getSurveyResponses, deleteSurvey } from '../../../api/teacherApi';
+import { useToast } from '../../../context/ToastContext';
 
 const TeacherSurveys = () => {
   const [surveys, setSurveys] = useState([]);
@@ -10,6 +11,7 @@ const TeacherSurveys = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
+  const { showConfirm } = useToast();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -97,7 +99,8 @@ const TeacherSurveys = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this survey? This action cannot be undone and will delete all responses.")) return;
+    const confirmed = await showConfirm('This will permanently delete this survey and all its responses.');
+    if (!confirmed) return;
     try {
       await deleteSurvey(id);
       fetchData();

@@ -65,6 +65,7 @@ const TopHeader = () => {
         {/* Mobile menu toggle (if needed) */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
+          aria-label={isCollapsed ? "Expand sidebar menu" : "Collapse sidebar menu"}
           className="lg:hidden text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
         >
           <Menu size={20} />
@@ -79,6 +80,8 @@ const TopHeader = () => {
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            aria-expanded={isDropdownOpen}
+            aria-label="User profile menu"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none"
           >
             <div className="hidden md:flex flex-col items-end justify-center">

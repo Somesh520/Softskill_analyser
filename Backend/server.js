@@ -105,6 +105,16 @@ app.get("/api/health", (req, res) => {
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    // Start SQS Queue Worker if configured
+    if (process.env.SQS_QUEUE_URL) {
+      import('./src/Services/queueWorker.js')
+        .then(({ startQueueWorker }) => {
+          startQueueWorker();
+        })
+        .catch(err => {
+          console.error("❌ Failed to start SQS queue worker:", err);
+        });
+    }
   });
 }
 

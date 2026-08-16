@@ -1,6 +1,7 @@
 import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import QueryProvider from '../context/QueryProvider';
+import { ToastProvider } from '../context/ToastContext';
 import { ThemeProvider } from '../components/ThemeProvider';
 import ThemeCustomizer from '../components/common/ThemeCustomizer';
 
@@ -90,10 +91,12 @@ export default function RootLayout({ children }) {
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
             <QueryProvider>
-              <div id="root" className="min-h-screen flex flex-col">
-                {children}
-                <ThemeCustomizer />
-              </div>
+              <ToastProvider>
+                <div id="root" className="min-h-screen flex flex-col">
+                  {children}
+                  <ThemeCustomizer />
+                </div>
+              </ToastProvider>
             </QueryProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -100,7 +100,7 @@ const SidebarItem = ({ item, isActive, isCollapsed }) => {
       <div className="relative flex items-center justify-center min-w-[24px]">
         <Icon size={18} className={isActive ? 'text-primary' : ''} />
       </div>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {!isCollapsed && (
           <motion.span
             initial={{ opacity: 0, width: 0 }}
@@ -151,12 +151,13 @@ const Sidebar = ({ role = 'student' }) => {
     <motion.aside
       initial={false}
       animate={{ width: isCollapsed ? 80 : 260 }}
+      style={{ width: isCollapsed ? 80 : 260 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="relative h-screen bg-sidebar text-sidebar-foreground flex flex-col shrink-0 overflow-hidden shadow-xl z-20 transition-colors duration-300 border-r border-border"
     >
       {/* ─── Header ──────────────────────── */}
       <div className="flex items-center justify-between p-4 h-16 border-b border-sidebar-foreground/10 shrink-0">
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {!isCollapsed && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -178,6 +179,7 @@ const Sidebar = ({ role = 'student' }) => {
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={`w-8 h-8 flex items-center justify-center rounded-md hover:bg-sidebar-foreground/10 text-sidebar-foreground/70 transition-colors ${
             isCollapsed ? 'mx-auto' : ''
           }`}
@@ -187,7 +189,7 @@ const Sidebar = ({ role = 'student' }) => {
       </div>
 
       {/* ─── User Profile Area ───────────── */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {!isCollapsed && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -205,7 +207,7 @@ const Sidebar = ({ role = 'student' }) => {
       </AnimatePresence>
 
       <div className="px-4 py-2 mt-2">
-        <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider mb-2 px-2">
+        <p className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider mb-2 px-2">
           {isCollapsed ? '' : config.label.toUpperCase()}
         </p>
       </div>
@@ -233,7 +235,7 @@ const Sidebar = ({ role = 'student' }) => {
           <div className="relative flex items-center justify-center min-w-[24px]">
             <LogOut size={18} />
           </div>
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {!isCollapsed && (
               <motion.span
                 initial={{ opacity: 0, width: 0 }}
