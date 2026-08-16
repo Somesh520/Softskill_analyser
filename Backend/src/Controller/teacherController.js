@@ -18,9 +18,10 @@ import {
     addStudentManuallyService,
     getTeachersService,
     updateStudentPlacementService,
-    getStudentReportByTeacherService
+    getStudentReportByTeacherService,
+    calculateClassCAService
 } from '../Services/teacherService.js';
-import { createClassSchema, assignTeacherSchema, createActivitySchema, addStudentManuallySchema, updatePlacementSchema } from '../Schemas_zod/teacherSchema_zod.js';
+import { createClassSchema, assignTeacherSchema, createActivitySchema, addStudentManuallySchema, updatePlacementSchema, calculateCASchema } from '../Schemas_zod/teacherSchema_zod.js';
 
 // ... existing code ...
 
@@ -342,6 +343,25 @@ export const getStudentReportByTeacher = async (req, res) => {
         const report = await getStudentReportByTeacherService(teacherId, classId, studentId);
         res.status(200).json(report);
     } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Calculate Continuous Assessment (CA) or Mid-Sem Exam (MSE) marks for a class
+// @route   POST /api/teacher/classes/:classId/calculate-ca
+// @access  Private (Teacher)
+export const calculateClassCA = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const { classId } = req.params;
+        const options = calculateCASchema.parse(req.body);
+
+        const results = await calculateClassCAService(teacherId, classId, options);
+        res.status(200).json(results);
+    } catch (error) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+        }
         res.status(400).json({ message: error.message });
     }
 };

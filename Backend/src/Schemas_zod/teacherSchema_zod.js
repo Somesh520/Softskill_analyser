@@ -40,3 +40,12 @@ export const updatePlacementSchema = z.object({
     ctc: z.string().optional(),
     type: z.enum(['intern', 'full time ppo', 'none']).optional()
 });
+
+export const calculateCASchema = z.object({
+    targetMarks: z.coerce.number().int().positive("Target marks must be a positive integer"),
+    calculationMode: z.enum(['equal', 'weighted']),
+    activityWeightages: z.array(z.object({
+        activityId: z.string().min(1, "Activity ID is required"),
+        weight: z.coerce.number().nonnegative().optional()
+    })).min(1, "At least one activity is required")
+});

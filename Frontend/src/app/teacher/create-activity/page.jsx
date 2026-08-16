@@ -305,7 +305,7 @@ const CreateActivity = () => {
 
   const handleQuestionChange = (id, field, value) => {
     const newQuestions = formData.questions.map(q =>
-      q.id === id ? { ...q, [field]: field === 'weight' ? Number(value) : value } : q
+      q.id === id ? { ...q, [field]: field === 'weight' ? (value === '' ? '' : Number(value)) : value } : q
     );
     setFormData({ ...formData, questions: newQuestions });
   };
@@ -549,7 +549,7 @@ const CreateActivity = () => {
                     type="number"
                     className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors text-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     value={formData.maxPoints}
-                    onChange={(e) => setFormData({ ...formData, maxPoints: Number(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, maxPoints: e.target.value === '' ? '' : Number(e.target.value) })}
                   />
                 </div>
               </div>

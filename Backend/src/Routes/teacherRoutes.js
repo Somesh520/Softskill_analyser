@@ -20,7 +20,8 @@ import {
   addStudentManually,
   getTeachersList,
   updateStudentPlacement,
-  getStudentReportByTeacher
+  getStudentReportByTeacher,
+  calculateClassCA
 } from '../Controller/teacherController.js';
 import { verifyToken, requireRole } from '../Middlewares/authMiddleware.js';
 
@@ -51,6 +52,7 @@ router.delete('/classes/:id', deleteClass);
 router.delete('/classes/:classId/students/:studentId', deleteStudentFromClass);
 router.post('/classes/:id/upload-students', upload.single('file'), uploadStudentCsv);
 router.post('/classes/:classId/students', addStudentManually);
+router.post('/classes/:classId/calculate-ca', calculateClassCA);
 
 // Activity Management
 router.post('/activities', createActivity);

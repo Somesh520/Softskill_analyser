@@ -15,7 +15,7 @@ export const getStudentDashboardSummaryService = async (studentId) => {
     let classObj = null;
     let teacher = null;
     let activities = [];
-    
+
     if (student.classId) {
         classObj = await Class.findById(student.classId).lean();
     }
@@ -25,7 +25,7 @@ export const getStudentDashboardSummaryService = async (studentId) => {
         teacher = await User.findOne({ _id: classObj.teacherId, role: 'teacher' })
             .select('name email deptName')
             .lean();
-            
+
         activities = await Activity.find({ classIds: classObj._id })
             .sort({ createdAt: -1 })
             .lean();
@@ -37,8 +37,8 @@ export const getStudentDashboardSummaryService = async (studentId) => {
     // 5. Compile activity details with grading status
     const activitiesList = activities.map(act => {
         const submission = submissions.find(sub => String(sub.activityId) === String(act._id));
-        const criteriaMarks = submission 
-            ? (submission.criteriaMarks instanceof Map ? Object.fromEntries(submission.criteriaMarks) : submission.criteriaMarks) 
+        const criteriaMarks = submission
+            ? (submission.criteriaMarks instanceof Map ? Object.fromEntries(submission.criteriaMarks) : submission.criteriaMarks)
             : {};
 
         return {
@@ -51,31 +51,42 @@ export const getStudentDashboardSummaryService = async (studentId) => {
             status: submission ? 'Graded' : 'Pending',
             score: submission ? submission.totalMarks : null,
             feedback: submission ? submission.feedback : '',
-            criteriaMarks
+            criteriaMarks,
+            submissionId: submission ? submission._id : null,
+            editHistory: submission ? (submission.editHistory || []) : []
         };
     });
 
-    // 6. Calculate statistics
+    // 6. Calculate statistics based on normalized percentages
     const totalActivities = activities.length;
     const submittedActivities = submissions.length;
     const pendingActivities = totalActivities - submittedActivities;
 
-    let totalMarksSum = 0;
+    let percentageSum = 0;
     submissions.forEach(sub => {
-        totalMarksSum += (sub.totalMarks || 0);
+        const act = activities.find(a => String(a._id) === String(sub.activityId));
+        const maxPoints = act ? act.maxPoints : 100;
+        const subPercentage = maxPoints > 0 ? ((sub.totalMarks || 0) / maxPoints) * 100 : 0;
+        percentageSum += subPercentage;
     });
-    const avgScore = submittedActivities > 0 ? Math.round((totalMarksSum / submittedActivities) * 10) / 10 : 0;
+    const avgScore = submittedActivities > 0 ? Math.round((percentageSum / submittedActivities) * 10) / 10 : 0;
 
-    // 7. Calculate criteria performance breakdown (radar chart dataset)
+    // 7. Calculate criteria performance breakdown (normalized to 100-point scale)
     const criteriaSums = {};
     const criteriaCounts = {};
 
     submissions.forEach(sub => {
         if (sub.criteriaMarks) {
+            const act = activities.find(a => String(a._id) === String(sub.activityId));
             const marksObj = sub.criteriaMarks instanceof Map ? Object.fromEntries(sub.criteriaMarks) : sub.criteriaMarks;
+            
             for (const [criterion, score] of Object.entries(marksObj)) {
                 if (score !== undefined && score !== null) {
-                    criteriaSums[criterion] = (criteriaSums[criterion] || 0) + Number(score);
+                    const rubric = act ? (act.rubrics || []).find(r => r.criteria && r.criteria.toLowerCase() === criterion.toLowerCase()) : null;
+                    const maxWeight = rubric ? rubric.weight : 100;
+                    const normalizedScore = maxWeight > 0 ? (Number(score) / maxWeight) * 100 : Number(score);
+
+                    criteriaSums[criterion] = (criteriaSums[criterion] || 0) + normalizedScore;
                     criteriaCounts[criterion] = (criteriaCounts[criterion] || 0) + 1;
                 }
             }
@@ -88,7 +99,7 @@ export const getStudentDashboardSummaryService = async (studentId) => {
         const avg = count > 0 ? Math.round((sum / count) * 10) / 10 : 0;
         return {
             subject: criterion.charAt(0).toUpperCase() + criterion.slice(1),
-            A: avg, // A represents the student's score
+            A: avg,
             fullMark: 100
         };
     });

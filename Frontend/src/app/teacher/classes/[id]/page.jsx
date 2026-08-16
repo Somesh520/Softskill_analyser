@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ArrowLeft, BookOpen, Upload, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2, Briefcase, Download, FileDown } from 'lucide-react';
-import { getClassDetails, uploadStudentCsv, deleteStudent, addStudentManually, updateStudentPlacement } from '../../../../api/teacherApi';
+import { Users, ArrowLeft, BookOpen, Upload, FileText, Trash2, X, CheckCircle2, AlertCircle, Loader2, Briefcase, Download, FileDown, TrendingUp } from 'lucide-react';
+import { getClassDetails, uploadStudentCsv, deleteStudent, addStudentManually, updateStudentPlacement, getActivities, calculateClassCA } from '../../../../api/teacherApi';
 import { useAuth } from '../../../../context/AuthContext';
 import { useToast } from '../../../../context/ToastContext';
 
@@ -40,6 +40,17 @@ const ClassDetails = () => {
   const [placementError, setPlacementError] = useState('');
   const [placementViewMode, setPlacementViewMode] = useState(false);
 
+  // CA Calculation States
+  const [showCAModal, setShowCAModal] = useState(false);
+  const [classActivities, setClassActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [caTargetMarks, setCaTargetMarks] = useState(20);
+  const [caCalculationMode, setCaCalculationMode] = useState('equal');
+  const [selectedActivityWeightages, setSelectedActivityWeightages] = useState([]);
+  const [caResults, setCaResults] = useState(null);
+  const [caLoading, setCaLoading] = useState(false);
+  const [caError, setCaError] = useState('');
+
   useEffect(() => {
     if (id) {
       fetchDetails();
@@ -57,6 +68,106 @@ const ClassDetails = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (showCAModal && id) {
+      fetchClassActivities();
+    }
+  }, [showCAModal, id]);
+
+  const fetchClassActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      setCaError('');
+      const data = await getActivities(id);
+      setClassActivities(data || []);
+      setSelectedActivityWeightages([]);
+      setCaResults(null);
+    } catch (err) {
+      setCaError(err.message || 'Failed to load class activities');
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
+  const handleToggleActivity = (activityId) => {
+    setSelectedActivityWeightages(prev => {
+      const exists = prev.find(item => item.activityId === activityId);
+      if (exists) {
+        return prev.filter(item => item.activityId !== activityId);
+      } else {
+        return [...prev, { activityId, weight: 0 }];
+      }
+    });
+  };
+
+  const handleWeightChange = (activityId, val) => {
+    setSelectedActivityWeightages(prev =>
+      prev.map(item =>
+        item.activityId === activityId ? { ...item, weight: Number(val) || 0 } : item
+      )
+    );
+  };
+
+  const handleCalculateCA = async () => {
+    if (selectedActivityWeightages.length === 0) {
+      setCaError('Please select at least one activity to calculate CA.');
+      return;
+    }
+
+    if (caCalculationMode === 'weighted') {
+      const sumWeights = selectedActivityWeightages.reduce((sum, item) => sum + (item.weight || 0), 0);
+      if (Math.abs(sumWeights - 100) > 0.001) {
+        setCaError(`Total weight must be exactly 100%. Currently it is ${sumWeights}%.`);
+        return;
+      }
+    }
+
+    try {
+      setCaLoading(true);
+      setCaError('');
+      const payload = {
+        targetMarks: Number(caTargetMarks),
+        calculationMode: caCalculationMode,
+        activityWeightages: selectedActivityWeightages
+      };
+      const data = await calculateClassCA(id, payload);
+      setCaResults(data);
+      showToast('CA/MSE Marks calculated successfully!', 'success');
+    } catch (err) {
+      setCaError(err.message || 'Failed to calculate CA marks');
+    } finally {
+      setCaLoading(false);
+    }
+  };
+
+  const handleDownloadCACSV = () => {
+    if (!caResults || !caResults.scores || caResults.scores.length === 0) return;
+
+    const activityHeaders = caResults.scores[0].marks.map(m => `"${m.title} (${m.maxPoints})"`);
+    const headers = ['Name', 'Email', 'Roll No', ...activityHeaders, `Scaled Score (Out of ${caResults.targetMarks})`].join(',');
+
+    const csvRows = caResults.scores.map(student => {
+      const studentActivityScores = student.marks.map(m => m.obtained);
+      return [
+        `"${student.name}"`,
+        `"${student.email}"`,
+        `"${student.rollNo}"`,
+        ...studentActivityScores,
+        student.scaledScore
+      ].join(',');
+    });
+
+    const csvString = [headers, ...csvRows].join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `CA_Report_${classData?.name || 'Class'}_Target_${caResults.targetMarks}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDownloadTemplate = () => {
@@ -302,6 +413,12 @@ const ClassDetails = () => {
                 disabled={uploading}
               >
                 <Upload size={18} /> {uploading ? 'Processing CSV...' : 'Upload Student CSV'}
+              </button>
+              <button
+                className="bg-card border border-border rounded-xl shadow-sm px-5 py-2.5 font-semibold text-sm flex items-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
+                onClick={() => setShowCAModal(true)}
+              >
+                <FileText size={18} /> Calculate CA/MSE Marks
               </button>
               <button
                 className="bg-card border border-border rounded-xl shadow-sm px-5 py-2.5 font-semibold text-sm flex items-center gap-2 hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
@@ -803,6 +920,222 @@ const ClassDetails = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* CA/MSE Calculation Modal */}
+        <AnimatePresence>
+          {showCAModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="bg-card border border-border rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col"
+                >
+                  {/* Modal Header */}
+                  <div className="p-6 border-b border-border flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="text-primary" size={24} />
+                      <h3 className="text-xl font-bold text-foreground">Calculate CA/MSE Marks</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowCAModal(false)}
+                      className="p-1.5 hover:bg-foreground/5 rounded-lg text-foreground/60 transition-colors cursor-pointer"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left Panel: Settings */}
+                    <div className="lg:col-span-5 space-y-5">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-foreground/60">Target Max Marks</label>
+                        <input
+                          type="number"
+                          value={caTargetMarks}
+                          onChange={(e) => setCaTargetMarks(e.target.value === '' ? '' : Math.max(1, Number(e.target.value) || 1))}
+                          className="w-full bg-background border border-border rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                          placeholder="e.g. 20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-foreground/60">Calculation Mode</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCaCalculationMode('equal');
+                              setCaError('');
+                            }}
+                            className={`p-3 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+                              caCalculationMode === 'equal'
+                                ? 'bg-primary/10 border-primary text-primary'
+                                : 'bg-background border-border text-foreground/70 hover:bg-foreground/5'
+                            }`}
+                          >
+                            Equal Weight
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCaCalculationMode('weighted');
+                              setCaError('');
+                            }}
+                            className={`p-3 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+                              caCalculationMode === 'weighted'
+                                ? 'bg-primary/10 border-primary text-primary'
+                                : 'bg-background border-border text-foreground/70 hover:bg-foreground/5'
+                            }`}
+                          >
+                            Custom Weights
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold uppercase tracking-wider text-foreground/60 flex justify-between">
+                          <span>Select Activities</span>
+                          <span className="text-[10px] text-foreground/40 normal-case">Check to include</span>
+                        </label>
+                        {activitiesLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="animate-spin text-primary" size={24} />
+                          </div>
+                        ) : classActivities.length === 0 ? (
+                          <p className="text-sm text-foreground/50 italic py-4 text-center">No activities found for this class.</p>
+                        ) : (
+                          <div className="max-h-[200px] overflow-y-auto border border-border rounded-xl p-2 space-y-1 bg-background">
+                            {classActivities.map((act) => {
+                              const isSelected = selectedActivityWeightages.some(item => item.activityId === act._id);
+                              const selectedItem = selectedActivityWeightages.find(item => item.activityId === act._id);
+
+                              return (
+                                <div key={act._id} className="flex items-center justify-between p-2 hover:bg-foreground/5 rounded-lg transition-colors gap-3">
+                                  <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => handleToggleActivity(act._id)}
+                                      className="rounded border-border text-primary focus:ring-primary/50 w-4 h-4"
+                                    />
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold text-foreground truncate">{act.title}</p>
+                                      <p className="text-[11px] text-foreground/50">Max: {act.maxPoints} pts</p>
+                                    </div>
+                                  </label>
+                                  {isSelected && caCalculationMode === 'weighted' && (
+                                    <div className="flex items-center gap-1.5 min-w-[70px]">
+                                      <input
+                                        type="number"
+                                        value={selectedItem?.weight || 0}
+                                        onChange={(e) => handleWeightChange(act._id, e.target.value)}
+                                        className="w-12 bg-card border border-border rounded-md px-1.5 py-1 text-xs font-bold text-center focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+                                        placeholder="%"
+                                      />
+                                      <span className="text-xs text-foreground/60">%</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {caError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold rounded-xl flex items-center gap-2">
+                          <AlertCircle size={16} className="shrink-0" />
+                          <span>{caError}</span>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleCalculateCA}
+                        disabled={caLoading || classActivities.length === 0}
+                        className="w-full bg-primary text-primary-foreground font-semibold text-sm rounded-xl py-3 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {caLoading ? (
+                          <>
+                            <Loader2 className="animate-spin" size={16} /> Calculating...
+                          </>
+                        ) : (
+                          'Calculate Marks'
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Right Panel: Results Preview */}
+                    <div className="lg:col-span-7 border border-border rounded-xl p-4 bg-background/50 flex flex-col min-h-[300px]">
+                      {caResults ? (
+                        <div className="flex-1 flex flex-col overflow-hidden h-full">
+                          <div className="flex items-center justify-between mb-4 shrink-0">
+                            <div>
+                              <h4 className="text-sm font-bold text-foreground">Calculation Results Preview</h4>
+                              <p className="text-[11px] text-foreground/50">Normalized out of {caResults.targetMarks} marks</p>
+                            </div>
+                            <button
+                              onClick={handleDownloadCACSV}
+                              className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground rounded-lg px-3 py-1.5 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Download size={14} /> Download ERP CSV
+                            </button>
+                          </div>
+
+                          <div className="flex-1 overflow-auto border border-border rounded-lg bg-card">
+                            <table className="w-full border-collapse text-left text-xs">
+                              <thead>
+                                <tr className="bg-foreground/5 text-foreground/80 font-bold border-b border-border">
+                                  <th className="p-3">Student</th>
+                                  <th className="p-3">Roll No</th>
+                                  {caResults.scores[0]?.marks.map((m, idx) => (
+                                    <th key={idx} className="p-3 text-center truncate max-w-[80px]" title={m.title}>
+                                      {m.title}
+                                    </th>
+                                  ))}
+                                  <th className="p-3 text-right">Scaled Score</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {caResults.scores.map((student) => (
+                                  <tr key={student.studentId} className="border-b border-border hover:bg-foreground/5 transition-colors font-medium">
+                                    <td className="p-3 text-foreground truncate max-w-[120px]">{student.name}</td>
+                                    <td className="p-3 text-foreground/75 font-mono">{student.rollNo}</td>
+                                    {student.marks.map((m, idx) => (
+                                      <td key={idx} className="p-3 text-center text-foreground/75 font-mono">
+                                        {m.obtained}
+                                      </td>
+                                    ))}
+                                    <td className="p-3 text-right font-bold text-primary font-mono bg-primary/5">
+                                      {student.scaledScore}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                          <div className="bg-primary/5 p-4 rounded-full border border-primary/10 text-primary/60 mb-3">
+                            <TrendingUp size={36} />
+                          </div>
+                          <h4 className="font-bold text-sm text-foreground/80 mb-1">No Calculations Yet</h4>
+                          <p className="text-xs text-foreground/50 max-w-[280px]">Select activities, set target marks, and click Calculate to preview here.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
 
       </main>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
   BarChart,
@@ -22,12 +22,15 @@ import {
 import {
   BarChart3,
   TrendingUp,
+  TrendingDown,
   Users,
   Award,
   Activity,
   CheckCircle2,
   AlertCircle,
-  Loader } from 'lucide-react';
+  Loader,
+  Search,
+  X } from 'lucide-react';
 import { getTeacherReportsSummary, getClasses } from '../../../api/teacherApi';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -35,6 +38,8 @@ const TeacherReports = () => {
   const router = useRouter();
   const { user: teacherData } = useAuth();
   const [selectedClass, setSelectedClass] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAllStandingsModal, setShowAllStandingsModal] = useState(false);
 
   // Fetch classes list via TanStack Query
   const { data: classList = [], isLoading: classesLoading } = useQuery({
@@ -60,6 +65,13 @@ const TeacherReports = () => {
   const completionRate = summary.completionRate || null;
   const improvement = summary.improvement || null;
   const topCriterion = summary.topCriterion || null;
+  const allStudents = summary.allStudents || [];
+  const filteredStudents = allStudents.filter(student => 
+    student.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    student.rollNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const driftAlerts = summary.driftAlerts || [];
 
   // Default stats if data not loaded
   const teacherStats = stats ? [
@@ -342,6 +354,188 @@ const TeacherReports = () => {
           </motion.div>
         </div>
 
+
+
+        {/* Performance Drift & Shifts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.52 }}
+            className="lg:col-span-3 bg-card border border-border rounded-2xl shadow-sm p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <TrendingUp size={20} className="text-primary"/> Performance Drift & Learning Velocity
+                </h3>
+                <p className="text-xs text-foreground/50 mt-1">
+                  Real-time alerts detecting significant positive (improvement) or negative (attention needed) shifts in student soft skills.
+                </p>
+              </div>
+            </div>
+
+            {driftAlerts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border rounded-xl bg-background/50">
+                <p className="text-sm font-semibold text-foreground/50 italic">No significant performance drifts detected recently.</p>
+                <p className="text-xs text-foreground/40 mt-1">Drifts are calculated automatically when new evaluations are logged.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {driftAlerts.slice(0, 6).map((alert, idx) => {
+                  const isPositive = alert.driftDirection === 'positive';
+                  
+                  return (
+                    <motion.div
+                      key={alert.id || idx}
+                      whileHover={{ y: -3 }}
+                      className={`border rounded-xl p-4 flex flex-col justify-between shadow-sm transition-all relative overflow-hidden ${
+                        isPositive 
+                          ? 'bg-green-500/5 border-green-500/20 hover:border-green-500/40' 
+                          : 'bg-red-500/5 border-red-500/20 hover:border-red-500/40'
+                      }`}
+                    >
+                      <div className={`absolute top-0 left-0 w-1.5 h-full ${isPositive ? 'bg-green-500' : 'bg-red-500'}`} />
+                      
+                      <div className="pl-2 flex-1">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                            isPositive ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'
+                          }`}>
+                            {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                            {isPositive ? 'Positive Drift' : 'Negative Drift'}
+                          </span>
+                          <span className={`text-sm font-extrabold font-mono ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                            {isPositive ? '+' : '-'}{alert.driftMagnitude}%
+                          </span>
+                        </div>
+                        
+                        <h4 className="font-bold text-sm text-foreground truncate">{alert.studentName}</h4>
+                        <p className="text-xs text-foreground/50 font-mono mt-0.5 truncate">{alert.rollNo} • {alert.className}</p>
+                        
+                        <div className="mt-4 pt-3 border-t border-border/50 flex flex-col gap-1">
+                          <p className="text-[11px] text-foreground/60 truncate">
+                            <span className="font-semibold text-foreground">Activity:</span> {alert.activityTitle}
+                          </p>
+                          <p className="text-[11px] text-foreground/60 truncate">
+                            <span className="font-semibold text-foreground">Skill:</span> {alert.skillType.toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Student Standings List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.58 }}
+          className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden mb-8"
+        >
+          <div className="p-6 border-b border-border bg-card/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Users size={20} className="text-primary"/> Student Standings & Leaderboard
+              </h3>
+              <p className="text-xs text-foreground/50 mt-1">Complete performance rankings of all students across selected classes.</p>
+            </div>
+            
+            {/* Search Input */}
+            <div className="relative max-w-xs w-full">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground/45" size={16} />
+              <input
+                type="text"
+                placeholder="Search name, roll no..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-foreground/40 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="bg-foreground/5 text-foreground/70 uppercase tracking-wider text-xs border-b border-border">
+                  <th className="p-4 font-semibold text-center w-16">Rank</th>
+                  <th className="p-4 font-semibold">Student Details</th>
+                  <th className="p-4 font-semibold">Class</th>
+                  <th className="p-4 font-semibold text-center">Submissions</th>
+                  <th className="p-4 font-semibold text-right">Avg Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-foreground/50 font-medium">
+                      {searchTerm ? 'No matching students found.' : 'No student evaluations found.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.slice(0, 10).map((stud, idx) => {
+                    const originalRank = allStudents.findIndex(s => s.rollNo === stud.rollNo) + 1;
+                    
+                    let rankBadge = '';
+                    if (originalRank === 1) rankBadge = 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+                    else if (originalRank === 2) rankBadge = 'bg-slate-300/20 text-slate-500 border-slate-300/30';
+                    else if (originalRank === 3) rankBadge = 'bg-amber-600/10 text-amber-700 border-amber-600/20';
+                    else rankBadge = 'bg-foreground/5 text-foreground/60 border-border';
+
+                    return (
+                      <tr key={stud.rollNo || idx} className="hover:bg-foreground/5 transition-colors">
+                        <td className="p-4 text-center">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded border ${rankBadge}`}>
+                            #{originalRank}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="font-semibold text-foreground">{stud.name}</div>
+                          <div className="text-xs text-foreground/50 font-mono mt-0.5">{stud.rollNo} • {stud.email}</div>
+                        </td>
+                        <td className="p-4 font-medium text-foreground/80">
+                          {stud.className}
+                        </td>
+                        <td className="p-4 text-center font-medium text-foreground/75 font-mono">
+                          {stud.submissionsCount} submission{stud.submissionsCount !== 1 ? 's' : ''}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            <div className="w-24 bg-foreground/10 rounded-full h-1.5 hidden md:block overflow-hidden">
+                              <div 
+                                className="bg-primary h-1.5 rounded-full" 
+                                style={{ width: `${Math.min(100, Math.max(0, stud.avg))}%` }}
+                              />
+                            </div>
+                            <span className="font-bold text-primary font-mono text-sm">
+                              {stud.avg}%
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {filteredStudents.length > 10 && (
+            <div className="p-4 border-t border-border bg-foreground/5 flex justify-center">
+              <button
+                onClick={() => setShowAllStandingsModal(true)}
+                className="text-primary hover:text-primary/80 font-bold text-sm flex items-center gap-1.5 cursor-pointer transition-colors"
+              >
+                View Full Leaderboard ({filteredStudents.length} Students) →
+              </button>
+            </div>
+          )}
+        </motion.div>
+
         {/* Detailed Activity Breakdown */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -399,6 +593,102 @@ const TeacherReports = () => {
             </table>
           </div>
         </motion.div>
+
+        {/* Full Leaderboard Modal */}
+        <AnimatePresence>
+          {showAllStandingsModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowAllStandingsModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-card border border-border rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-border flex items-center justify-between bg-card shrink-0">
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                      <Users className="text-primary" size={24} /> Complete Student Leaderboard
+                    </h3>
+                    <p className="text-xs text-foreground/50 mt-1">Full ranking of all {filteredStudents.length} students across selected classes.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAllStandingsModal(false)}
+                    className="p-1.5 hover:bg-foreground/5 rounded-lg text-foreground/60 transition-colors cursor-pointer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Table Body */}
+                <div className="overflow-y-auto flex-1">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead className="sticky top-0 bg-card z-10">
+                      <tr className="bg-foreground/5 text-foreground/70 uppercase tracking-wider text-xs border-b border-border">
+                        <th className="p-4 font-semibold text-center w-16">Rank</th>
+                        <th className="p-4 font-semibold">Student Details</th>
+                        <th className="p-4 font-semibold">Class</th>
+                        <th className="p-4 font-semibold text-center">Submissions</th>
+                        <th className="p-4 font-semibold text-right">Avg Score</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {filteredStudents.map((stud, idx) => {
+                        const originalRank = allStudents.findIndex(s => s.rollNo === stud.rollNo) + 1;
+                        
+                        let rankBadge = '';
+                        if (originalRank === 1) rankBadge = 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+                        else if (originalRank === 2) rankBadge = 'bg-slate-300/20 text-slate-500 border-slate-300/30';
+                        else if (originalRank === 3) rankBadge = 'bg-amber-600/10 text-amber-700 border-amber-600/20';
+                        else rankBadge = 'bg-foreground/5 text-foreground/60 border-border';
+
+                        return (
+                          <tr key={stud.rollNo || idx} className="hover:bg-foreground/5 transition-colors">
+                            <td className="p-4 text-center">
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded border ${rankBadge}`}>
+                                #{originalRank}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <div className="font-semibold text-foreground">{stud.name}</div>
+                              <div className="text-xs text-foreground/50 font-mono mt-0.5">{stud.rollNo} • {stud.email}</div>
+                            </td>
+                            <td className="p-4 font-medium text-foreground/80">
+                              {stud.className}
+                            </td>
+                            <td className="p-4 text-center font-medium text-foreground/75 font-mono">
+                              {stud.submissionsCount} submission{stud.submissionsCount !== 1 ? 's' : ''}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-3">
+                                <div className="w-24 bg-foreground/10 rounded-full h-1.5 hidden md:block overflow-hidden">
+                                  <div 
+                                    className="bg-primary h-1.5 rounded-full" 
+                                    style={{ width: `${Math.min(100, Math.max(0, stud.avg))}%` }}
+                                  />
+                                </div>
+                                <span className="font-bold text-primary font-mono text-sm">
+                                  {stud.avg}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

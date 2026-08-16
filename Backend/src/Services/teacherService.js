@@ -1,6 +1,8 @@
+import mongoose from 'mongoose';
 import Class from '../Models/Classmodel.js';
 import User from '../Models/Usermodel.js';
 import Activity from '../Models/Activitymodel.js';
+import DriftEvent from '../Models/DriftEventModel.js';
 import ActivitySubmission from '../Models/ActivitySubmissionmodel.js';
 import Survey from '../Models/SurveyModel.js';
 import SurveyResponse from '../Models/SurveyResponseModel.js';
@@ -15,6 +17,7 @@ import { generateActivityCSV } from '../utils/csvGenerator.js';
 import { createLogService } from './logService.js';
 import groq from '../Config/groq.js'
 import { processNewGrade } from './driftService.js';
+import { trackStudentTrajectory, trackModificationImpact } from './patentTracker.js';
 
 const reportsSummaryCache = new Map();
 const CACHE_TTL = 15000; // 15 seconds TTL
@@ -495,9 +498,25 @@ export const editActivityMarksService = async (teacherId, activityId, submission
 
     // Trigger drift detection asynchronously
     if (criteriaMarks) {
-        setImmediate(() => {
-            for (const [criterion, newValue] of Object.entries(criteriaMarks)) {
-                processNewGrade(submission.studentId, activity._id, criterion, newValue, feedback).catch(console.error);
+        setImmediate(async () => {
+            try {
+                const User = mongoose.model('User');
+                const student = await User.findById(submission.studentId).select('classId').lean();
+                const classId = student ? student.classId : null;
+
+                for (const [criterion, newValue] of Object.entries(criteriaMarks)) {
+                    const oldValue = submission.criteriaMarks?.get?.(criterion) ?? submission.criteriaMarks?.[criterion] ?? 0;
+                    const rubric = (activity.rubrics || []).find(r => r.criteria && r.criteria.toLowerCase() === criterion.toLowerCase());
+                    const maxWeight = rubric ? rubric.weight : 100;
+
+                    if (classId) {
+                        await trackStudentTrajectory(submission.studentId, classId, activity._id, criterion, newValue, maxWeight).catch(console.error);
+                        await trackModificationImpact(submission.studentId, classId, activity._id, criterion, oldValue, newValue, maxWeight).catch(console.error);
+                    }
+                    processNewGrade(submission.studentId, activity._id, criterion, newValue, feedback, true).catch(console.error);
+                }
+            } catch (err) {
+                console.error('Error in setImmediate trajectory edit tracker:', err);
             }
         });
     }
@@ -689,6 +708,10 @@ export const uploadActivityMarksService = async (teacherId, activityId, fileBuff
                                 const numericMark = Number(rawMark);
                                 const safeMark = Number.isFinite(numericMark) ? numericMark : 0;
                                 
+                                const rubric = (activity.rubrics || []).find(r => r.criteria && r.criteria.toLowerCase() === criterion.toLowerCase());
+                                const maxWeight = rubric ? rubric.weight : 100;
+                                
+                                trackStudentTrajectory(student._id, student.classId, activity._id, criterion, safeMark, maxWeight).catch(console.error);
                                 processNewGrade(student._id, activity._id, criterion, safeMark, feedback).catch(console.error);
                             }
                         }
@@ -970,7 +993,67 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
         improvementLabel = `Single week data: ${scoringTrend[0].week}`;
     }
 
-    return {
+    // 12. Calculate top performing students
+    const studentAverages = students.map(student => {
+        const studentSubmissions = submissions.filter(sub => String(sub.studentId) === String(student._id));
+        const count = studentSubmissions.length;
+        let sum = 0;
+        let avg = 0;
+
+        studentSubmissions.forEach(sub => {
+            sum += (sub.totalMarks || 0);
+        });
+
+        if (count > 0) {
+            avg = Math.round((sum / count) * 10) / 10;
+        }
+
+        const cls = classes.find(c => String(c._id) === String(student.classId));
+
+        return {
+            name: student.name,
+            rollNo: student.rollNo,
+            email: student.email,
+            className: cls ? cls.name : 'Unknown Class',
+            avg,
+            submissionsCount: count
+        };
+    });
+
+    const topStudents = studentAverages
+        .filter(s => s.submissionsCount > 0)
+        .sort((a, b) => b.avg - a.avg)
+        .slice(0, 5); // Limit to top 5 students
+
+    const allStudents = studentAverages.sort((a, b) => b.avg - a.avg);
+
+    // Fetch recent performance drift events for students under this teacher
+    const driftEvents = await DriftEvent.find({ studentId: { $in: studentIds } })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .populate({
+            path: 'studentId',
+            select: 'name rollNo classId'
+        })
+        .populate({
+            path: 'activityId',
+            select: 'title'
+        })
+        .lean();
+
+    const driftAlerts = driftEvents.map(event => ({
+        id: event._id,
+        studentName: event.studentId?.name || 'Unknown Student',
+        rollNo: event.studentId?.rollNo || 'N/A',
+        className: classes.find(c => String(c._id) === String(event.studentId?.classId))?.name || 'Unknown Class',
+        activityTitle: event.activityId?.title || 'Unknown Activity',
+        skillType: event.skillType,
+        driftMagnitude: event.driftMagnitude,
+        driftDirection: event.driftDirection,
+        createdAt: event.createdAt
+    }));
+
+    const result = {
         stats: {
             totalActivities,
             totalClasses,
@@ -991,7 +1074,10 @@ export const getTeacherReportsSummaryService = async (teacherId, classId = null)
             value: improvementValue,
             label: improvementLabel
         },
-        topCriterion
+        topCriterion,
+        topStudents,
+        allStudents,
+        driftAlerts
     };
 
     reportsSummaryCache.set(cacheKey, {
@@ -1123,5 +1209,104 @@ export const getStudentReportByTeacherService = async (teacherId, classId, stude
 
     // Call the student service to get the dashboard summary
     return await getStudentDashboardSummaryService(studentId);
+};
+
+export const calculateClassCAService = async (teacherId, classId, options) => {
+    const { targetMarks, calculationMode, activityWeightages } = options;
+
+    // 1. Verify class belongs to teacher
+    const classObj = await Class.findOne({ _id: classId, teacherId });
+    if (!classObj) {
+        throw new Error('Class not found or unauthorized');
+    }
+
+    // 2. Verify all selected activities exist and belong to the teacher
+    const activityIds = activityWeightages.map(a => a.activityId);
+    const activities = await Activity.find({ _id: { $in: activityIds }, teacherId });
+    if (activities.length !== activityIds.length) {
+        throw new Error('One or more selected activities not found or unauthorized');
+    }
+
+    // Map activities by ID for easy access
+    const activitiesMap = new Map(activities.map(a => [a._id.toString(), a]));
+
+    // Validate weights sum up to 100% in weighted mode
+    if (calculationMode === 'weighted') {
+        const totalWeight = activityWeightages.reduce((sum, item) => sum + (item.weight || 0), 0);
+        if (Math.abs(totalWeight - 100) > 0.001) {
+            throw new Error('Total weight of selected activities must equal 100%');
+        }
+    }
+
+    // 3. Fetch all students in the class
+    const students = await User.find({ classId, role: 'student' }).select('name rollNo email');
+
+    // 4. Fetch all submissions for the selected activities
+    const submissions = await ActivitySubmission.find({ activityId: { $in: activityIds } });
+
+    // Group submissions by studentId and activityId
+    const submissionsByStudent = new Map(); // studentId -> { activityId -> totalMarks }
+    submissions.forEach(sub => {
+        const studId = sub.studentId.toString();
+        if (!submissionsByStudent.has(studId)) {
+            submissionsByStudent.set(studId, new Map());
+        }
+        submissionsByStudent.get(studId).set(sub.activityId.toString(), sub.totalMarks);
+    });
+
+    // 5. Calculate scaled marks for each student
+    const studentScores = students.map(student => {
+        const studId = student._id.toString();
+        const studentSubs = submissionsByStudent.get(studId) || new Map();
+
+        // Trace marks for each activity in the requested order
+        const marks = activityWeightages.map(item => {
+            const act = activitiesMap.get(item.activityId);
+            const obtained = studentSubs.get(item.activityId) || 0;
+            return {
+                activityId: item.activityId,
+                title: act.title,
+                maxPoints: act.maxPoints,
+                obtained
+            };
+        });
+
+        let scaledScore = 0;
+
+        if (calculationMode === 'equal') {
+            const totalObtained = marks.reduce((sum, item) => sum + item.obtained, 0);
+            const totalMax = marks.reduce((sum, item) => sum + item.maxPoints, 0);
+            scaledScore = totalMax > 0 ? (totalObtained / totalMax) * targetMarks : 0;
+        } else {
+            // Weighted mode
+            activityWeightages.forEach(item => {
+                const act = activitiesMap.get(item.activityId);
+                const obtained = studentSubs.get(item.activityId) || 0;
+                const weightFrac = (item.weight || 0) / 100;
+                const activityContribution = act.maxPoints > 0 ? (obtained / act.maxPoints) * targetMarks * weightFrac : 0;
+                scaledScore += activityContribution;
+            });
+        }
+
+        // Round score to 2 decimal places
+        scaledScore = Math.round(scaledScore * 100) / 100;
+
+        return {
+            studentId: studId,
+            name: student.name,
+            rollNo: student.rollNo,
+            email: student.email,
+            marks,
+            scaledScore
+        };
+    });
+
+    return {
+        classId,
+        className: classObj.name,
+        targetMarks,
+        calculationMode,
+        scores: studentScores
+    };
 };
 

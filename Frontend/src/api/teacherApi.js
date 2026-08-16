@@ -260,3 +260,12 @@ export const getStudentReport = async (classId, studentId) => {
     throw new Error(error.response?.data?.message || 'Failed to fetch student report');
   }
 };
+
+export const calculateClassCA = async (classId, caData) => {
+  try {
+    const response = await axiosInstance.post(`/teacher/classes/${classId}/calculate-ca`, caData);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Failed to calculate CA marks');
+  }
+};

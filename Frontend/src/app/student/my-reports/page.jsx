@@ -153,6 +153,19 @@ const MyReports = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* Warning box if marks were changed */}
+                      {act.editHistory && act.editHistory.length > 0 && (
+                        <div className="mt-4 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 rounded-xl p-3.5 flex gap-2.5 items-start text-xs font-semibold">
+                          <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <p>⚠️ Your marks were updated by {act.editHistory[act.editHistory.length - 1].editedByTeacherName || 'your teacher'}.</p>
+                            <p className="text-[10px] text-foreground/50 font-medium">
+                              Last updated on {new Date(act.editHistory[act.editHistory.length - 1].editedAt).toLocaleDateString()} at {new Date(act.editHistory[act.editHistory.length - 1].editedAt).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Right Side: Grades & Feedback */}

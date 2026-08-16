@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { FileText, BarChart, BookOpen, User, Book, Award, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, BarChart, BookOpen, User, Book, Award, Clock, AlertCircle, ArrowLeft, Edit2, X, Loader2 } from 'lucide-react';
 import Skeleton from '@mui/material/Skeleton';
-import { getStudentReport } from '../../../../../../api/teacherApi';
+import { getStudentReport, editActivityMarks } from '../../../../../../api/teacherApi';
 
 const StudentReportView = () => {
   const router = useRouter();
@@ -12,6 +12,60 @@ const StudentReportView = () => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [editMarks, setEditMarks] = useState({});
+  const [editFeedback, setEditFeedback] = useState('');
+  const [editError, setEditError] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleOpenEditModal = (act) => {
+    setSelectedActivity(act);
+    setEditMarks(act.criteriaMarks || {});
+    setEditFeedback(act.feedback || '');
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  const handleEditMarksChange = (criterion, val) => {
+    setEditMarks({
+      ...editMarks,
+      [criterion]: val === '' ? '' : Number(val)
+    });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setEditLoading(true);
+      setEditError('');
+      
+      const finalMarks = {};
+      for (const [criterion, val] of Object.entries(editMarks)) {
+        if (val === '') {
+          throw new Error(`Please enter score for ${criterion}`);
+        }
+        const numVal = Number(val);
+        if (numVal < 0) {
+          throw new Error(`Score for ${criterion} cannot be negative`);
+        }
+        finalMarks[criterion] = numVal;
+      }
+
+      await editActivityMarks(selectedActivity._id, selectedActivity.submissionId, {
+        criteriaMarks: finalMarks,
+        feedback: editFeedback
+      });
+
+      setShowEditModal(false);
+      fetchDashboardSummary(); // Refresh list
+    } catch (err) {
+      setEditError(err.message || 'Failed to update marks');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (classId && studentId) {
@@ -149,7 +203,7 @@ const StudentReportView = () => {
             <FileText size={20} className="text-primary" /> Activity Submissions
           </h3>
           
-          {summary?.activitiesList && summary.activitiesList.length > 0 ? (
+          {summary?.activities && summary.activities.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-foreground/70 uppercase bg-primary/5">
@@ -157,11 +211,12 @@ const StudentReportView = () => {
                     <th className="px-4 py-3 rounded-tl-lg">Activity Title</th>
                     <th className="px-4 py-3">Type</th>
                     <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 rounded-tr-lg">Score</th>
+                    <th className="px-4 py-3">Score</th>
+                    <th className="px-4 py-3 rounded-tr-lg text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {summary.activitiesList.map((act, idx) => (
+                  {summary.activities.map((act, idx) => (
                     <motion.tr 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -179,6 +234,18 @@ const StudentReportView = () => {
                       <td className="px-4 py-4 font-medium">
                         {act.score !== null ? `${act.score}/${act.maxPoints}` : '-'}
                       </td>
+                      <td className="px-4 py-4 text-right">
+                        {act.status === 'Graded' ? (
+                          <button
+                            onClick={() => handleOpenEditModal(act)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Edit2 size={13} /> Edit Marks
+                          </button>
+                        ) : (
+                          <span className="text-xs text-foreground/45 italic">Not Graded</span>
+                        )}
+                      </td>
                     </motion.tr>
                   ))}
                 </tbody>
@@ -190,6 +257,105 @@ const StudentReportView = () => {
              </div>
           )}
         </motion.div>
+
+        {/* Edit Marks Modal */}
+        <AnimatePresence>
+          {showEditModal && selectedActivity && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowEditModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-card border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-border flex items-center justify-between bg-card shrink-0 text-foreground">
+                  <div>
+                    <h3 className="text-lg font-bold">Edit Student Marks</h3>
+                    <p className="text-xs text-foreground/50 mt-1">{selectedActivity.title}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="p-1.5 hover:bg-foreground/5 rounded-lg text-foreground/60 transition-colors cursor-pointer"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Form */}
+                <form onSubmit={handleEditSubmit} className="p-6 space-y-4 flex-1 overflow-y-auto">
+                  {editError && (
+                    <div className="bg-red-500/10 text-red-500 border border-red-500/20 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                      <AlertCircle size={16} /> {editError}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-foreground/50 mb-2">Criteria Allocation</p>
+                    {Object.entries(editMarks).map(([criterion, val]) => (
+                      <div key={criterion} className="flex items-center justify-between gap-4 p-3 bg-foreground/5 rounded-xl border border-border">
+                        <label className="text-sm font-semibold text-foreground capitalize flex-1 min-w-0 truncate">
+                          {criterion}
+                        </label>
+                        <div className="flex items-center gap-1.5 w-24 shrink-0">
+                          <input
+                            type="number"
+                            value={val}
+                            onChange={(e) => handleEditMarksChange(criterion, e.target.value)}
+                            className="w-full bg-background border border-border rounded-lg px-2.5 py-1.5 text-center text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+                            placeholder="Score"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-1.5 pt-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-foreground/50">Teacher Feedback</label>
+                    <textarea
+                      value={editFeedback}
+                      onChange={(e) => setEditFeedback(e.target.value)}
+                      className="w-full bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground resize-none h-24"
+                      placeholder="Add feedback about student's performance..."
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-border mt-6 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(false)}
+                      className="flex-1 bg-background border border-border rounded-xl py-3 font-semibold text-sm hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
+                      disabled={editLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-primary text-primary-foreground rounded-xl py-3 font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer"
+                      disabled={editLoading}
+                    >
+                      {editLoading ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} /> Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </main>
     </div>
