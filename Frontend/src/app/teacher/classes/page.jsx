@@ -7,6 +7,49 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getClasses, createClass, deleteClass } from '../../../api/teacherApi';
 import { useToast } from '../../../context/ToastContext';
 
+const getOrdinalSuffix = (num) => {
+  const n = parseInt(num);
+  if (isNaN(n)) return '';
+  const j = n % 10, k = n % 100;
+  if (j === 1 && k !== 11) return 'st';
+  if (j === 2 && k !== 12) return 'nd';
+  if (j === 3 && k !== 13) return 'rd';
+  return 'th';
+};
+
+const getCurrentAcademicYear = () => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0 is Jan, 6 is July
+  if (currentMonth >= 6) {
+    const nextYearSuffix = String(currentYear + 1).slice(-2);
+    return `${currentYear}-${nextYearSuffix}`;
+  } else {
+    const prevYear = currentYear - 1;
+    const currentYearSuffix = String(currentYear).slice(-2);
+    return `${prevYear}-${currentYearSuffix}`;
+  }
+};
+
+const getAcademicYearOptions = () => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  let baseYear = currentYear;
+  if (currentMonth < 6) {
+    baseYear = currentYear - 1;
+  }
+  
+  const options = [];
+  for (let i = -5; i <= 2; i++) {
+    const yr = baseYear + i;
+    const nextYrSuffix = String(yr + 1).slice(-2);
+    options.push(`${yr}-${nextYrSuffix}`);
+  }
+  return options;
+};
+
 const MyClasses = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -14,13 +57,18 @@ const MyClasses = () => {
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNameEdited, setIsNameEdited] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState(getCurrentAcademicYear());
+  const [customProgram, setCustomProgram] = useState('');
+  const [customAcademicYear, setCustomAcademicYear] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     program: '',
     branch: '',
     semester: '',
     section: '',
-    academicYear: '2024-25'
+    academicYear: getCurrentAcademicYear()
   });
   const [error, setError] = useState('');
 
@@ -35,7 +83,12 @@ const MyClasses = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teacherClasses'] });
       setIsModalOpen(false);
-      setFormData({ name: '', program: '', branch: '', semester: '', section: '', academicYear: '2024-25' });
+      setFormData({ name: '', program: '', branch: '', semester: '', section: '', academicYear: getCurrentAcademicYear() });
+      setIsNameEdited(false);
+      setSelectedProgram('');
+      setSelectedAcademicYear(getCurrentAcademicYear());
+      setCustomProgram('');
+      setCustomAcademicYear('');
     },
     onError: (err) => {
       setError(err.message || 'Failed to create class');
@@ -52,6 +105,76 @@ const MyClasses = () => {
       showToast(err.message || 'Failed to delete class', 'error');
     }
   });
+
+  // Auto-generate name based on program, branch, semester, section
+  React.useEffect(() => {
+    if (!isNameEdited) {
+      const program = formData.program || '';
+      const branch = formData.branch || '';
+      const sem = formData.semester ? `${formData.semester}${getOrdinalSuffix(formData.semester)} Sem` : '';
+      const sec = formData.section ? `Section ${formData.section.toUpperCase()}` : '';
+      
+      const parts = [program, branch, sem, sec].filter(Boolean);
+      const generatedName = parts.join(' ');
+      
+      setFormData(prev => ({ ...prev, name: generatedName }));
+    }
+  }, [formData.program, formData.branch, formData.semester, formData.section, isNameEdited]);
+
+  const handleNameChange = (e) => {
+    setFormData({ ...formData, name: e.target.value });
+    setIsNameEdited(true);
+  };
+
+  const handleProgramSelectChange = (e) => {
+    const value = e.target.value;
+    setSelectedProgram(value);
+    if (value === 'Others') {
+      setFormData(prev => ({ ...prev, program: customProgram }));
+    } else {
+      setFormData(prev => ({ ...prev, program: value }));
+    }
+  };
+
+  const handleCustomProgramChange = (e) => {
+    const value = e.target.value;
+    setCustomProgram(value);
+    setFormData(prev => ({ ...prev, program: value }));
+  };
+
+  const handleAcademicYearSelectChange = (e) => {
+    const value = e.target.value;
+    setSelectedAcademicYear(value);
+    if (value === 'Others') {
+      setFormData(prev => ({ ...prev, academicYear: customAcademicYear }));
+    } else {
+      setFormData(prev => ({ ...prev, academicYear: value }));
+    }
+  };
+
+  const handleCustomAcademicYearChange = (e) => {
+    const value = e.target.value;
+    setCustomAcademicYear(value);
+    setFormData(prev => ({ ...prev, academicYear: value }));
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      name: '',
+      program: '',
+      branch: '',
+      semester: '',
+      section: '',
+      academicYear: getCurrentAcademicYear()
+    });
+    setIsNameEdited(false);
+    setSelectedProgram('');
+    setSelectedAcademicYear(getCurrentAcademicYear());
+    setCustomProgram('');
+    setCustomAcademicYear('');
+    setError('');
+  };
 
   const handleCreateClass = (e) => {
     e.preventDefault();
@@ -181,7 +304,7 @@ const MyClasses = () => {
                 <div className="flex justify-between items-center p-6 border-b border-border bg-primary/5">
                   <h2 className="text-2xl font-bold tracking-tight text-foreground">Create New Class</h2>
                   <button 
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={handleCloseModal}
                     className="text-foreground/50 hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-colors cursor-pointer"
                   >
                     <X size={24} />
@@ -203,23 +326,42 @@ const MyClasses = () => {
                         type="text" 
                         required
                         value={formData.name}
-                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        onChange={handleNameChange}
                         placeholder="e.g. B.Tech CSE 5th Sem Section A"
                         className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30"
                       />
+                      <p className="text-xs text-foreground/50 mt-1">
+                        Auto-generated from fields below. Feel free to edit and customize this to anything you want.
+                      </p>
                     </div>
 
                     {/* Program */}
                     <div>
                       <label className="block text-sm font-semibold text-foreground/80 mb-2">Program</label>
-                      <input 
-                        type="text" 
+                      <select 
                         required
-                        value={formData.program}
-                        onChange={e => setFormData({...formData, program: e.target.value})}
-                        placeholder="e.g. B.Tech, MBA"
-                        className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30"
-                      />
+                        value={selectedProgram}
+                        onChange={handleProgramSelectChange}
+                        className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground cursor-pointer appearance-none"
+                      >
+                        <option value="" disabled>Select Program</option>
+                        <option value="B.Tech">B.Tech</option>
+                        <option value="M.Tech">M.Tech</option>
+                        <option value="MBA">MBA</option>
+                        <option value="MCA">MCA</option>
+                        <option value="B.Pharma">B.Pharma</option>
+                        <option value="Others">Others</option>
+                      </select>
+                      {selectedProgram === 'Others' && (
+                        <input 
+                          type="text"
+                          required
+                          value={customProgram}
+                          onChange={handleCustomProgramChange}
+                          placeholder="Enter Custom Program"
+                          className="w-full mt-2 bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30"
+                        />
+                      )}
                     </div>
 
                     {/* Branch */}
@@ -256,14 +398,22 @@ const MyClasses = () => {
                     {/* Semester */}
                     <div>
                       <label className="block text-sm font-semibold text-foreground/80 mb-2">Semester</label>
-                      <input 
-                        type="number" 
-                        required min="1" max="8"
+                      <select 
+                        required
                         value={formData.semester}
                         onChange={e => setFormData({...formData, semester: e.target.value})}
-                        placeholder="1 - 8"
-                        className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
+                        className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground cursor-pointer appearance-none"
+                      >
+                        <option value="" disabled>Select Semester</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                      </select>
                     </div>
 
                     {/* Section */}
@@ -273,7 +423,7 @@ const MyClasses = () => {
                         type="text" 
                         required
                         value={formData.section}
-                        onChange={e => setFormData({...formData, section: e.target.value})}
+                        onChange={e => setFormData({...formData, section: e.target.value.toUpperCase()})}
                         placeholder="e.g. A, B, C"
                         className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30"
                       />
@@ -282,14 +432,29 @@ const MyClasses = () => {
                     {/* Academic Year */}
                     <div className="col-span-full">
                       <label className="block text-sm font-semibold text-foreground/80 mb-2">Academic Year</label>
-                      <input 
-                        type="text" 
+                      <select 
                         required
-                        value={formData.academicYear}
-                        onChange={e => setFormData({...formData, academicYear: e.target.value})}
-                        placeholder="2024-25"
-                        className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30"
-                      />
+                        value={selectedAcademicYear}
+                        onChange={handleAcademicYearSelectChange}
+                        className="w-full bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground cursor-pointer appearance-none"
+                      >
+                        {getAcademicYearOptions().map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                        <option value="Others">Others</option>
+                      </select>
+                      {selectedAcademicYear === 'Others' && (
+                        <input 
+                          type="text"
+                          required
+                          value={customAcademicYear}
+                          onChange={handleCustomAcademicYearChange}
+                          placeholder="e.g. 2026-27"
+                          pattern="^\d{4}-\d{2}$"
+                          title="Please use a valid academic year format like '2026-27'"
+                          className="w-full mt-2 bg-background border border-border rounded-xl shadow-sm px-4 py-3 font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-foreground placeholder:text-foreground/30"
+                        />
+                      )}
                     </div>
                   </div>
 
